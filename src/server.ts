@@ -5,7 +5,6 @@ import http from "http";
 import config from "./app/config";
 import { seedSuperAdmin } from "./app/modules/auth/auth.seed";
 import { initSocket } from "./app/socket/socket";
-// import { testEmail } from "./utils/testemail";
 
 let server: Server;
 
@@ -13,16 +12,9 @@ async function main() {
     try {
         await mongoose.connect(config.mongodb_url as string);
         server = http.createServer(app);
-        // testEmail();
-
         initSocket(server);
 
         seedSuperAdmin();
-        // createBotAdmin();
-
-        // reviewReminderCron.start();
-
-        // await verifyMailConnection();
 
         server.listen(Number(config.port), () => {
             console.log(`✅ App listening on port ${config.port}`);
