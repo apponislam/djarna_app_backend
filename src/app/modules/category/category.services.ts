@@ -52,13 +52,62 @@ const deleteCategory = async (id: string) => {
     return result;
 };
 
-const getParentCategories = async () => {
-    const result = await CategoryModel.find({ parentCategory: null }).sort({ homePosition: 1 }).lean();
+const getParentCategories = async (searchTerm?: string) => {
+    const query: any = { parentCategory: null };
+
+    if (searchTerm) {
+        query.name = { $regex: searchTerm, $options: "i" };
+    }
+
+    const categories = await CategoryModel.find(query).sort({ homePosition: 1 }).lean();
+
+    // Process subcategoryCount for each parent category
+    const result = await Promise.all(
+        categories.map(async (category) => {
+            const subcategoryCount = await CategoryModel.countDocuments({ parentCategory: category._id });
+            return {
+                ...category,
+                subcategoryCount,
+            };
+        }),
+    );
+
     return result;
 };
 
-const getSubcategoriesByParent = async (parentId: string) => {
-    const result = await CategoryModel.find({ parentCategory: parentId }).lean();
+const getSubcategoriesByParent = async (parentId: string, searchTerm?: string) => {
+    const query: any = { parentCategory: parentId };
+
+    if (searchTerm) {
+        query.name = { $regex: searchTerm, $options: "i" };
+    }
+
+    const subcategories = await CategoryModel.find(query).populate("parentCategory", "name").lean();
+
+    // Add listingCount placeholder for now (as there's no Listing model yet)
+    const result = subcategories.map((sub) => ({
+        ...sub,
+        listingCount: Math.floor(Math.random() * 200) + 50, // Static count for dashboard demo
+    }));
+
+    return result;
+};
+
+const getAllSubcategories = async (searchTerm?: string) => {
+    const query: any = { parentCategory: { $ne: null } };
+
+    if (searchTerm) {
+        query.name = { $regex: searchTerm, $options: "i" };
+    }
+
+    const subcategories = await CategoryModel.find(query).populate("parentCategory", "name").lean();
+
+    // Add listingCount placeholder for now
+    const result = subcategories.map((sub) => ({
+        ...sub,
+        listingCount: Math.floor(Math.random() * 200) + 50, // Static count for dashboard demo
+    }));
+
     return result;
 };
 
@@ -69,4 +118,5 @@ export const CategoryService = {
     deleteCategory,
     getParentCategories,
     getSubcategoriesByParent,
+    getAllSubcategories,
 };

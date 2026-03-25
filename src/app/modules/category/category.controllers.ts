@@ -55,7 +55,8 @@ const deleteCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getParentCategories = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.getParentCategories();
+    const { searchTerm } = req.query;
+    const result = await CategoryService.getParentCategories(searchTerm as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -66,12 +67,25 @@ const getParentCategories = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSubcategoriesByParent = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.getSubcategoriesByParent(req.params.parentId as string);
+    const { searchTerm } = req.query;
+    const result = await CategoryService.getSubcategoriesByParent(req.params.parentId as string, searchTerm as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Subcategories retrieved successfully",
+        data: result,
+    });
+});
+
+const getAllSubcategories = catchAsync(async (req: Request, res: Response) => {
+    const { searchTerm } = req.query;
+    const result = await CategoryService.getAllSubcategories(searchTerm as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "All subcategories retrieved successfully",
         data: result,
     });
 });
@@ -83,4 +97,5 @@ export const CategoryController = {
     deleteCategory,
     getParentCategories,
     getSubcategoriesByParent,
+    getAllSubcategories,
 };

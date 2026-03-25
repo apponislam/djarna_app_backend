@@ -37,6 +37,7 @@ const CategorySchema = new Schema<ICategory>(
 );
 
 // Index for better search performance
+CategorySchema.index({ name: "text" });
 CategorySchema.index({ parentCategory: 1 });
 CategorySchema.index({ isActive: 1 });
 CategorySchema.index({ homePosition: 1 });
