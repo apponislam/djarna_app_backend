@@ -5,6 +5,9 @@ import { CategoryService } from "./category.services";
 import { Request, Response } from "express";
 
 const createCategory = catchAsync(async (req: Request, res: Response) => {
+    if (req.file) {
+        req.body.icon = req.file.path;
+    }
     const result = await CategoryService.createCategory(req.body);
 
     sendResponse(res, {
@@ -27,7 +30,7 @@ const getAllCategories = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCategoryById = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.getCategoryById(req.params.id);
+    const result = await CategoryService.getCategoryById(req.params.id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -38,7 +41,10 @@ const getCategoryById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCategory = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.updateCategory(req.params.id, req.body);
+    if (req.file) {
+        req.body.icon = req.file.path;
+    }
+    const result = await CategoryService.updateCategory(req.params.id as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -49,7 +55,7 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteCategory = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.deleteCategory(req.params.id);
+    const result = await CategoryService.deleteCategory(req.params.id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -76,5 +82,5 @@ export const CategoryController = {
     getCategoryById,
     updateCategory,
     deleteCategory,
-    getHomeVisibleCategories
+    getHomeVisibleCategories,
 };
