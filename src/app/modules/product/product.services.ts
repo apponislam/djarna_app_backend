@@ -1,24 +1,23 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { ProductModel } from "./product.model";
-import { IProduct, BoostPlan } from "./product.interface";
-
-const calculateBoostEndTime = (plan: BoostPlan) => {
-    const now = new Date();
-    if (plan === "7-DAY") return new Date(now.setDate(now.getDate() + 7));
-    if (plan === "14-DAY") return new Date(now.setDate(now.getDate() + 14));
-    if (plan === "30-DAY") return new Date(now.setDate(now.getDate() + 30));
-    return null;
-};
+import { IProduct } from "./product.interface";
+import { BoostPackModel } from "../boostPack/boostPack.model";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
-    if (payload.isBoosted && payload.boostPlan) {
-        payload.boostStartTime = new Date();
-        payload.boostEndTime = calculateBoostEndTime(payload.boostPlan);
+    if (payload.isBoosted && payload.boostPack) {
+        const pack = await BoostPackModel.findById(payload.boostPack);
+        if (!pack || !pack.isActive) {
+            throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive boost pack");
+        }
+
+        const now = new Date();
+        payload.boostStartTime = now;
+        payload.boostEndTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
     } else {
         payload.isBoosted = false;
-        payload.boostPlan = null;
+        payload.boostPack = null;
         payload.boostStartTime = null;
         payload.boostEndTime = null;
     }
@@ -33,10 +32,7 @@ const getAllProducts = async (query: any) => {
     const filters: any = { status: "ACTIVE" };
 
     if (searchTerm) {
-        filters.$or = [
-            { title: { $regex: searchTerm, $options: "i" } },
-            { description: { $regex: searchTerm, $options: "i" } },
-        ];
+        filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }];
     }
 
     if (category) filters.category = category;
@@ -55,20 +51,13 @@ const getAllProducts = async (query: any) => {
         sortOptions.createdAt = -1;
     }
 
-    const result = await ProductModel.find(filters)
-        .populate("category", "name icon")
-        .populate("subcategory", "name icon")
-        .populate("user", "name email phone")
-        .sort(sortOptions);
+    const result = await ProductModel.find(filters).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone").sort(sortOptions);
 
     return result;
 };
 
 const getProductById = async (id: string) => {
-    const result = await ProductModel.findById(id)
-        .populate("category", "name icon")
-        .populate("subcategory", "name icon")
-        .populate("user", "name email phone");
+    const result = await ProductModel.findById(id).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone");
 
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
     return result;
@@ -87,7 +76,7 @@ const updateProductStatus = async (id: string, userId: string, status: string) =
     return product;
 };
 
-const boostProduct = async (id: string, userId: string, plan: BoostPlan) => {
+const boostProduct = async (id: string, userId: string, boostPackId: string) => {
     const product = await ProductModel.findById(id);
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
@@ -95,10 +84,16 @@ const boostProduct = async (id: string, userId: string, plan: BoostPlan) => {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to boost product");
     }
 
+    const pack = await BoostPackModel.findById(boostPackId);
+    if (!pack || !pack.isActive) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive boost pack");
+    }
+
+    const now = new Date();
     product.isBoosted = true;
-    product.boostPlan = plan;
-    product.boostStartTime = new Date();
-    product.boostEndTime = calculateBoostEndTime(plan);
+    product.boostPack = pack._id;
+    product.boostStartTime = now;
+    product.boostEndTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
 
     await product.save();
     return product;

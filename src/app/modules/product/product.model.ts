@@ -51,9 +51,9 @@ const ProductSchema = new Schema<IProduct>(
             type: Boolean,
             default: false,
         },
-        boostPlan: {
-            type: String,
-            enum: ["7-DAY", "14-DAY", "30-DAY", null],
+        boostPack: {
+            type: Schema.Types.ObjectId,
+            ref: "BoostPack",
             default: null,
         },
         boostStartTime: {
@@ -65,6 +65,7 @@ const ProductSchema = new Schema<IProduct>(
             default: null,
         },
     },
+
     {
         timestamps: true,
         versionKey: false,

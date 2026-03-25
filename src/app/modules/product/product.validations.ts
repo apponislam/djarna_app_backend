@@ -6,9 +6,9 @@ export const createProductSchema = z.object({
     price: z.coerce.number().min(0, "Price cannot be negative"),
     category: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid category ID"),
     subcategory: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid subcategory ID"),
-    images: z.array(z.string()).optional(), // images will be handled by multer and then validated manually in the controller
+    images: z.array(z.string()).optional(),
     isBoosted: z.boolean().default(false).optional(),
-    boostPlan: z.enum(["7-DAY", "14-DAY", "30-DAY", "null"]).optional(),
+    boostPack: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid boost pack ID").optional(),
 });
 
 export const updateProductStatusSchema = z.object({
@@ -16,5 +16,5 @@ export const updateProductStatusSchema = z.object({
 });
 
 export const boostProductSchema = z.object({
-    boostPlan: z.enum(["7-DAY", "14-DAY", "30-DAY"]),
+    boostPackId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid boost pack ID"),
 });

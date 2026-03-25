@@ -15,7 +15,7 @@ export interface IProduct {
 
     // Boost Fields
     isBoosted: boolean;
-    boostPlan: BoostPlan;
+    boostPack?: Types.ObjectId | null;
     boostStartTime?: Date | null;
     boostEndTime?: Date | null;
 
