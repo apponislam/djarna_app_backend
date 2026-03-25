@@ -13,7 +13,7 @@ export const registerSchema = z.object({
 
     password: z.string().min(6),
 
-    role: z.enum(["SUPER_ADMIN", "TEACHER", "STUDENT", "ADMIN", "GUEST"]).default("STUDENT"),
+    role: z.enum(["USER", "ADMIN"]).default("USER"),
 
     phone: z.string().optional(),
 

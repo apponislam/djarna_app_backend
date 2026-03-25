@@ -29,9 +29,9 @@ const registerUser = async (data: any) => {
         verificationExpiry,
     };
 
-    if (userData.role === "TEACHER") {
-        userData.teacherApprovalStatus = "PENDING";
-    }
+    // if (userData.role === "TEACHER") {
+    //     userData.teacherApprovalStatus = "PENDING";
+    // }
 
     const createdUser = await UserModel.create(userData);
 

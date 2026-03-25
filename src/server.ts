@@ -3,7 +3,7 @@ import app from "./app";
 import mongoose from "mongoose";
 import http from "http";
 import config from "./app/config";
-import { seedSuperAdmin } from "./app/modules/auth/auth.seed";
+import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { initSocket } from "./app/socket/socket";
 
 let server: Server;
@@ -14,7 +14,7 @@ async function main() {
         server = http.createServer(app);
         initSocket(server);
 
-        seedSuperAdmin();
+        seedAdmin();
 
         server.listen(Number(config.port), () => {
             console.log(`✅ App listening on port ${config.port}`);

@@ -1,7 +1,5 @@
-import mongoose from "mongoose";
-
-export type UserRole = "SUPER_ADMIN" | "TEACHER" | "STUDENT" | "ADMIN" | "GUEST";
-export type TeacherApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "BLOCKED";
+export type UserRole = "USER" | "ADMIN";
+// export type TeacherApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "BLOCKED";
 
 export interface User {
     name: string;
@@ -26,15 +24,15 @@ export interface User {
     lastLogin?: Date;
 
     // Teacher approval workflow
-    teacherApprovalStatus?: TeacherApprovalStatus;
-    approvedBy?: mongoose.Types.ObjectId;
-    approvalDate?: Date;
-    availabilityLocation?: {
-        address?: string;
-        lat?: number;
-        lng?: number;
-        radiusKm?: number;
-    };
+    // teacherApprovalStatus?: TeacherApprovalStatus;
+    // approvedBy?: mongoose.Types.ObjectId;
+    // approvalDate?: Date;
+    // availabilityLocation?: {
+    //     address?: string;
+    //     lat?: number;
+    //     lng?: number;
+    //     radiusKm?: number;
+    // };
 
     // Password reset fields
     resetPasswordOtp?: string;

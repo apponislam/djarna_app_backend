@@ -24,8 +24,8 @@ const UserSchema = new Schema<User>(
 
         role: {
             type: String,
-            enum: ["SUPER_ADMIN", "TEACHER", "STUDENT", "ADMIN", "GUEST"],
-            default: "STUDENT",
+            enum: ["USER", "ADMIN"],
+            default: "USER",
             required: true,
         },
 
@@ -65,26 +65,26 @@ const UserSchema = new Schema<User>(
         },
 
         // Teacher approval workflow
-        teacherApprovalStatus: {
-            type: String,
-            enum: ["PENDING", "APPROVED", "REJECTED", "BLOCKED"],
-        },
+        // teacherApprovalStatus: {
+        //     type: String,
+        //     enum: ["PENDING", "APPROVED", "REJECTED", "BLOCKED"],
+        // },
 
-        approvedBy: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-        },
+        // approvedBy: {
+        //     type: Schema.Types.ObjectId,
+        //     ref: "User",
+        // },
 
-        approvalDate: {
-            type: Date,
-        },
+        // approvalDate: {
+        //     type: Date,
+        // },
 
-        availabilityLocation: {
-            address: String,
-            lat: Number,
-            lng: Number,
-            radiusKm: Number,
-        },
+        // availabilityLocation: {
+        //     address: String,
+        //     lat: Number,
+        //     lng: Number,
+        //     radiusKm: Number,
+        // },
 
         resetPasswordOtp: String,
         resetPasswordOtpExpiry: Date,
@@ -114,7 +114,6 @@ const UserSchema = new Schema<User>(
                 delete ret.emailVerificationToken;
                 delete ret.emailVerificationExpiry;
                 delete ret.pendingEmail;
-                delete ret.availabilityLocation;
                 return ret;
             },
         },
