@@ -12,25 +12,6 @@ const createCategory = async (payload: ICategory) => {
     return result;
 };
 
-const getAllCategories = async () => {
-    // Return hierarchical structure for all categories
-    const categories = await CategoryModel.find({ parentCategory: null }).lean();
-
-    // Process subcategories for each parent category
-    const result = await Promise.all(
-        categories.map(async (category) => {
-            const subcategories = await CategoryModel.find({ parentCategory: category._id }).lean();
-            return {
-                ...category,
-                subcategoryCount: subcategories.length,
-                subcategories,
-            };
-        }),
-    );
-
-    return result;
-};
-
 const getCategoryById = async (id: string) => {
     const category = await CategoryModel.findById(id).lean();
     if (!category) {
@@ -71,16 +52,21 @@ const deleteCategory = async (id: string) => {
     return result;
 };
 
-const getHomeVisibleCategories = async () => {
-    const result = await CategoryModel.find({ homeVisibility: true }).sort({ homePosition: 1 }).lean();
+const getParentCategories = async () => {
+    const result = await CategoryModel.find({ parentCategory: null }).sort({ homePosition: 1 }).lean();
+    return result;
+};
+
+const getSubcategoriesByParent = async (parentId: string) => {
+    const result = await CategoryModel.find({ parentCategory: parentId }).lean();
     return result;
 };
 
 export const CategoryService = {
     createCategory,
-    getAllCategories,
     getCategoryById,
     updateCategory,
     deleteCategory,
-    getHomeVisibleCategories,
+    getParentCategories,
+    getSubcategoriesByParent,
 };

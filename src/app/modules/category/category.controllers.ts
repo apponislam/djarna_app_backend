@@ -18,17 +18,6 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const getAllCategories = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.getAllCategories();
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Categories retrieved successfully",
-        data: result,
-    });
-});
-
 const getCategoryById = catchAsync(async (req: Request, res: Response) => {
     const result = await CategoryService.getCategoryById(req.params.id as string);
 
@@ -65,22 +54,33 @@ const deleteCategory = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const getHomeVisibleCategories = catchAsync(async (req: Request, res: Response) => {
-    const result = await CategoryService.getHomeVisibleCategories();
+const getParentCategories = catchAsync(async (req: Request, res: Response) => {
+    const result = await CategoryService.getParentCategories();
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Home visible categories retrieved successfully",
+        message: "Parent categories retrieved successfully",
+        data: result,
+    });
+});
+
+const getSubcategoriesByParent = catchAsync(async (req: Request, res: Response) => {
+    const result = await CategoryService.getSubcategoriesByParent(req.params.parentId as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Subcategories retrieved successfully",
         data: result,
     });
 });
 
 export const CategoryController = {
     createCategory,
-    getAllCategories,
     getCategoryById,
     updateCategory,
     deleteCategory,
-    getHomeVisibleCategories,
+    getParentCategories,
+    getSubcategoriesByParent,
 };

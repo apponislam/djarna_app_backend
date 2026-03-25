@@ -8,28 +8,13 @@ import { uploadCategoryIcon } from "../../middlewares/multer";
 const router = Router();
 
 // Public routes
-router.get("/", CategoryController.getAllCategories);
-router.get("/home-visible", CategoryController.getHomeVisibleCategories);
+router.get("/parents", CategoryController.getParentCategories);
+router.get("/subcategories/:parentId", CategoryController.getSubcategoriesByParent);
 router.get("/:id", CategoryController.getCategoryById);
 
 // Protected Admin only routes (assuming category management is for admins)
-router.post(
-    "/",
-    auth,
-    uploadCategoryIcon,
-    validateRequest(createCategorySchema),
-    CategoryController.createCategory
-);
-
-router.patch(
-    "/:id",
-    auth,
-    uploadCategoryIcon,
-    validateRequest(updateCategorySchema),
-    CategoryController.updateCategory
-);
-
+router.post("/", auth, uploadCategoryIcon, validateRequest(createCategorySchema), CategoryController.createCategory);
+router.patch("/:id", auth, uploadCategoryIcon, validateRequest(updateCategorySchema), CategoryController.updateCategory);
 router.delete("/:id", auth, CategoryController.deleteCategory);
-
 
 export const CategoryRoutes = router;
