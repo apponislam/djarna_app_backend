@@ -97,6 +97,16 @@ const UserSchema = new Schema<User>(
         pendingEmail: String,
         emailVerificationToken: String,
         emailVerificationExpiry: Date,
+
+        // Referral fields
+        referralCode: {
+            type: String,
+            unique: true,
+        },
+        referredBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
     },
     {
         timestamps: true,
@@ -120,6 +130,19 @@ const UserSchema = new Schema<User>(
     },
 );
 
+// Pre-save hook to generate unique referral code
+UserSchema.pre("save", async function () {
+    if (this.isNew && !this.referralCode) {
+        // Generate a random 8-character uppercase alphanumeric code
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
+        for (let i = 0; i < 8; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        this.referralCode = code;
+    }
+});
+
 /*
 |--------------------------------------------------------------------------
 | Index Strategy (Production Safe)
@@ -141,5 +164,9 @@ UserSchema.index({ emailVerificationToken: 1 });
 
 // Activity tracking optimization
 UserSchema.index({ lastLogin: -1 });
+
+// Referral and search indexes
+UserSchema.index({ referralCode: 1 });
+UserSchema.index({ name: "text" });
 
 export const UserModel = mongoose.model<User>("User", UserSchema);

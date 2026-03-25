@@ -1,5 +1,6 @@
+import { Types } from "mongoose";
+
 export type UserRole = "USER" | "ADMIN";
-// export type TeacherApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "BLOCKED";
 
 export interface User {
     name: string;
@@ -23,17 +24,6 @@ export interface User {
     isEmailVerified: boolean;
     lastLogin?: Date;
 
-    // Teacher approval workflow
-    // teacherApprovalStatus?: TeacherApprovalStatus;
-    // approvedBy?: mongoose.Types.ObjectId;
-    // approvalDate?: Date;
-    // availabilityLocation?: {
-    //     address?: string;
-    //     lat?: number;
-    //     lng?: number;
-    //     radiusKm?: number;
-    // };
-
     // Password reset fields
     resetPasswordOtp?: string;
     resetPasswordOtpExpiry?: Date;
@@ -48,6 +38,10 @@ export interface User {
     pendingEmail?: string;
     emailVerificationToken?: string;
     emailVerificationExpiry?: Date;
+
+    // Referral fields
+    referralCode: string;
+    referredBy?: Types.ObjectId; // Relation to the user who referred
 
     createdAt: Date;
     updatedAt: Date;

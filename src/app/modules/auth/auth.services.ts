@@ -8,12 +8,23 @@ import crypto from "crypto";
 import { sendOtpEmail, sendVerificationEmail, sendWelcomeEmail, sendEmailUpdateVerification } from "../../../utils/emailTemplates";
 
 const registerUser = async (data: any) => {
+    const { referralCode, ...rest } = data;
+
     // Check existing user
-    const existing = await UserModel.findOne({ email: data.email });
+    const existing = await UserModel.findOne({ email: rest.email });
     if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Email already in use");
 
+    // Handle referral logic
+    let referredBy;
+    if (referralCode) {
+        const referrer = await UserModel.findOne({ referralCode });
+        if (referrer) {
+            referredBy = referrer._id;
+        }
+    }
+
     // Hash password
-    const hashedPassword = await bcrypt.hash(data.password, Number(config.bcrypt_salt_rounds));
+    const hashedPassword = await bcrypt.hash(rest.password, Number(config.bcrypt_salt_rounds));
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -21,7 +32,8 @@ const registerUser = async (data: any) => {
 
     // Create user
     const userData = {
-        ...data,
+        ...rest,
+        referredBy,
         password: hashedPassword,
         isActive: true,
         isEmailVerified: false,
