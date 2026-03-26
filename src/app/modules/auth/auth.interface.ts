@@ -14,11 +14,12 @@ export interface User {
     };
     language?: string;
     address?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
+        fullName?: string;
         country?: string;
+        addressLine1?: string;
+        addressLine2?: string;
+        postcode?: string;
+        city?: string;
     };
     isActive: boolean;
     isEmailVerified: boolean;

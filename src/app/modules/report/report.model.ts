@@ -66,7 +66,7 @@ ReportSchema.pre("validate", async function () {
 });
 
 // Indexing for Dashboard & Search
-ReportSchema.index({ reportId: 1 });
+// ReportSchema.index({ reportId: 1 });
 ReportSchema.index({ status: 1 });
 ReportSchema.index({ type: 1 });
 ReportSchema.index({ reporter: 1 });

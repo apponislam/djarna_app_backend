@@ -43,11 +43,12 @@ const UserSchema = new Schema<User>(
         },
 
         address: {
-            street: String,
-            city: String,
-            state: String,
-            zipCode: String,
+            fullName: String,
             country: String,
+            addressLine1: String,
+            addressLine2: String,
+            postcode: String,
+            city: String,
         },
 
         isActive: {

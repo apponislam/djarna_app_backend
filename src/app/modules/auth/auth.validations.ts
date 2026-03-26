@@ -6,6 +6,15 @@ const locationSchema = z.object({
     lng: z.number().optional(),
 });
 
+const addressSchema = z.object({
+    fullName: z.string().optional(),
+    country: z.string().optional(),
+    addressLine1: z.string().optional(),
+    addressLine2: z.string().optional(),
+    postcode: z.string().optional(),
+    city: z.string().optional(),
+});
+
 export const registerSchema = z.object({
     name: z.string().min(2),
 
@@ -18,6 +27,8 @@ export const registerSchema = z.object({
     phone: z.string().optional(),
 
     location: locationSchema.optional(),
+
+    address: addressSchema.optional(),
 
     referralCode: z.string().optional(),
 });
@@ -40,6 +51,7 @@ export const updateProfileSchema = z.object({
     name: z.string().min(2).optional(),
     phone: z.string().optional(),
     location: locationSchema.optional(),
+    address: addressSchema.optional(),
 });
 
 export const changePasswordSchema = z.object({
