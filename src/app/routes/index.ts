@@ -5,6 +5,7 @@ import { ProductRoutes } from "../modules/product/product.routes";
 import { ReportRoutes } from "../modules/report/report.routes";
 import { BoostPackRoutes } from "../modules/boostPack/boostPack.routes";
 import { SettingsRoutes } from "../modules/settings/settings.routes";
+import { FollowRoutes } from "../modules/follow/follow.routes";
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
     {
         path: "/settings",
         route: SettingsRoutes,
+    },
+    {
+        path: "/follow",
+        route: FollowRoutes,
     },
 ];
 
