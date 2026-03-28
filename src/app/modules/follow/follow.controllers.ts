@@ -22,7 +22,7 @@ const unfollowUser = catchAsync(async (req: Request, res: Response) => {
     const followerId = req.user?._id;
     const { followingId } = req.params;
 
-    const result = await FollowService.unfollowUser(followerId, followingId);
+    const result = await FollowService.unfollowUser(followerId, followingId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -34,7 +34,7 @@ const unfollowUser = catchAsync(async (req: Request, res: Response) => {
 
 const getFollowers = catchAsync(async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const result = await FollowService.getFollowers(userId);
+    const result = await FollowService.getFollowers(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -46,7 +46,7 @@ const getFollowers = catchAsync(async (req: Request, res: Response) => {
 
 const getFollowing = catchAsync(async (req: Request, res: Response) => {
     const { userId } = req.params;
-    const result = await FollowService.getFollowing(userId);
+    const result = await FollowService.getFollowing(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -60,7 +60,7 @@ const checkFollowStatus = catchAsync(async (req: Request, res: Response) => {
     const followerId = req.user?._id;
     const { followingId } = req.params;
 
-    const result = await FollowService.checkFollowStatus(followerId, followingId);
+    const result = await FollowService.checkFollowStatus(followerId, followingId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
