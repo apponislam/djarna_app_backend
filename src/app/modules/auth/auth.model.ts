@@ -65,28 +65,6 @@ const UserSchema = new Schema<User>(
             type: Date,
         },
 
-        // Teacher approval workflow
-        // teacherApprovalStatus: {
-        //     type: String,
-        //     enum: ["PENDING", "APPROVED", "REJECTED", "BLOCKED"],
-        // },
-
-        // approvedBy: {
-        //     type: Schema.Types.ObjectId,
-        //     ref: "User",
-        // },
-
-        // approvalDate: {
-        //     type: Date,
-        // },
-
-        // availabilityLocation: {
-        //     address: String,
-        //     lat: Number,
-        //     lng: Number,
-        //     radiusKm: Number,
-        // },
-
         resetPasswordOtp: String,
         resetPasswordOtpExpiry: Date,
         resetPasswordToken: String,
@@ -167,7 +145,6 @@ UserSchema.index({ emailVerificationToken: 1 });
 UserSchema.index({ lastLogin: -1 });
 
 // Referral and search indexes
-UserSchema.index({ referralCode: 1 });
 UserSchema.index({ name: "text" });
 
 export const UserModel = mongoose.model<User>("User", UserSchema);
