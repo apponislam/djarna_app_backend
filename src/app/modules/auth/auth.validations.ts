@@ -16,15 +16,15 @@ const addressSchema = z.object({
 });
 
 export const registerSchema = z.object({
-    name: z.string().min(2),
+    name: z.string().trim().min(2),
 
-    email: z.string().email(),
+    email: z.string().trim().email(),
 
-    password: z.string().min(6),
+    password: z.string().trim().min(6),
 
     role: z.enum(["USER", "ADMIN"]).default("USER"),
 
-    phone: z.string().optional(),
+    phone: z.string().trim().min(1, "Phone is required"),
 
     location: locationSchema.optional(),
 
@@ -34,8 +34,8 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string(),
+    email: z.string().trim().email(),
+    password: z.string().trim(),
 });
 
 export const verifyEmailSchema = z.object({
@@ -48,8 +48,8 @@ export const resendVerificationSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-    name: z.string().min(2).optional(),
-    phone: z.string().optional(),
+    name: z.string().trim().min(2).optional(),
+    phone: z.string().trim().optional(),
     location: locationSchema.optional(),
     address: addressSchema.optional(),
 });

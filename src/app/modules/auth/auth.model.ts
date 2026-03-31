@@ -31,6 +31,7 @@ const UserSchema = new Schema<User>(
 
         phone: {
             type: String,
+            required: [true, "Phone is required"],
         },
 
         location: {
