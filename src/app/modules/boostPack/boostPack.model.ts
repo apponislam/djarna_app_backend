@@ -46,6 +46,5 @@ const BoostPackSchema = new Schema<IBoostPack>(
 
 // Indexes for common queries
 BoostPackSchema.index({ isActive: 1 });
-// BoostPackSchema.index({ name: 1 });
 
 export const BoostPackModel = mongoose.model<IBoostPack>("BoostPack", BoostPackSchema);

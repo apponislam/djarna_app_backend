@@ -12,34 +12,9 @@ router.get("/", auth, BoostPackController.getAllBoostPacks);
 router.get("/:id", auth, BoostPackController.getBoostPackById);
 
 // Admin only routes for managing packs
-router.post(
-    "/",
-    auth,
-    authorize(["ADMIN"]),
-    validateRequest(createBoostPackSchema),
-    BoostPackController.createBoostPack
-);
-
-router.patch(
-    "/:id",
-    auth,
-    authorize(["ADMIN"]),
-    validateRequest(updateBoostPackSchema),
-    BoostPackController.updateBoostPack
-);
-
-router.patch(
-    "/:id/toggle-status",
-    auth,
-    authorize(["ADMIN"]),
-    BoostPackController.toggleBoostPackStatus
-);
-
-router.delete(
-    "/:id",
-    auth,
-    authorize(["ADMIN"]),
-    BoostPackController.deleteBoostPack
-);
+router.post("/", auth, authorize(["ADMIN"]), validateRequest(createBoostPackSchema), BoostPackController.createBoostPack);
+router.patch("/:id", auth, authorize(["ADMIN"]), validateRequest(updateBoostPackSchema), BoostPackController.updateBoostPack);
+router.patch("/:id/toggle-status", auth, authorize(["ADMIN"]), BoostPackController.toggleBoostPackStatus);
+router.delete("/:id", auth, authorize(["ADMIN"]), BoostPackController.deleteBoostPack);
 
 export const BoostPackRoutes = router;
