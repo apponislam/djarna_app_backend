@@ -5,6 +5,30 @@ import config from "../../config";
 import { Request, Response } from "express";
 import { authServices } from "./auth.services";
 
+const sendOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone } = req.body;
+    const result = await authServices.sendRegistrationOtp(phone);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+});
+
+const verifyOtp = catchAsync(async (req: Request, res: Response) => {
+    const { phone, otp } = req.body;
+    const result = await authServices.verifyRegistrationOtp(phone, otp);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+});
+
 const register = catchAsync(async (req: Request, res: Response) => {
     const result = await authServices.registerUser(req.body);
 
@@ -47,29 +71,6 @@ const login = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const verifyEmail = catchAsync(async (req: Request, res: Response) => {
-    const { token, email } = req.query;
-    await authServices.verifyEmail(token as string, email as string);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Email verified successfully",
-        data: null,
-    });
-});
-
-const resendVerificationEmail = catchAsync(async (req: Request, res: Response) => {
-    await authServices.resendVerificationEmail(req.user.email);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Verification email resent successfully",
-        data: null,
-    });
-});
-
 const getMe = catchAsync(async (req: Request, res: Response) => {
     const user = await authServices.getUserById(req.user._id);
 
@@ -105,40 +106,20 @@ const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const requestPasswordReset = catchAsync(async (req: Request, res: Response) => {
-    await authServices.requestPasswordReset(req.body.email);
+    const { phone } = req.body;
+    await authServices.requestPasswordReset(phone);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Password reset OTP sent to email",
-        data: null,
-    });
-});
-
-const verifyOtp = catchAsync(async (req: Request, res: Response) => {
-    const result = await authServices.verifyOtp(req.body.email, req.body.otp);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "OTP verified successfully",
-        data: { token: result.token },
-    });
-});
-
-const resendOtp = catchAsync(async (req: Request, res: Response) => {
-    await authServices.resendOtp(req.body.email);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "OTP resent successfully",
+        message: "Password reset OTP sent to phone",
         data: null,
     });
 });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
-    await authServices.resetPassword(req.body.token, req.body.newPassword);
+    const { phone, otp, newPassword } = req.body;
+    await authServices.resetPassword(phone, otp, newPassword);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -170,40 +151,6 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const updateEmail = catchAsync(async (req: Request, res: Response) => {
-    await authServices.updateEmail(req.user._id, req.body.email, req.body.password);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Email update requested. Please verify new email.",
-        data: null,
-    });
-});
-
-const resendEmailUpdate = catchAsync(async (req: Request, res: Response) => {
-    await authServices.resendEmailUpdate(req.user._id, req.body.password);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Email verification resent successfully",
-        data: null,
-    });
-});
-
-const verifyNewEmail = catchAsync(async (req: Request, res: Response) => {
-    const { token, email } = req.query;
-    await authServices.verifyNewEmail(token as string, email as string);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "New email verified successfully",
-        data: null,
-    });
-});
-
 const setUserPassword = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId as string;
     const { password } = req.body;
@@ -218,21 +165,16 @@ const setUserPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const authControllers = {
+    sendOtp,
+    verifyOtp,
     register,
     login,
-    verifyEmail,
-    resendVerificationEmail,
     getMe,
     logout,
     refreshAccessToken,
     requestPasswordReset,
-    verifyOtp,
-    resendOtp,
     resetPassword,
     updateProfile,
     changePassword,
-    updateEmail,
-    resendEmailUpdate,
-    verifyNewEmail,
     setUserPassword,
 };

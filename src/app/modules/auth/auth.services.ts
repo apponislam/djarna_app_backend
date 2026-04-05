@@ -3,16 +3,64 @@ import ApiError from "../../../errors/ApiError";
 import { jwtHelper } from "../../../utils/jwtHelper";
 import config from "../../config";
 import { UserModel } from "./auth.model";
+import { VerificationModel } from "./verification.model";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { sendOtpEmail, sendVerificationEmail, sendWelcomeEmail, sendEmailUpdateVerification } from "../../../utils/emailTemplates";
+import { sendSms } from "../../../utils/twilioHelper";
+
+const sendRegistrationOtp = async (phone: string) => {
+    // Check if user already exists
+    const existingUser = await UserModel.findOne({ phone });
+    if (existingUser) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already registered");
+    }
+
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Upsert verification record
+    await VerificationModel.findOneAndUpdate({ phone }, { otp, expiry, isVerified: false }, { upsert: true, new: true });
+
+    // Send SMS
+    await sendSms(phone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
+
+    return { message: "OTP sent successfully" };
+};
+
+const verifyRegistrationOtp = async (phone: string, otp: string) => {
+    const verification = await VerificationModel.findOne({ phone });
+
+    if (!verification) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "No OTP request found for this number");
+    }
+
+    if (verification.expiry < new Date()) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "OTP expired");
+    }
+
+    if (verification.otp !== otp) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid OTP");
+    }
+
+    verification.isVerified = true;
+    await verification.save();
+
+    return { message: "OTP verified successfully" };
+};
 
 const registerUser = async (data: any) => {
     const { referralCode, ...rest } = data;
 
-    // Check existing user
-    const existing = await UserModel.findOne({ email: rest.email });
-    if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Email already in use");
+    // Check if phone was verified
+    const verification = await VerificationModel.findOne({ phone: rest.phone });
+    if (!verification || !verification.isVerified) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number not verified. Please verify OTP first.");
+    }
+
+    // Double check existing user
+    const existing = await UserModel.findOne({ phone: rest.phone });
+    if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already in use");
 
     // Handle referral logic
     let referredBy;
@@ -26,36 +74,25 @@ const registerUser = async (data: any) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(rest.password, Number(config.bcrypt_salt_rounds));
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
     // Create user
     const userData = {
         ...rest,
         referredBy,
         password: hashedPassword,
         isActive: true,
-        isEmailVerified: false,
-        verificationToken,
-        verificationExpiry,
+        isPhoneVerified: true,
     };
-
-    // if (userData.role === "TEACHER") {
-    //     userData.teacherApprovalStatus = "PENDING";
-    // }
 
     const createdUser = await UserModel.create(userData);
 
-    const verificationUrl = `${config.client_url}/verify-email?token=${verificationToken}&email=${createdUser.email}`;
-    sendVerificationEmail(createdUser.email as string, createdUser.name as string, verificationUrl);
-    sendWelcomeEmail(createdUser.email as string, createdUser.name as string);
+    // Delete verification record
+    await VerificationModel.deleteOne({ phone: rest.phone });
 
     // Generate tokens
     const jwtPayload = {
         _id: createdUser._id,
         name: createdUser.name,
-        email: createdUser.email,
+        phone: createdUser.phone,
         role: createdUser.role,
     };
 
@@ -63,14 +100,14 @@ const registerUser = async (data: any) => {
     const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
 
     const userObject = createdUser.toObject();
-    const { password: pwd, verificationToken: vToken, verificationExpiry: vExpiry, ...userWithoutSensitive } = userObject;
+    const { password: pwd, ...userWithoutSensitive } = userObject;
 
     return { user: userWithoutSensitive, accessToken, refreshToken };
 };
 
-const loginUser = async (data: { email: string; password: string }) => {
+const loginUser = async (data: { phone: string; password: string }) => {
     // Find user
-    const user = await UserModel.findOne({ email: data.email });
+    const user = await UserModel.findOne({ phone: data.phone });
     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials");
 
     // Check password
@@ -80,11 +117,6 @@ const loginUser = async (data: { email: string; password: string }) => {
     // Check if active
     if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Account is deactivated");
 
-    // Check if email verified
-    // if (!user.isEmailVerified) {
-    //     throw new ApiError(httpStatus.FORBIDDEN, "Please verify your email first");
-    // }
-
     // Update last login
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
 
@@ -92,7 +124,7 @@ const loginUser = async (data: { email: string; password: string }) => {
     const jwtPayload = {
         _id: user._id,
         name: user.name,
-        email: user.email,
+        phone: user.phone,
         role: user.role,
     };
 
@@ -102,46 +134,6 @@ const loginUser = async (data: { email: string; password: string }) => {
     const { password, ...userWithoutPassword } = user.toObject();
 
     return { user: userWithoutPassword, accessToken, refreshToken };
-};
-
-const verifyEmail = async (token: string, email: string) => {
-    const user = await UserModel.findOne({
-        email,
-        verificationToken: token,
-        verificationExpiry: { $gt: new Date() },
-    });
-
-    if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or expired verification token");
-
-    user.isEmailVerified = true;
-    user.verificationToken = undefined;
-    user.verificationExpiry = undefined;
-    await user.save();
-
-    return { message: "Email verified successfully" };
-};
-
-const resendVerificationEmail = async (email: string) => {
-    const user = await UserModel.findOne({ email });
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-
-    if (user.isEmailVerified) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Email already verified");
-    }
-
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    user.verificationToken = verificationToken;
-    user.verificationExpiry = verificationExpiry;
-    await user.save();
-
-    // Send verification email
-    const verificationUrl = `${config.client_url}/verify-email?token=${verificationToken}&email=${user.email}`;
-    sendVerificationEmail(user.email as string, user.name as string, verificationUrl);
-
-    return { message: "Verification email sent" };
 };
 
 const getUserById = async (userId: string) => {
@@ -162,7 +154,7 @@ const refreshAccessToken = async (refreshToken: string) => {
         const jwtPayload = {
             _id: user._id,
             name: user.name,
-            email: user.email,
+            phone: user.phone,
             role: user.role,
         };
 
@@ -174,8 +166,8 @@ const refreshAccessToken = async (refreshToken: string) => {
     }
 };
 
-const requestPasswordReset = async (email: string) => {
-    const user = await UserModel.findOne({ email });
+const requestPasswordReset = async (phone: string) => {
+    const user = await UserModel.findOne({ phone });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
     // Generate OTP
@@ -186,14 +178,14 @@ const requestPasswordReset = async (email: string) => {
     user.resetPasswordOtpExpiry = otpExpiry;
     await user.save();
 
-    // Send OTP email
-    sendOtpEmail(email, otp, user.name as string);
+    // Send SMS
+    await sendSms(phone, `Your password reset code is: ${otp}. Valid for 5 minutes.`);
 
-    return { message: "OTP sent" };
+    return { message: "OTP sent successfully" };
 };
 
-const verifyOtp = async (email: string, otp: string) => {
-    const user = await UserModel.findOne({ email });
+const resetPassword = async (phone: string, otp: string, newPassword: string) => {
+    const user = await UserModel.findOne({ phone });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
     if (!user.resetPasswordOtp || !user.resetPasswordOtpExpiry) {
@@ -208,54 +200,16 @@ const verifyOtp = async (email: string, otp: string) => {
         throw new ApiError(httpStatus.BAD_REQUEST, "Invalid OTP");
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordTokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
 
-    // Clear OTP
+    user.password = hashedPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordOtpExpiry = undefined;
 
     await user.save();
 
-    return { token: resetToken };
-};
-
-const resendOtp = async (email: string) => {
-    const user = await UserModel.findOne({ email });
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-
-    // Generate new OTP
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-    user.resetPasswordOtp = otp;
-    user.resetPasswordOtpExpiry = otpExpiry;
-    await user.save();
-
-    // Send email
-    sendOtpEmail(email, otp, user.name as string);
-
-    return { message: "OTP resent" };
-};
-
-const resetPassword = async (token: string, newPassword: string) => {
-    const user = await UserModel.findOne({
-        resetPasswordToken: token,
-        resetPasswordTokenExpiry: { $gt: new Date() },
-    });
-
-    if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or expired token");
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
-
-    user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordTokenExpiry = undefined;
-
-    await user.save();
+    return { message: "Password reset successful" };
 };
 
 const updateProfile = async (userId: string, data: any) => {
@@ -277,76 +231,6 @@ const changePassword = async (userId: string, currentPassword: string, newPasswo
     await user.save();
 };
 
-const updateEmail = async (userId: string, newEmail: string, password: string) => {
-    const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-
-    const isPasswordValid = await bcrypt.compare(password, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect");
-
-    const existingUser = await UserModel.findOne({ email: newEmail });
-    if (existingUser) throw new ApiError(httpStatus.BAD_REQUEST, "Email already in use");
-
-    // Generate verification token for new email
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
-    user.pendingEmail = newEmail;
-    user.emailVerificationToken = verificationToken;
-    user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    await user.save();
-
-    // Send verification email
-    const verificationUrl = `${config.client_url}/verify-new-email?token=${verificationToken}&email=${newEmail}`;
-    sendEmailUpdateVerification(newEmail, user.name as string, verificationUrl);
-};
-
-const resendEmailUpdate = async (userId: string, password: string) => {
-    const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-
-    if (!user.pendingEmail) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "No pending email update");
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect");
-
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    user.emailVerificationToken = verificationToken;
-    user.emailVerificationExpiry = verificationExpiry;
-    await user.save();
-
-    // Send verification email
-    const verificationUrl = `${config.client_url}/verify-new-email?token=${verificationToken}&email=${user.pendingEmail}`;
-    sendEmailUpdateVerification(user.pendingEmail as string, user.name as string, verificationUrl);
-
-    return { message: "Verification email resent" };
-};
-
-const verifyNewEmail = async (token: string, email: string) => {
-    const user = await UserModel.findOne({
-        pendingEmail: email,
-        emailVerificationToken: token,
-        emailVerificationExpiry: { $gt: new Date() },
-    });
-
-    if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or expired token");
-
-    // Update email
-    user.email = email;
-    user.pendingEmail = undefined;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpiry = undefined;
-
-    await user.save();
-
-    return { message: "New email verified successfully" };
-};
-
 const setUserPassword = async (userId: string, newPassword: string) => {
     const user = await UserModel.findById(userId);
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
@@ -357,20 +241,15 @@ const setUserPassword = async (userId: string, newPassword: string) => {
 };
 
 export const authServices = {
+    sendRegistrationOtp,
+    verifyRegistrationOtp,
     registerUser,
     loginUser,
-    verifyEmail,
-    resendVerificationEmail,
     getUserById,
     refreshAccessToken,
     requestPasswordReset,
-    verifyOtp,
-    resendOtp,
     resetPassword,
     updateProfile,
     changePassword,
-    updateEmail,
-    resendEmailUpdate,
-    verifyNewEmail,
     setUserPassword,
 };

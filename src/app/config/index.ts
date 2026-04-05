@@ -25,6 +25,12 @@ export default {
     },
     superAdminPassword: process.env.SUPERADMINPASSWORD,
     superAdminEmail: process.env.SUPERADMINEMAIL,
+
+    // Twilio Config
+    twilio_account_sid: process.env.TWILIO_ACCOUNT_SID,
+    twilio_auth_token: process.env.TWILIO_AUTH_TOKEN,
+    twilio_phone_number: process.env.TWILIO_PHONE_NUMBER,
+
     // stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
     // stripe_secret_key: process.env.STRIPE_SECRET_KEY,
     // stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
