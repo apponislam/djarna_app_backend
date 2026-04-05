@@ -23,7 +23,7 @@ const sendRegistrationOtp = async (phone: string) => {
     await VerificationModel.findOneAndUpdate({ phone }, { otp, expiry, isVerified: false }, { upsert: true, new: true });
 
     // Send SMS
-    await sendSms(phone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
+    // await sendSms(phone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
 
     return { message: "OTP sent successfully" };
 };
@@ -143,6 +143,7 @@ const getUserById = async (userId: string) => {
 };
 
 const refreshAccessToken = async (refreshToken: string) => {
+    console.log(refreshToken);
     if (!refreshToken) throw new ApiError(httpStatus.UNAUTHORIZED, "Refresh token required");
 
     try {

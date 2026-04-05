@@ -94,7 +94,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 });
 
 const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
     const result = await authServices.refreshAccessToken(refreshToken);
 
     sendResponse(res, {
