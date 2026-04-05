@@ -7,10 +7,13 @@ import { VerificationModel } from "./verification.model";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendSms } from "../../../utils/twilioHelper";
+import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 
 const sendRegistrationOtp = async (phone: string) => {
+    const normalizedPhone = normalizePhoneNumber(phone);
+
     // Check if user already exists
-    const existingUser = await UserModel.findOne({ phone });
+    const existingUser = await UserModel.findOne({ phone: normalizedPhone });
     if (existingUser) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already registered");
     }
@@ -20,16 +23,20 @@ const sendRegistrationOtp = async (phone: string) => {
     const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Upsert verification record
-    await VerificationModel.findOneAndUpdate({ phone }, { otp, expiry, isVerified: false }, { upsert: true, new: true });
+    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false }, { upsert: true, new: true });
 
     // Send SMS
-    // await sendSms(phone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
+    await sendSms(normalizedPhone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
+
+    // Log for development
+    console.log(`Registration OTP for ${normalizedPhone}: ${otp}`);
 
     return { message: "OTP sent successfully" };
 };
 
 const verifyRegistrationOtp = async (phone: string, otp: string) => {
-    const verification = await VerificationModel.findOne({ phone });
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const verification = await VerificationModel.findOne({ phone: normalizedPhone });
 
     if (!verification) {
         throw new ApiError(httpStatus.BAD_REQUEST, "No OTP request found for this number");
@@ -51,15 +58,16 @@ const verifyRegistrationOtp = async (phone: string, otp: string) => {
 
 const registerUser = async (data: any) => {
     const { referralCode, ...rest } = data;
+    const normalizedPhone = normalizePhoneNumber(rest.phone);
 
     // Check if phone was verified
-    const verification = await VerificationModel.findOne({ phone: rest.phone });
+    const verification = await VerificationModel.findOne({ phone: normalizedPhone });
     if (!verification || !verification.isVerified) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Phone number not verified. Please verify OTP first.");
     }
 
     // Double check existing user
-    const existing = await UserModel.findOne({ phone: rest.phone });
+    const existing = await UserModel.findOne({ phone: normalizedPhone });
     if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already in use");
 
     // Handle referral logic
@@ -77,6 +85,7 @@ const registerUser = async (data: any) => {
     // Create user
     const userData = {
         ...rest,
+        phone: normalizedPhone,
         referredBy,
         password: hashedPassword,
         isActive: true,
@@ -86,7 +95,7 @@ const registerUser = async (data: any) => {
     const createdUser = await UserModel.create(userData);
 
     // Delete verification record
-    await VerificationModel.deleteOne({ phone: rest.phone });
+    await VerificationModel.deleteOne({ phone: normalizedPhone });
 
     // Generate tokens
     const jwtPayload = {
@@ -106,8 +115,10 @@ const registerUser = async (data: any) => {
 };
 
 const loginUser = async (data: { phone: string; password: string }) => {
+    const normalizedPhone = normalizePhoneNumber(data.phone);
+
     // Find user
-    const user = await UserModel.findOne({ phone: data.phone });
+    const user = await UserModel.findOne({ phone: normalizedPhone });
     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials");
 
     // Check password
@@ -168,7 +179,8 @@ const refreshAccessToken = async (refreshToken: string) => {
 };
 
 const requestPasswordReset = async (phone: string) => {
-    const user = await UserModel.findOne({ phone });
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const user = await UserModel.findOne({ phone: normalizedPhone });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
     // Generate OTP
@@ -180,13 +192,17 @@ const requestPasswordReset = async (phone: string) => {
     await user.save();
 
     // Send SMS
-    await sendSms(phone, `Your password reset code is: ${otp}. Valid for 5 minutes.`);
+    await sendSms(normalizedPhone, `Your password reset code is: ${otp}. Valid for 5 minutes.`);
+
+    // Log for development
+    console.log(`Password Reset OTP for ${normalizedPhone}: ${otp}`);
 
     return { message: "OTP sent successfully" };
 };
 
 const resetPassword = async (phone: string, otp: string, newPassword: string) => {
-    const user = await UserModel.findOne({ phone });
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const user = await UserModel.findOne({ phone: normalizedPhone });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
     if (!user.resetPasswordOtp || !user.resetPasswordOtpExpiry) {
@@ -214,6 +230,9 @@ const resetPassword = async (phone: string, otp: string, newPassword: string) =>
 };
 
 const updateProfile = async (userId: string, data: any) => {
+    if (data.phone) {
+        data.phone = normalizePhoneNumber(data.phone);
+    }
     const user = await UserModel.findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true }).select("-password");
 
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");

@@ -24,6 +24,7 @@ export default {
         smtp_pass: process.env.SMTP_PASS,
     },
     superAdminPassword: process.env.SUPERADMINPASSWORD,
+    superAdminPhone: process.env.SUPERADMINPHONE,
     superAdminEmail: process.env.SUPERADMINEMAIL,
 
     // Twilio Config
