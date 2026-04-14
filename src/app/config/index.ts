@@ -32,6 +32,12 @@ export default {
     twilio_auth_token: process.env.TWILIO_AUTH_TOKEN,
     twilio_phone_number: process.env.TWILIO_PHONE_NUMBER,
 
+    // Payment Config
+    paydunya_master_key: process.env.PAYDUNYA_MASTER_KEY,
+    paydunya_public_key: process.env.PAYDUNYA_PUBLIC_KEY,
+    paydunya_private_key: process.env.PAYDUNYA_PRIVATE_KEY,
+    paydunya_token: process.env.PAYDUNYA_TOKEN,
+
     // stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
     // stripe_secret_key: process.env.STRIPE_SECRET_KEY,
     // stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
