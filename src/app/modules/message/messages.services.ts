@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { ConversationModel, MessageModel } from "./messages.model";
 import { Message } from "./messages.interface";
+import { getSocket } from "../../socket/socket";
 
 /**
  * Send a new message or start a conversation
@@ -47,6 +48,21 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             arrayFilters: [{ "elem.userId": receiverId }],
         },
     );
+
+    // Populate sender details for socket emission
+    const populatedMessage = await MessageModel.findById(newMessage._id).populate("senderId", "name avatar");
+
+    // Emit via Socket
+    try {
+        const io = getSocket();
+        io.to(`user_${receiverId}`).emit("new_message", populatedMessage);
+        io.to(`user_${receiverId}`).emit("update_conversation", {
+            conversationId: conversation._id,
+            lastMessage: populatedMessage,
+        });
+    } catch (error) {
+        console.error("Socket error:", error);
+    }
 
     return newMessage;
 };

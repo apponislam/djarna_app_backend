@@ -186,6 +186,10 @@ const UserSchema = new Schema<User>(
             unique: true,
         },
 
+        photo: {
+            type: String,
+        },
+
         location: {
             lat: { type: Number },
             lng: { type: Number },

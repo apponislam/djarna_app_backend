@@ -96,6 +96,8 @@ export const registerSchema = z.object({
 
     phone: z.string().trim().min(1, "Phone is required"),
 
+    photo: z.string().optional(),
+
     location: locationSchema.optional(),
 
     address: addressSchema.optional(),
@@ -126,6 +128,7 @@ export const updateProfileSchema = z.object({
     name: z.string().trim().min(2).optional(),
     phone: z.string().trim().optional(),
     email: z.string().trim().email().optional(),
+    photo: z.string().optional(),
     location: locationSchema.optional(),
     address: addressSchema.optional(),
 });

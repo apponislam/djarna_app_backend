@@ -40,12 +40,12 @@ const generateFileName = (prefix: string) => {
 
 // Middleware for single profile image upload
 export const uploadProfileImage = (req: Request, res: Response, next: NextFunction) => {
-    const uploadSingle = upload.single("profileImage");
+    const uploadSingle = upload.single("photo");
 
     uploadSingle(req, res, async (err) => {
         if (err) return next(err);
 
-        // Process profileImage file if uploaded
+        // Process photo file if uploaded
         if (req.file) {
             try {
                 const file = req.file;

@@ -58,6 +58,7 @@ export interface User {
     password: string;
     role: UserRole;
     phone: string;
+    photo?: string;
     location?: {
         lat?: number;
         lng?: number;

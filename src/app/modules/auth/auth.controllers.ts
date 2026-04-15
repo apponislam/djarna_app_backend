@@ -30,7 +30,14 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
 });
 
 const register = catchAsync(async (req: Request, res: Response) => {
-    const result = await authServices.registerUser(req.body);
+    const body = req.body;
+
+    // Handle photo upload if present
+    if (req.file) {
+        body.photo = req.file.path;
+    }
+
+    const result = await authServices.registerUser(body);
 
     res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
@@ -130,7 +137,15 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
-    const updatedUser = await authServices.updateProfile(req.user._id, req.body);
+    const userId = req.user._id;
+    const body = req.body;
+
+    // Handle photo upload if present
+    if (req.file) {
+        body.photo = req.file.path;
+    }
+
+    const updatedUser = await authServices.updateProfile(userId, body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
