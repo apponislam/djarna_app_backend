@@ -110,6 +110,7 @@ export const loginSchema = z.object({
 
 export const sendOtpSchema = z.object({
     phone: z.string().trim().min(1, "Phone is required"),
+    referralCode: z.string().optional(),
 });
 
 export const verifyOtpSchema = z.object({

@@ -6,8 +6,8 @@ import { Request, Response } from "express";
 import { authServices } from "./auth.services";
 
 const sendOtp = catchAsync(async (req: Request, res: Response) => {
-    const { phone } = req.body;
-    const result = await authServices.sendRegistrationOtp(phone);
+    const { phone, referralCode } = req.body;
+    const result = await authServices.sendRegistrationOtp(phone, referralCode);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

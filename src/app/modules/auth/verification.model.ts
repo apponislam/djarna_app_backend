@@ -5,6 +5,7 @@ export interface IVerification extends Document {
     otp: string;
     expiry: Date;
     isVerified: boolean;
+    referralCode?: string;
 }
 
 const VerificationSchema = new Schema<IVerification>(
@@ -25,6 +26,9 @@ const VerificationSchema = new Schema<IVerification>(
         isVerified: {
             type: Boolean,
             default: false,
+        },
+        referralCode: {
+            type: String,
         },
     },
     {

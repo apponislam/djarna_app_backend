@@ -9,7 +9,7 @@ import crypto from "crypto";
 import { sendSms } from "../../../utils/twilioHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 
-const sendRegistrationOtp = async (phone: string) => {
+const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
 
     // Check if user already exists
@@ -23,7 +23,7 @@ const sendRegistrationOtp = async (phone: string) => {
     const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Upsert verification record
-    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false }, { upsert: true, new: true });
+    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false, referralCode }, { upsert: true, new: true });
 
     // Send SMS
     await sendSms(normalizedPhone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
@@ -57,14 +57,16 @@ const verifyRegistrationOtp = async (phone: string, otp: string) => {
 };
 
 const registerUser = async (data: any) => {
-    const { referralCode, ...rest } = data;
-    const normalizedPhone = normalizePhoneNumber(rest.phone);
+    const normalizedPhone = normalizePhoneNumber(data.phone);
 
     // Check if phone was verified
     const verification = await VerificationModel.findOne({ phone: normalizedPhone });
     if (!verification || !verification.isVerified) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Phone number not verified. Please verify OTP first.");
     }
+
+    const { referralCode: inputReferralCode, ...rest } = data;
+    const referralCode = inputReferralCode || verification.referralCode;
 
     // Double check existing user
     const existing = await UserModel.findOne({ phone: normalizedPhone });
