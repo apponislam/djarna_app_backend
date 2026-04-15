@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import ApiError from "../../../errors/ApiError";
-import { Conversation, Message } from "./messages.types";
+import { Conversation, Message } from "./messages.interface";
 
 // Document interfaces
 export interface ConversationDocument extends Conversation, Document {}
@@ -13,11 +13,6 @@ export interface MessageDocument extends Message, Document {}
 */
 const ConversationSchema = new Schema<ConversationDocument>(
     {
-        type: {
-            type: String,
-            enum: ["PRIVATE", "GROUP"],
-            required: true,
-        },
         participantIds: [
             {
                 type: Schema.Types.ObjectId,
@@ -25,23 +20,13 @@ const ConversationSchema = new Schema<ConversationDocument>(
                 required: true,
             },
         ],
-        name: {
-            type: String,
-            trim: true,
-            required: function (this: ConversationDocument) {
-                return this.type === "GROUP";
-            },
-        },
-        avatar: String,
-        adminIds: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "User",
-            },
-        ],
         lastMessage: {
             type: Schema.Types.ObjectId,
             ref: "Message",
+        },
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
         },
         unreadCounts: [
             {
@@ -70,17 +55,6 @@ const MessageFileSchema = new Schema({
     fileName: { type: String, required: true },
     fileSize: { type: Number, required: true },
     mimeType: { type: String, required: true },
-    thumbnailUrl: String,
-});
-
-const MessageSeenSchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    seenAt: { type: Date, default: Date.now, required: true },
-});
-
-const MessageDeliverySchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    deliveredAt: { type: Date, default: Date.now, required: true },
 });
 
 /*
@@ -103,46 +77,27 @@ const MessageSchema = new Schema<MessageDocument>(
         },
         type: {
             type: String,
-            enum: ["TEXT", "FILE", "TEXT_WITH_FILE", "SYSTEM", "MEETING"],
-            default: "TEXT",
+            enum: ["MESSAGE", "LOCATION", "OFFER", "ACCEPTED", "REJECTED", "COMPLETED"],
+            default: "MESSAGE",
             required: true,
         },
         text: {
             type: String,
             trim: true,
-            required: function (this: MessageDocument) {
-                return ["TEXT", "TEXT_WITH_FILE"].includes(this.type);
-            },
         },
         files: [MessageFileSchema],
-        meeting: {
-            provider: {
-                type: String,
-                enum: ["ZOOM"],
-                required: function (this: MessageDocument) {
-                    return this.type === "MEETING";
-                },
-            },
-            meetingId: {
-                type: String,
-                required: function (this: MessageDocument) {
-                    return this.type === "MEETING";
-                },
-            },
-            meetingLink: {
-                type: String,
-                required: function (this: MessageDocument) {
-                    return this.type === "MEETING";
-                },
-            },
-            recordingLink: String,
-            scheduledAt: Date,
-        },
-        seenBy: [MessageSeenSchema],
-        deliveredTo: [MessageDeliverySchema],
-        replyTo: {
+        productId: {
             type: Schema.Types.ObjectId,
-            ref: "Message",
+            ref: "Product",
+        },
+        offerPrice: {
+            type: Number,
+        },
+        location: {
+            fullAddress: String,
+            latitude: Number,
+            longitude: Number,
+            updatedAt: Date,
         },
         isEdited: { type: Boolean, default: false },
         editedAt: Date,
@@ -161,16 +116,9 @@ const MessageSchema = new Schema<MessageDocument>(
 |--------------------------------------------------------------------------
 */
 
-// Ensure group conversations have a name
-ConversationSchema.pre("save", async function (this: ConversationDocument) {
-    if (this.type === "GROUP" && !this.name) {
-        throw new ApiError(400, "Group conversation must have a name");
-    }
-});
-
 // Ensure private conversations have exactly two participants
 ConversationSchema.pre("save", async function (this: ConversationDocument) {
-    if (this.type === "PRIVATE" && this.participantIds.length !== 2) {
+    if (this.participantIds.length !== 2) {
         throw new ApiError(400, "Private conversation must have exactly 2 participants");
     }
 });
@@ -190,7 +138,6 @@ MessageSchema.pre("save", async function (this: MessageDocument) {
 */
 // Conversation indexes
 ConversationSchema.index({ participantIds: 1 });
-ConversationSchema.index({ type: 1 });
 ConversationSchema.index({ updatedAt: -1 });
 ConversationSchema.index({ "unreadCounts.userId": 1, "unreadCounts.count": 1 });
 ConversationSchema.index({ participantIds: 1, updatedAt: -1 });
@@ -200,11 +147,7 @@ MessageSchema.index({ conversationId: 1, createdAt: -1 });
 MessageSchema.index({ senderId: 1 });
 MessageSchema.index({ type: 1 });
 MessageSchema.index({ isDeleted: 1 });
-MessageSchema.index({ "seenBy.userId": 1 });
-MessageSchema.index({ "deliveredTo.userId": 1 });
 MessageSchema.index({ conversationId: 1, createdAt: -1, _id: 1 });
-MessageSchema.index({ conversationId: 1, "seenBy.userId": 1 });
-MessageSchema.index({ replyTo: 1 });
 MessageSchema.index({ text: "text" });
 
 /*
