@@ -59,3 +59,17 @@ export const getSocket = () => {
 
     return io;
 };
+
+/*
+|--------------------------------------------------------------------------
+| New Socket Helpers (Exported at the bottom)
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Emit event to a specific user's room
+ */
+export const emitToUser = (userId: string, event: string, data: any) => {
+    if (!io) return;
+    io.to(`user_${userId}`).emit(event, data);
+};

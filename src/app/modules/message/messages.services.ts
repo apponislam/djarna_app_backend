@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { ConversationModel, MessageModel } from "./messages.model";
 import { Message } from "./messages.interface";
-import { getSocket } from "../../socket/socket";
+import { emitToUser } from "../../socket/socket";
 
 /**
  * Send a new message or start a conversation
@@ -11,7 +11,7 @@ import { getSocket } from "../../socket/socket";
 const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId: string }) => {
     const { receiverId, ...messageData } = payload;
 
-    // Find or create a private conversation between these two users
+    // 1. Find or Create conversation
     let conversation = await ConversationModel.findOne({
         participantIds: { $all: [senderId, receiverId], $size: 2 },
     });
@@ -28,40 +28,38 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
         });
     }
 
-    // Create the message
+    // 2. Create the message
     const newMessage = await MessageModel.create({
         ...messageData,
         conversationId: conversation._id,
         senderId,
     });
 
-    // Update conversation's last message and unread count
-    await ConversationModel.updateOne(
-        { _id: conversation._id },
+    // 3. Update conversation state and fetch necessary data for emission in ONE go
+    const updatedConversation = await ConversationModel.findByIdAndUpdate(
+        conversation._id,
         {
             $set: { lastMessage: newMessage._id },
             $inc: { "unreadCounts.$[elem].count": 1 },
-            // If the conversation was previously deleted by someone, remove them from deletedBy
             $pull: { deletedBy: { $in: [senderId, receiverId] } },
         },
         {
             arrayFilters: [{ "elem.userId": receiverId }],
+            new: true,
         },
-    );
+    ).populate([{ path: "participantIds", select: "name avatar photo phone" }, { path: "productId", select: "title images price" }, { path: "lastMessage" }]);
 
-    // Populate sender details for socket emission
-    const populatedMessage = await MessageModel.findById(newMessage._id).populate("senderId", "name avatar");
+    // 4. Emit events via optimized socket helper
+    if (updatedConversation) {
+        // Fetch the message with sender info for UI
+        const populatedMessage = await MessageModel.findById(newMessage._id).populate("senderId", "name avatar photo").lean();
 
-    // Emit via Socket
-    try {
-        const io = getSocket();
-        io.to(`user_${receiverId}`).emit("new_message", populatedMessage);
-        io.to(`user_${receiverId}`).emit("update_conversation", {
-            conversationId: conversation._id,
-            lastMessage: populatedMessage,
-        });
-    } catch (error) {
-        console.error("Socket error:", error);
+        // Send to receiver
+        emitToUser(receiverId, "new_message", populatedMessage);
+        emitToUser(receiverId, "update_conversation", updatedConversation);
+
+        // Send to sender (to sync other devices)
+        emitToUser(senderId, "update_conversation", updatedConversation);
     }
 
     return newMessage;
@@ -114,23 +112,27 @@ const updateOfferStatus = async (senderId: string, payload: { receiverId: string
  * Get all conversations for a user
  */
 const getMyConversations = async (userId: string) => {
-    const conversations = await ConversationModel.find({
+    return await ConversationModel.find({
         participantIds: userId,
         deletedBy: { $ne: new Types.ObjectId(userId) },
     })
-        .populate("participantIds", "name avatar phone")
-        .populate("lastMessage")
-        .populate("productId", "title images price")
-        .sort({ updatedAt: -1 });
-
-    return conversations;
+        .populate([
+            { path: "participantIds", select: "name avatar photo phone" },
+            { path: "productId", select: "title images price" },
+            {
+                path: "lastMessage",
+                populate: { path: "senderId", select: "name avatar photo" },
+            },
+        ])
+        .sort({ updatedAt: -1 })
+        .lean();
 };
 
 /**
  * Get messages for a specific conversation
  */
 const getMessages = async (userId: string, conversationId: string) => {
-    // Check if conversation exists and user is a participant
+    // 1. Check access
     const conversation = await ConversationModel.findOne({
         _id: conversationId,
         participantIds: userId,
@@ -140,19 +142,27 @@ const getMessages = async (userId: string, conversationId: string) => {
         throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found or access denied");
     }
 
-    // Mark messages as read for this user
+    // 2. Mark as read
     await ConversationModel.markMessageAsRead(conversationId, userId);
 
-    // Get messages that are NOT deleted by this user
-    const messages = await MessageModel.find({
+    // 3. Notify other participant that messages were read
+    const otherParticipantId = conversation.participantIds.find((id) => id.toString() !== userId.toString());
+    if (otherParticipantId) {
+        emitToUser(otherParticipantId.toString(), "messages_read", {
+            conversationId,
+            readBy: userId,
+        });
+    }
+
+    // 4. Get messages (lean for performance)
+    return await MessageModel.find({
         conversationId,
         deletedBy: { $ne: new Types.ObjectId(userId) },
         isDeleted: false,
     })
-        .populate("senderId", "name avatar")
-        .sort({ createdAt: 1 });
-
-    return messages;
+        .populate("senderId", "name avatar photo")
+        .sort({ createdAt: 1 })
+        .lean();
 };
 
 /**
@@ -164,6 +174,9 @@ const deleteConversation = async (userId: string, conversationId: string) => {
     if (result.matchedCount === 0) {
         throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found");
     }
+
+    // Sync other devices for the same user
+    emitToUser(userId, "conversation_deleted", { conversationId });
 
     return { message: "Conversation deleted successfully" };
 };
@@ -177,6 +190,9 @@ const deleteMessage = async (userId: string, messageId: string) => {
     if (result.matchedCount === 0) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message not found");
     }
+
+    // Sync other devices for the same user
+    emitToUser(userId, "message_deleted", { messageId });
 
     return { message: "Message deleted successfully" };
 };
