@@ -28,6 +28,10 @@ const ConversationSchema = new Schema<ConversationDocument>(
             type: Schema.Types.ObjectId,
             ref: "Product",
         },
+        productOwner: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
         unreadCounts: [
             {
                 userId: {
@@ -40,6 +44,12 @@ const ConversationSchema = new Schema<ConversationDocument>(
                     default: 0,
                     min: 0,
                 },
+            },
+        ],
+        deletedBy: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
             },
         ],
     },
@@ -90,6 +100,10 @@ const MessageSchema = new Schema<MessageDocument>(
             type: Schema.Types.ObjectId,
             ref: "Product",
         },
+        productOwner: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
         offerPrice: {
             type: Number,
         },
@@ -103,6 +117,12 @@ const MessageSchema = new Schema<MessageDocument>(
         editedAt: Date,
         isDeleted: { type: Boolean, default: false },
         deletedAt: Date,
+        deletedBy: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     {
         timestamps: true,
@@ -139,6 +159,7 @@ MessageSchema.pre("save", async function (this: MessageDocument) {
 // Conversation indexes
 ConversationSchema.index({ participantIds: 1 });
 ConversationSchema.index({ updatedAt: -1 });
+ConversationSchema.index({ deletedBy: 1 });
 ConversationSchema.index({ "unreadCounts.userId": 1, "unreadCounts.count": 1 });
 ConversationSchema.index({ participantIds: 1, updatedAt: -1 });
 
@@ -147,6 +168,7 @@ MessageSchema.index({ conversationId: 1, createdAt: -1 });
 MessageSchema.index({ senderId: 1 });
 MessageSchema.index({ type: 1 });
 MessageSchema.index({ isDeleted: 1 });
+MessageSchema.index({ deletedBy: 1 });
 MessageSchema.index({ conversationId: 1, createdAt: -1, _id: 1 });
 MessageSchema.index({ text: "text" });
 

@@ -4,10 +4,12 @@ export interface Conversation {
     participantIds: Types.ObjectId[];
     lastMessage?: Types.ObjectId;
     productId?: Types.ObjectId;
+    productOwner?: Types.ObjectId;
     unreadCounts: {
         userId: Types.ObjectId;
         count: number;
     }[];
+    deletedBy: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,6 +30,7 @@ export interface Message {
     text?: string;
     files?: MessageFile[];
     productId?: Types.ObjectId;
+    productOwner?: Types.ObjectId;
     offerPrice?: number;
     location?: {
         fullAddress?: string;
@@ -39,6 +42,7 @@ export interface Message {
     editedAt?: Date;
     isDeleted: boolean;
     deletedAt?: Date;
+    deletedBy: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
