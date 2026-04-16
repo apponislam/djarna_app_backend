@@ -5,61 +5,16 @@ import { Request, Response } from "express";
 import { messageServices } from "./messages.services";
 
 /**
- * Send a message (creates a new conversation if it doesn't exist)
+ * Create a new conversation
  */
-const sendMessage = catchAsync(async (req: Request, res: Response) => {
+const createConversation = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const result = await messageServices.sendMessage(userId, req.body);
+    const result = await messageServices.createConversation(userId, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Message sent successfully",
-        data: result,
-    });
-});
-
-/**
- * Send an offer
- */
-const sendOffer = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
-    const result = await messageServices.sendOffer(userId, req.body);
-
-    sendResponse(res, {
-        statusCode: httpStatus.CREATED,
-        success: true,
-        message: "Offer sent successfully",
-        data: result,
-    });
-});
-
-/**
- * Share location
- */
-const shareLocation = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
-    const result = await messageServices.shareLocation(userId, req.body);
-
-    sendResponse(res, {
-        statusCode: httpStatus.CREATED,
-        success: true,
-        message: "Location shared successfully",
-        data: result,
-    });
-});
-
-/**
- * Update offer status
- */
-const updateOfferStatus = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
-    const result = await messageServices.updateOfferStatus(userId, req.body);
-
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Offer status updated successfully",
+        message: "Conversation created successfully",
         data: result,
     });
 });
@@ -67,7 +22,7 @@ const updateOfferStatus = catchAsync(async (req: Request, res: Response) => {
 /**
  * Get all conversations for the authenticated user
  */
-const getMyConversations = catchAsync(async (req: Request, res: Response) => {
+const getUserConversations = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const result = await messageServices.getMyConversations(userId);
 
@@ -75,6 +30,38 @@ const getMyConversations = catchAsync(async (req: Request, res: Response) => {
         statusCode: httpStatus.OK,
         success: true,
         message: "Conversations retrieved successfully",
+        data: result,
+    });
+});
+
+/**
+ * Get a specific conversation by ID
+ */
+const getConversationById = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
+    const result = await messageServices.getConversationById(userId, conversationId as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Conversation retrieved successfully",
+        data: result,
+    });
+});
+
+/**
+ * Mark messages in a conversation as read
+ */
+const markAsRead = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
+    const result = await messageServices.markAsRead(userId, conversationId as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Conversation marked as read",
         data: result,
     });
 });
@@ -96,23 +83,82 @@ const getMessages = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Delete a conversation for the user
+ * Send a message
  */
-const deleteConversation = catchAsync(async (req: Request, res: Response) => {
+const sendMessage = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const { conversationId } = req.params;
-    const result = await messageServices.deleteConversation(userId, conversationId as string);
+    const body = req.body;
+
+    // Handle multiple file uploads
+    if (req.files && Array.isArray(req.files)) {
+        body.files = (req.files as Express.Multer.File[]).map((file) => ({
+            url: file.path,
+            fileName: file.originalname,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+        }));
+    }
+
+    const result = await messageServices.sendMessage(userId, body);
 
     sendResponse(res, {
-        statusCode: httpStatus.OK,
+        statusCode: httpStatus.CREATED,
         success: true,
-        message: result.message,
-        data: null,
+        message: "Message sent successfully",
+        data: result,
     });
 });
 
 /**
- * Delete a specific message for the user
+ * Accept an offer message
+ */
+const acceptOffer = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+    const result = await messageServices.updateOfferStatus(userId, messageId as string, "ACCEPTED");
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Offer accepted successfully",
+        data: result,
+    });
+});
+
+/**
+ * Reject an offer message
+ */
+const rejectOffer = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+    const result = await messageServices.updateOfferStatus(userId, messageId as string, "REJECTED");
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Offer rejected successfully",
+        data: result,
+    });
+});
+
+/**
+ * Edit a specific message
+ */
+const editMessage = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+    const result = await messageServices.editMessage(userId, messageId as string, req.body.text);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Message edited successfully",
+        data: result,
+    });
+});
+
+/**
+ * Delete a specific message (for the user)
  */
 const deleteMessage = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
@@ -122,18 +168,37 @@ const deleteMessage = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: result.message,
+        message: "Message deleted successfully",
+        data: null,
+    });
+});
+
+/**
+ * Delete a conversation for the user
+ */
+const deleteConversation = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
+    await messageServices.deleteConversation(userId, conversationId as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Conversation deleted successfully",
         data: null,
     });
 });
 
 export const messageControllers = {
-    sendMessage,
-    sendOffer,
-    shareLocation,
-    updateOfferStatus,
-    getMyConversations,
+    createConversation,
+    getUserConversations,
+    getConversationById,
+    markAsRead,
     getMessages,
-    deleteConversation,
+    sendMessage,
+    acceptOffer,
+    rejectOffer,
+    editMessage,
     deleteMessage,
+    deleteConversation,
 };

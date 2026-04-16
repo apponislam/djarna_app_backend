@@ -1,32 +1,30 @@
 import express from "express";
 import auth from "../../middlewares/auth";
-import validateRequest from "../../middlewares/validateRequest";
 import { messageControllers } from "./messages.controllers";
+import { uploadMessageFiles } from "../../middlewares/multer";
 
 const router = express.Router();
 
-// Get user's conversations
-router.get("/", auth, messageControllers.getMyConversations);
+// All routes require authentication
+router.use(auth);
 
-// Send a message
-router.post("/send", auth, messageControllers.sendMessage);
+// Conversation management
+router.post("/conversations", messageControllers.createConversation);
+router.get("/conversations", messageControllers.getUserConversations);
+router.get("/conversations/:conversationId", messageControllers.getConversationById);
+router.post("/conversations/:conversationId/read", messageControllers.markAsRead);
+router.delete("/conversations/:conversationId", messageControllers.deleteConversation);
 
-// Send an offer
-router.post("/send-offer", auth, messageControllers.sendOffer);
+// Message management
+router.get("/conversations/:conversationId/messages", messageControllers.getMessages);
+router.post("/send", uploadMessageFiles, messageControllers.sendMessage);
 
-// Share location
-router.post("/share-location", auth, messageControllers.shareLocation);
+// Offer management
+router.post("/:messageId/accept", messageControllers.acceptOffer);
+router.post("/:messageId/reject", messageControllers.rejectOffer);
 
-// Update offer status (Accepted/Rejected/Completed)
-router.post("/update-offer-status", auth, messageControllers.updateOfferStatus);
-
-// Get messages for a specific conversation
-router.get("/:conversationId", auth, messageControllers.getMessages);
-
-// Delete a conversation for the user
-router.delete("/conversation/:conversationId", auth, messageControllers.deleteConversation);
-
-// Delete a specific message for the user
-router.delete("/message/:messageId", auth, messageControllers.deleteMessage);
+// Message editing/deletion
+router.patch("/:messageId", messageControllers.editMessage);
+router.delete("/:messageId", messageControllers.deleteMessage);
 
 export const messageRoutes = router;

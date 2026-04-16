@@ -14,6 +14,9 @@ if (!fs.existsSync(categoryIconDir)) fs.mkdirSync(categoryIconDir, { recursive: 
 const productImageDir = path.join(process.cwd(), "uploads", "products");
 if (!fs.existsSync(productImageDir)) fs.mkdirSync(productImageDir, { recursive: true });
 
+const messageFileDir = path.join(process.cwd(), "uploads", "messages");
+if (!fs.existsSync(messageFileDir)) fs.mkdirSync(messageFileDir, { recursive: true });
+
 // Multer memory storage
 const storage = multer.memoryStorage();
 
@@ -119,6 +122,46 @@ export const uploadProductImages = (req: Request, res: Response, next: NextFunct
                         file.filename = newName;
                         file.path = `/uploads/products/${newName}`;
                         file.mimetype = "image/webp";
+                        return file;
+                    }),
+                );
+                req.files = processedFiles;
+            } catch (error) {
+                return next(error);
+            }
+        }
+
+        next();
+    });
+};
+
+// Middleware for multiple message file uploads
+export const uploadMessageFiles = (req: Request, res: Response, next: NextFunction) => {
+    const uploadMultiple = upload.array("files", 10); // Allow up to 10 files
+
+    uploadMultiple(req, res, async (err) => {
+        if (err) return next(err);
+
+        if (req.files && Array.isArray(req.files)) {
+            try {
+                const processedFiles = await Promise.all(
+                    (req.files as Express.Multer.File[]).map(async (file, index) => {
+                        const timestamp = Date.now().toString().slice(-6);
+                        const randomNum = Math.floor(Math.random() * 10000);
+                        const newName = `msg-${timestamp}-${randomNum}${path.extname(file.originalname)}`;
+                        const outputPath = path.join(messageFileDir, newName);
+
+                        // Save the file (not converting non-images to webp)
+                        if (file.mimetype.startsWith("image/")) {
+                            await sharp(file.buffer).resize(1200, 1200, { fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toFile(outputPath);
+                            file.filename = `${path.parse(newName).name}.webp`;
+                            file.path = `/uploads/messages/${file.filename}`;
+                            file.mimetype = "image/webp";
+                        } else {
+                            fs.writeFileSync(outputPath, file.buffer);
+                            file.filename = newName;
+                            file.path = `/uploads/messages/${newName}`;
+                        }
                         return file;
                     }),
                 );
