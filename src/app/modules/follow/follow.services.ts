@@ -4,9 +4,9 @@ import { FollowModel } from "./follow.model";
 import { UserModel } from "../auth/auth.model";
 
 /**
- * Follow a user.
+ * Toggle follow/unfollow a user.
  */
-const followUser = async (followerId: string, followingId: string) => {
+const toggleFollow = async (followerId: string, followingId: string) => {
     if (followerId === followingId) {
         throw new ApiError(httpStatus.BAD_REQUEST, "You cannot follow yourself!");
     }
@@ -14,7 +14,7 @@ const followUser = async (followerId: string, followingId: string) => {
     // Check if user to follow exists
     const targetUser = await UserModel.findById(followingId);
     if (!targetUser) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User to follow not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
     }
 
     // Check if already following
@@ -24,40 +24,24 @@ const followUser = async (followerId: string, followingId: string) => {
     });
 
     if (existingFollow) {
-        throw new ApiError(httpStatus.CONFLICT, "You are already following this user!");
+        // Unfollow
+        await FollowModel.deleteOne({ _id: existingFollow._id });
+        return { isFollowing: false };
+    } else {
+        // Follow
+        await FollowModel.create({
+            follower: followerId,
+            following: followingId,
+        });
+        return { isFollowing: true };
     }
-
-    const result = await FollowModel.create({
-        follower: followerId,
-        following: followingId,
-    });
-
-    return result;
-};
-
-/**
- * Unfollow a user.
- */
-const unfollowUser = async (followerId: string, followingId: string) => {
-    const result = await FollowModel.findOneAndDelete({
-        follower: followerId,
-        following: followingId,
-    });
-
-    if (!result) {
-        throw new ApiError(httpStatus.NOT_FOUND, "You are not following this user!");
-    }
-
-    return result;
 };
 
 /**
  * Get followers of a user.
  */
 const getFollowers = async (userId: string) => {
-    const result = await FollowModel.find({ following: userId })
-        .populate("follower", "name email phone profileImage address")
-        .lean();
+    const result = await FollowModel.find({ following: userId }).populate("follower", "name email phone photo address").lean();
     return result;
 };
 
@@ -65,9 +49,7 @@ const getFollowers = async (userId: string) => {
  * Get users that a user is following.
  */
 const getFollowing = async (userId: string) => {
-    const result = await FollowModel.find({ follower: userId })
-        .populate("following", "name email phone profileImage address")
-        .lean();
+    const result = await FollowModel.find({ follower: userId }).populate("following", "name email phone photo address").lean();
     return result;
 };
 
@@ -82,9 +64,86 @@ const checkFollowStatus = async (followerId: string, followingId: string) => {
     return !!result;
 };
 
+/**
+ * Get top users based on follower count with search and pagination.
+ */
+const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: number }) => {
+    const { searchTerm, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const aggregationPipeline: any[] = [
+        {
+            $group: {
+                _id: "$following",
+                followerCount: { $sum: 1 },
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "_id",
+                foreignField: "_id",
+                as: "userDetails",
+            },
+        },
+        { $unwind: "$userDetails" },
+    ];
+
+    // Add search filter if searchTerm exists
+    if (searchTerm) {
+        aggregationPipeline.push({
+            $match: {
+                "userDetails.name": { $regex: searchTerm, $options: "i" },
+            },
+        });
+    }
+
+    // Sort by followerCount
+    aggregationPipeline.push({ $sort: { followerCount: -1 } });
+
+    // Use $facet for pagination and total count
+    aggregationPipeline.push({
+        $facet: {
+            data: [
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        _id: 0,
+                        followerCount: 1,
+                        user: {
+                            _id: "$userDetails._id",
+                            name: "$userDetails.name",
+                            photo: "$userDetails.photo",
+                            role: "$userDetails.role",
+                        },
+                    },
+                },
+            ],
+            totalCount: [{ $count: "count" }],
+        },
+    });
+
+    const result = await FollowModel.aggregate(aggregationPipeline);
+
+    const data = result[0].data;
+    const total = result[0].totalCount[0]?.count || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        data,
+    };
+};
+
 export const FollowService = {
-    followUser,
-    unfollowUser,
+    toggleFollow,
+    getTopUsers,
     getFollowers,
     getFollowing,
     checkFollowStatus,

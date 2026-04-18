@@ -4,11 +4,11 @@ import auth from "../../middlewares/auth";
 
 const router = Router();
 
-// Follow a user
-router.post("/", auth, FollowController.followUser);
+// Toggle follow/unfollow
+router.post("/toggle", auth, FollowController.toggleFollow);
 
-// Unfollow a user
-router.delete("/:followingId", auth, FollowController.unfollowUser);
+// Get top users based on followers
+router.get("/top", FollowController.getTopUsers);
 
 // Get followers of a user
 router.get("/followers/:userId", FollowController.getFollowers);

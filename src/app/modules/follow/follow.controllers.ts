@@ -4,31 +4,33 @@ import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { FollowService } from "./follow.services";
 
-const followUser = catchAsync(async (req: Request, res: Response) => {
+const toggleFollow = catchAsync(async (req: Request, res: Response) => {
     const followerId = req.user?._id;
     const { followingId } = req.body;
 
-    const result = await FollowService.followUser(followerId, followingId);
+    const result = await FollowService.toggleFollow(followerId, followingId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User followed successfully",
+        message: result.isFollowing ? "User followed successfully" : "User unfollowed successfully",
         data: result,
     });
 });
 
-const unfollowUser = catchAsync(async (req: Request, res: Response) => {
-    const followerId = req.user?._id;
-    const { followingId } = req.params;
+const getTopUsers = catchAsync(async (req: Request, res: Response) => {
+    const searchTerm = req.query.searchTerm as string;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
-    const result = await FollowService.unfollowUser(followerId, followingId as string);
+    const result = await FollowService.getTopUsers({ searchTerm, page, limit });
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User unfollowed successfully",
-        data: result,
+        message: "Top users retrieved successfully",
+        meta: result.meta,
+        data: result.data,
     });
 });
 
@@ -71,8 +73,8 @@ const checkFollowStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const FollowController = {
-    followUser,
-    unfollowUser,
+    toggleFollow,
+    getTopUsers,
     getFollowers,
     getFollowing,
     checkFollowStatus,
