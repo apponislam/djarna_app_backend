@@ -1,4 +1,5 @@
 import httpStatus from "http-status";
+import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { FollowModel } from "./follow.model";
 import { UserModel } from "../auth/auth.model";
@@ -67,8 +68,8 @@ const checkFollowStatus = async (followerId: string, followingId: string) => {
 /**
  * Get top users based on follower count with search and pagination.
  */
-const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: number }) => {
-    const { searchTerm, page = 1, limit = 10 } = query;
+const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: number; currentUserId?: string }) => {
+    const { searchTerm, page = 1, limit = 10, currentUserId } = query;
     const skip = (page - 1) * limit;
 
     const aggregationPipeline: any[] = [
@@ -108,9 +109,32 @@ const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: 
                 { $skip: skip },
                 { $limit: limit },
                 {
+                    $lookup: {
+                        from: "follows",
+                        let: { targetUserId: "$_id" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [{ $eq: ["$follower", new Types.ObjectId(currentUserId)] }, { $eq: ["$following", "$$targetUserId"] }],
+                                    },
+                                },
+                            },
+                        ],
+                        as: "followingStatus",
+                    },
+                },
+                {
                     $project: {
                         _id: 0,
                         followerCount: 1,
+                        isFollowing: {
+                            $cond: {
+                                if: { $and: [{ $gt: [currentUserId ? 1 : 0, 0] }, { $gt: [{ $size: "$followingStatus" }, 0] }] },
+                                then: true,
+                                else: false,
+                            },
+                        },
                         user: {
                             _id: "$userDetails._id",
                             name: "$userDetails.name",

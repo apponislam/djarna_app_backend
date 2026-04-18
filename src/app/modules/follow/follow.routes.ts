@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { FollowController } from "./follow.controllers";
 import auth from "../../middlewares/auth";
+import checkAuth from "../../middlewares/checkAuth";
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
 router.post("/toggle", auth, FollowController.toggleFollow);
 
 // Get top users based on followers
-router.get("/top", FollowController.getTopUsers);
+router.get("/top", checkAuth, FollowController.getTopUsers);
 
 // Get followers of a user
 router.get("/followers/:userId", FollowController.getFollowers);

@@ -22,8 +22,9 @@ const getTopUsers = catchAsync(async (req: Request, res: Response) => {
     const searchTerm = req.query.searchTerm as string;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const currentUserId = req.user?._id;
 
-    const result = await FollowService.getTopUsers({ searchTerm, page, limit });
+    const result = await FollowService.getTopUsers({ searchTerm, page, limit, currentUserId });
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
