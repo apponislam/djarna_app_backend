@@ -42,7 +42,7 @@ const toggleFollow = async (followerId: string, followingId: string) => {
  * Get followers of a user.
  */
 const getFollowers = async (userId: string) => {
-    const result = await FollowModel.find({ following: userId }).populate("follower", "name email phone photo address").lean();
+    const result = await FollowModel.find({ following: userId }).populate("follower", "_id name email phone photo address").lean();
     return result;
 };
 
@@ -50,7 +50,7 @@ const getFollowers = async (userId: string) => {
  * Get users that a user is following.
  */
 const getFollowing = async (userId: string) => {
-    const result = await FollowModel.find({ follower: userId }).populate("following", "name email phone photo address").lean();
+    const result = await FollowModel.find({ follower: userId }).populate("following", "_id name email phone photo address").lean();
     return result;
 };
 

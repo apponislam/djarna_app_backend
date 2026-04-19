@@ -6,6 +6,7 @@ import { ReportRoutes } from "../modules/report/report.routes";
 import { BoostPackRoutes } from "../modules/boostPack/boostPack.routes";
 import { SettingsRoutes } from "../modules/settings/settings.routes";
 import { FollowRoutes } from "../modules/follow/follow.routes";
+import { FavoriteRoutes } from "../modules/favorite/favorite.routes";
 import { PaymentRoutes } from "../modules/payment/payment.routes";
 import { messageRoutes } from "../modules/message/messages.routes";
 
@@ -39,6 +40,10 @@ const moduleRoutes = [
     {
         path: "/follow",
         route: FollowRoutes,
+    },
+    {
+        path: "/favorite",
+        route: FavoriteRoutes,
     },
     {
         path: "/payment",

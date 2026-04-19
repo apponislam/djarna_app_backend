@@ -28,8 +28,8 @@ const createConversation = async (senderId: string, payload: { receiverId: strin
     }
 
     return await ConversationModel.findById(conversation._id).populate([
-        { path: "participantIds", select: "name photo phone" },
-        { path: "productId", select: "title images price" },
+        { path: "participantIds", select: "_id name photo phone" },
+        { path: "productId", select: "_id title images price" },
     ]);
 };
 
@@ -75,10 +75,10 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             arrayFilters: [{ "elem.userId": receiverId }],
             new: true,
         },
-    ).populate([{ path: "participantIds", select: "name photo phone" }, { path: "productId", select: "title images price" }, { path: "lastMessage" }]);
+    ).populate([{ path: "participantIds", select: "_id name photo phone" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
 
     // 4. Emit events
-    const messageToEmit = await MessageModel.findById(newMessage._id).populate("senderId", "name photo").lean();
+    const messageToEmit = await MessageModel.findById(newMessage._id).populate("senderId", "_id name photo").lean();
 
     [senderId, receiverId].forEach((id) => {
         emitToUser(id.toString(), "new_message", messageToEmit);
@@ -97,11 +97,11 @@ const getMyConversations = async (userId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
     })
         .populate([
-            { path: "participantIds", select: "name photo phone" },
-            { path: "productId", select: "title images price" },
+            { path: "participantIds", select: "_id name photo phone" },
+            { path: "productId", select: "_id title images price" },
             {
                 path: "lastMessage",
-                populate: { path: "senderId", select: "name photo" },
+                populate: { path: "senderId", select: "_id name photo" },
             },
         ])
         .sort({ updatedAt: -1 })
@@ -116,11 +116,11 @@ const getConversationById = async (userId: string, conversationId: string) => {
         _id: conversationId,
         participantIds: userId,
     }).populate([
-        { path: "participantIds", select: "name photo phone" },
-        { path: "productId", select: "title images price" },
+        { path: "participantIds", select: "_id name photo phone" },
+        { path: "productId", select: "_id title images price" },
         {
             path: "lastMessage",
-            populate: { path: "senderId", select: "name photo" },
+            populate: { path: "senderId", select: "_id name photo" },
         },
     ]);
 
@@ -152,7 +152,7 @@ const getMessages = async (userId: string, conversationId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
         isDeleted: false,
     })
-        .populate("senderId", "name photo")
+        .populate("senderId", "_id name photo")
         .sort({ createdAt: 1 })
         .lean();
 };
@@ -208,7 +208,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
  * Edit a specific message
  */
 const editMessage = async (userId: string, messageId: string, text: string) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { new: true }).populate("senderId", "name photo");
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { new: true }).populate("senderId", "_id name photo");
 
     if (!message) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message not found or unauthorized");
