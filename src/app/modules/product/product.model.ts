@@ -18,14 +18,22 @@ const ProductSchema = new Schema<IProduct>(
             min: [0, "Price cannot be negative"],
         },
         category: {
-            type: Schema.Types.ObjectId,
+            type: String,
             ref: "Category",
             required: [true, "Category is required"],
         },
         subcategory: {
-            type: Schema.Types.ObjectId,
+            type: String,
             ref: "Category",
             required: [true, "Subcategory is required"],
+        },
+        gender: {
+            type: String,
+            enum: ["MEN", "WOMEN", "KID"],
+        },
+        size: {
+            type: String,
+            enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"],
         },
         user: {
             type: Schema.Types.ObjectId,
@@ -69,7 +77,7 @@ const ProductSchema = new Schema<IProduct>(
     {
         timestamps: true,
         versionKey: false,
-    }
+    },
 );
 
 // Search optimization (Production Safe)

@@ -1,14 +1,17 @@
 import { Types } from "mongoose";
 
 export type ProductStatus = "ACTIVE" | "SOLD" | "PENDING" | "REJECTED";
-export type BoostPlan = "7-DAY" | "14-DAY" | "30-DAY" | null;
+
+export type ProductSize = "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "4XL" | "5XL" | "6XL" | "7XL" | "8XL";
 
 export interface IProduct {
     title: string;
     description: string;
     price: number;
-    category: Types.ObjectId;
-    subcategory: Types.ObjectId;
+    category: string;
+    subcategory: string;
+    gender?: "MEN" | "WOMEN" | "KID";
+    size?: ProductSize;
     user: Types.ObjectId;
     images: string[];
     status: ProductStatus;

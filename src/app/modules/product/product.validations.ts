@@ -4,11 +4,16 @@ export const createProductSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters long"),
     description: z.string().min(10, "Description must be at least 10 characters long"),
     price: z.coerce.number().min(0, "Price cannot be negative"),
-    category: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid category ID"),
-    subcategory: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid subcategory ID"),
+    category: z.string().min(1, "Category is required"),
+    subcategory: z.string().min(1, "Subcategory is required"),
+    gender: z.enum(["MEN", "WOMEN", "KID"]).optional(),
+    size: z.enum(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"]).optional(),
     images: z.array(z.string()).optional(),
     isBoosted: z.boolean().default(false).optional(),
-    boostPack: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid boost pack ID").optional(),
+    boostPack: z
+        .string()
+        .regex(/^[0-9a-fA-F]{24}$/, "Invalid boost pack ID")
+        .optional(),
 });
 
 export const updateProductStatusSchema = z.object({
