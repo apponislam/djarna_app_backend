@@ -40,6 +40,8 @@ export interface User {
     referralCode: string;
     referredBy?: Types.ObjectId; // Relation to the user who referred
 
+    balance: number;
+
     createdAt: Date;
     updatedAt: Date;
 }

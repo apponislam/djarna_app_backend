@@ -87,6 +87,12 @@ const UserSchema = new Schema<User>(
             type: Schema.Types.ObjectId,
             ref: "User",
         },
+
+        balance: {
+            type: Number,
+            default: 0,
+            min: [0, "Balance cannot be negative"],
+        },
     },
     {
         timestamps: true,

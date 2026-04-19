@@ -66,6 +66,7 @@ const registerUser = async (data: any) => {
     }
 
     const { referralCode: inputReferralCode, ...rest } = data;
+    delete (rest as any).balance;
     const referralCode = inputReferralCode || verification.referralCode;
 
     // Double check existing user
@@ -232,6 +233,7 @@ const resetPassword = async (phone: string, otp: string, newPassword: string) =>
 };
 
 const updateProfile = async (userId: string, data: any) => {
+    delete data.balance;
     if (data.phone) {
         data.phone = normalizePhoneNumber(data.phone);
     }

@@ -10,8 +10,6 @@ router.post("/", auth, PaymentController.initializePayment);
 
 router.get("/verify", PaymentController.verifyPayment);
 
-router.post("/webhook", PaymentWebhookController.webhookController);
-
 router.get("/my-payments", auth, PaymentController.getMyPayments);
 
 router.get("/:id", auth, PaymentController.getPaymentById);
