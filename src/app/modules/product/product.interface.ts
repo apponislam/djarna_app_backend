@@ -8,8 +8,14 @@ export interface IProduct {
     title: string;
     description: string;
     price: number;
+    originalPrice?: number;
     category: string;
     subcategory: string;
+    location?: {
+        lat?: number;
+        lng?: number;
+    };
+    address?: string;
     gender?: "MEN" | "WOMEN" | "KID";
     size?: ProductSize;
     user: Types.ObjectId;

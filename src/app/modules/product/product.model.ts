@@ -17,6 +17,10 @@ const ProductSchema = new Schema<IProduct>(
             required: [true, "Price is required"],
             min: [0, "Price cannot be negative"],
         },
+        originalPrice: {
+            type: Number,
+            min: [0, "Original price cannot be negative"],
+        },
         category: {
             type: String,
             ref: "Category",
@@ -26,6 +30,13 @@ const ProductSchema = new Schema<IProduct>(
             type: String,
             ref: "Category",
             required: [true, "Subcategory is required"],
+        },
+        location: {
+            lat: { type: Number },
+            lng: { type: Number },
+        },
+        address: {
+            type: String,
         },
         gender: {
             type: String,
@@ -81,7 +92,7 @@ const ProductSchema = new Schema<IProduct>(
 );
 
 // Search optimization (Production Safe)
-ProductSchema.index({ title: "text", description: "text" });
+ProductSchema.index({ title: "text", description: "text", address: "text" });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ subcategory: 1 });
 ProductSchema.index({ user: 1 });

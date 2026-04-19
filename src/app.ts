@@ -5,8 +5,11 @@ import path from "path";
 import notFound from "./errors/notFound";
 import globalErrorHandler from "./errors/globalErrorhandler";
 import router from "./app/routes";
+import { PaymentWebhookController } from "./app/modules/payment/payment.webhook";
 
 const app: Application = express();
+
+app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), PaymentWebhookController.webhookController);
 
 const corsOptions = {
     origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],

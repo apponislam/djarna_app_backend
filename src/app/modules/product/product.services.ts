@@ -32,11 +32,17 @@ const getAllProducts = async (query: any) => {
     const filters: any = { status: "ACTIVE" };
 
     if (searchTerm) {
-        filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }];
+        filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }, { address: { $regex: searchTerm, $options: "i" } }];
     }
 
     if (category) filters.category = category;
     if (subcategory) filters.subcategory = subcategory;
+
+    // Filter by location if coordinates are provided (e.g., radius search could be added later)
+    if (query.lat && query.lng) {
+        // For now, exact match or simple proximity logic can be added here
+    }
+
     if (minPrice || maxPrice) {
         filters.price = {};
         if (minPrice) filters.price.$gte = Number(minPrice);
