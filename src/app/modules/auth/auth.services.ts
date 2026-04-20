@@ -67,6 +67,7 @@ const registerUser = async (data: any) => {
 
     const { referralCode: inputReferralCode, ...rest } = data;
     delete (rest as any).balance;
+    delete (rest as any).noCommission;
     const referralCode = inputReferralCode || verification.referralCode;
 
     // Double check existing user
@@ -79,6 +80,8 @@ const registerUser = async (data: any) => {
         const referrer = await UserModel.findOne({ referralCode });
         if (referrer) {
             referredBy = referrer._id;
+            // Increase referrer's noCommission
+            await UserModel.updateOne({ _id: referrer._id }, { $inc: { noCommission: 1 } });
         }
     }
 
@@ -234,6 +237,7 @@ const resetPassword = async (phone: string, otp: string, newPassword: string) =>
 
 const updateProfile = async (userId: string, data: any) => {
     delete data.balance;
+    delete data.noCommission;
     if (data.phone) {
         data.phone = normalizePhoneNumber(data.phone);
     }

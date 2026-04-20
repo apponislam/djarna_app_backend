@@ -41,6 +41,7 @@ export interface User {
     referredBy?: Types.ObjectId; // Relation to the user who referred
 
     balance: number;
+    noCommission: number;
 
     createdAt: Date;
     updatedAt: Date;

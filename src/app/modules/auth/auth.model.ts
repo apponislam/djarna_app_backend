@@ -93,6 +93,10 @@ const UserSchema = new Schema<User>(
             default: 0,
             min: [0, "Balance cannot be negative"],
         },
+        noCommission: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,
