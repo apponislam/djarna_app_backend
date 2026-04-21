@@ -70,6 +70,21 @@ export const uploadProfileImage = (req: Request, res: Response, next: NextFuncti
     });
 };
 
+// Middleware to parse JSON data from multipart form
+export const parseBodyData = (req: Request, res: Response, next: NextFunction) => {
+    // Check for both 'data' and 'body' fields as common JSON container names
+    const jsonData = req.body.data || req.body.body;
+
+    if (jsonData && typeof jsonData === "string") {
+        try {
+            req.body = JSON.parse(jsonData);
+        } catch (error) {
+            return next(new Error("Invalid JSON data in request body"));
+        }
+    }
+    next();
+};
+
 // Middleware for single category icon upload
 export const uploadCategoryIcon = (req: Request, res: Response, next: NextFunction) => {
     const uploadSingle = upload.single("icon");

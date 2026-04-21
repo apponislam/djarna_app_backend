@@ -4,7 +4,7 @@ import validateRequest from "../../middlewares/validateRequest";
 import { createCategorySchema, updateCategorySchema } from "./category.validations";
 import auth from "../../middlewares/auth";
 import authorize from "../../middlewares/authorized";
-import { uploadCategoryIcon } from "../../middlewares/multer";
+import { parseBodyData, uploadCategoryIcon } from "../../middlewares/multer";
 
 const router = Router();
 
@@ -18,9 +18,9 @@ router.get("/admin/parents", auth, authorize(["ADMIN"]), CategoryController.getP
 router.get("/admin/subcategories", auth, authorize(["ADMIN"]), CategoryController.getAllSubcategories);
 
 // Protected Admin only management routes
-router.post("/", auth, authorize(["ADMIN"]), uploadCategoryIcon, validateRequest(createCategorySchema), CategoryController.createCategory);
+router.post("/", auth, authorize(["ADMIN"]), uploadCategoryIcon, parseBodyData, validateRequest(createCategorySchema), CategoryController.createCategory);
 
-router.patch("/:id", auth, authorize(["ADMIN"]), uploadCategoryIcon, validateRequest(updateCategorySchema), CategoryController.updateCategory);
+router.patch("/:id", auth, authorize(["ADMIN"]), uploadCategoryIcon, parseBodyData, validateRequest(updateCategorySchema), CategoryController.updateCategory);
 
 router.delete("/:id", auth, authorize(["ADMIN"]), CategoryController.deleteCategory);
 

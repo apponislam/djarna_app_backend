@@ -32,7 +32,7 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
 const register = catchAsync(async (req: Request, res: Response) => {
     const body = req.body;
 
-    // Handle photo upload if present
+    // Handle photo upload if present (path is already set by uploadProfileImage middleware)
     if (req.file) {
         body.photo = req.file.path;
     }
@@ -140,7 +140,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const body = req.body;
 
-    // Handle photo upload if present
+    // Handle photo upload if present (path is already set by uploadProfileImage middleware)
     if (req.file) {
         body.photo = req.file.path;
     }
