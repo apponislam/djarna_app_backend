@@ -26,7 +26,7 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false, referralCode }, { upsert: true, new: true });
 
     // Send SMS
-    await sendSms(normalizedPhone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
+    // await sendSms(normalizedPhone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
 
     // Log for development
     console.log(`Registration OTP for ${normalizedPhone}: ${otp}`);
