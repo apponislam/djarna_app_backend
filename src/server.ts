@@ -5,6 +5,7 @@ import http from "http";
 import config from "./app/config";
 import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
+// import { seedBoostPacks } from "./app/modules/boostPack/boostPack.seed";
 import { initSocket } from "./app/socket/socket";
 
 let server: Server;
@@ -17,6 +18,7 @@ async function main() {
 
         await seedAdmin();
         await seedSettings();
+        // await seedBoostPacks();
 
         // server.listen(Number(config.port), () => {
         //     console.log(`✅ App listening on port ${config.port} at ${config.ip}`);

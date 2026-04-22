@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendSms } from "../../../utils/twilioHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
+import mongoose from "mongoose";
 
 const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -268,6 +269,31 @@ const setUserPassword = async (userId: string, newPassword: string) => {
     await user.save();
 };
 
+const getMyProfile = async (userId: string) => {
+    const result = await UserModel.findById(userId).populate("referredBy", "name email phone");
+    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    return result;
+};
+
+const boostShop = async (userId: string, boostPackId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    const pack = await (mongoose.model("BoostPack") as any).findById(boostPackId);
+    if (!pack || !pack.isActive || pack.type !== "SHOP") {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive shop boost pack");
+    }
+
+    const now = new Date();
+    user.isBoosted = true;
+    user.boostPack = pack._id;
+    user.boostStartTime = now;
+    user.boostEndTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
+
+    await user.save();
+    return user;
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
@@ -280,4 +306,6 @@ export const authServices = {
     updateProfile,
     changePassword,
     setUserPassword,
+    getMyProfile,
+    boostShop,
 };

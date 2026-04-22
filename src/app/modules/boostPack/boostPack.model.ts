@@ -9,6 +9,14 @@ const BoostPackSchema = new Schema<IBoostPack>(
             unique: true,
             trim: true,
         },
+        description: {
+            type: String,
+        },
+        type: {
+            type: String,
+            enum: ["PRODUCT", "SHOP"],
+            required: [true, "Boost pack type is required"],
+        },
         duration: {
             type: Number,
             required: [true, "Duration in days is required"],

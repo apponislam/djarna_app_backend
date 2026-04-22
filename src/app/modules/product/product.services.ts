@@ -38,26 +38,65 @@ const getAllProducts = async (query: any) => {
     if (category) filters.category = category;
     if (subcategory) filters.subcategory = subcategory;
 
-    // Filter by location if coordinates are provided (e.g., radius search could be added later)
-    if (query.lat && query.lng) {
-        // For now, exact match or simple proximity logic can be added here
-    }
-
     if (minPrice || maxPrice) {
         filters.price = {};
         if (minPrice) filters.price.$gte = Number(minPrice);
         if (maxPrice) filters.price.$lte = Number(maxPrice);
     }
 
-    // Sort: Always prioritize active boosted items, then apply user sorting or default to createdAt
-    const sortOptions: any = { isBoosted: -1 };
+    // Using aggregation to handle complex sorting (Individual Boost + Shop Boost)
+    const pipeline: any[] = [
+        { $match: filters },
+        // Join with User to get shop boost status
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "userDetails",
+            },
+        },
+        { $unwind: "$userDetails" },
+        // Join with BoostPack for product boost visibility
+        {
+            $lookup: {
+                from: "boostpacks",
+                localField: "boostPack",
+                foreignField: "_id",
+                as: "packDetails",
+            },
+        },
+        { $addFields: { packDetails: { $arrayElemAt: ["$packDetails", 0] } } },
+        // Determine effective boost status
+        {
+            $addFields: {
+                isEffectiveBoosted: {
+                    $or: [{ $eq: ["$isBoosted", true] }, { $eq: ["$userDetails.isBoosted", true] }],
+                },
+            },
+        },
+    ];
+
+    // Sort options
+    const sort: any = { isEffectiveBoosted: -1 };
     if (sortBy) {
-        sortOptions[sortBy] = order === "desc" ? -1 : 1;
+        sort[sortBy] = order === "desc" ? -1 : 1;
     } else {
-        sortOptions.createdAt = -1;
+        sort.createdAt = -1;
     }
 
-    const result = await ProductModel.find(filters).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone").sort(sortOptions);
+    pipeline.push({ $sort: sort });
+
+    // Execute aggregation
+    const products = await ProductModel.aggregate(pipeline);
+
+    // Populate for response (since aggregate returns plain objects)
+    const result = await ProductModel.populate(products, [
+        { path: "category", select: "name icon" },
+        { path: "subcategory", select: "name icon" },
+        { path: "boostPack", select: "name duration visibility" },
+        { path: "user", select: "name email phone isBoosted" },
+    ]);
 
     return result;
 };
@@ -90,9 +129,13 @@ const boostProduct = async (id: string, userId: string, boostPackId: string) => 
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to boost product");
     }
 
-    const pack = await BoostPackModel.findById(boostPackId);
+    const pack = await (BoostPackModel as any).findById(boostPackId);
     if (!pack || !pack.isActive) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive boost pack");
+    }
+
+    if (pack.type !== "PRODUCT") {
+        throw new ApiError(httpStatus.BAD_REQUEST, "This pack is not for individual product boosting");
     }
 
     const now = new Date();

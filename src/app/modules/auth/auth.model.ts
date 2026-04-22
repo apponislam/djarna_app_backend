@@ -97,6 +97,25 @@ const UserSchema = new Schema<User>(
             type: Number,
             default: 0,
         },
+
+        // Boost Handling (Shop level)
+        isBoosted: {
+            type: Boolean,
+            default: false,
+        },
+        boostPack: {
+            type: Schema.Types.ObjectId,
+            ref: "BoostPack",
+            default: null,
+        },
+        boostStartTime: {
+            type: Date,
+            default: null,
+        },
+        boostEndTime: {
+            type: Date,
+            default: null,
+        },
     },
     {
         timestamps: true,
@@ -153,5 +172,6 @@ UserSchema.index({ lastLogin: -1 });
 
 // Referral and search indexes
 UserSchema.index({ name: "text" });
+UserSchema.index({ isBoosted: -1, boostEndTime: -1 });
 
 export const UserModel = mongoose.model<User>("User", UserSchema);
