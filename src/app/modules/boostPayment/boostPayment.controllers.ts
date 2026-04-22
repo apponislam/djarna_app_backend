@@ -6,7 +6,7 @@ import { Request, Response } from "express";
 
 const initializeBoostPayment = catchAsync(async (req: Request, res: Response) => {
     const { productId, boostPackId } = req.body;
-    const userId = req.user?.userId;
+    const userId = req.user?._id;
 
     const result = await BoostPaymentService.initializeBoostPayment(userId, boostPackId, productId);
 
@@ -31,7 +31,7 @@ const verifyBoostPayment = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyBoostPayments = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
+    const userId = req.user?._id;
     const result = await BoostPaymentService.getMyBoostPayments(userId);
 
     sendResponse(res, {

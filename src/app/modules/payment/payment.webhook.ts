@@ -1,14 +1,13 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { PaymentModel } from "./payment.model";
-import { IPayment } from "./payment.interface";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { Request, Response } from "express";
 import { BoostPaymentModel } from "../boostPayment/boostPayment.model";
 import { BoostPaymentService } from "../boostPayment/boostPayment.services";
 
-const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string): Promise<any> => {
+const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string, receiptUrl?: string): Promise<any> => {
     // 1. Try to find in standard PaymentModel
     let payment: any = await PaymentModel.findOne({ paydunyaInvoiceToken: invoiceToken });
     let isBoostPayment = false;
@@ -21,6 +20,10 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 
     if (!payment) {
         throw new ApiError(httpStatus.NOT_FOUND, "Payment record not found");
+    }
+
+    if (receiptUrl) {
+        payment.paydunyaReceiptUrl = receiptUrl;
     }
 
     switch (status) {
@@ -52,17 +55,21 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 };
 
 const webhookController = catchAsync(async (req: Request, res: Response) => {
-    // Paydunya sends fields in different formats depending on the setup
-    // Common fields: token (or invoiceToken), status, transaction_id (or transactionId)
-    const invoiceToken = req.body.token || req.body.invoiceToken;
-    const status = req.body.status;
-    const transactionId = req.body.transaction_id || req.body.transactionId;
+    console.log("Webhook received:", req.body);
+
+    // Paydunya sends fields nested inside a 'data' object in some configurations
+    const data = req.body.data || req.body;
+
+    const invoiceToken = data.invoice?.token || data.token || data.invoiceToken;
+    const status = data.status;
+    const transactionId = data.transaction_id || data.transactionId;
+    const receiptUrl = data.receipt_url;
 
     if (!invoiceToken) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Invoice token is required");
     }
 
-    const result = await handleWebhook(invoiceToken, status, transactionId);
+    const result = await handleWebhook(invoiceToken, status, transactionId, receiptUrl);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

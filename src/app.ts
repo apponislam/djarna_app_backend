@@ -9,8 +9,6 @@ import { PaymentWebhookController } from "./app/modules/payment/payment.webhook"
 
 const app: Application = express();
 
-app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), PaymentWebhookController.webhookController);
-
 const corsOptions = {
     origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -23,6 +21,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.post("/api/v1/payment/webhook", PaymentWebhookController.webhookController);
 
 // Serve static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
