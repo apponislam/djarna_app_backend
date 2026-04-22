@@ -8,6 +8,12 @@ const createBoostPack = async (payload: IBoostPack) => {
     if (isExist) {
         throw new ApiError(httpStatus.CONFLICT, "Boost pack with this name already exists!");
     }
+
+    // If new pack is recommended, unset others of same type
+    if (payload.isRecommended) {
+        await BoostPackModel.updateMany({ type: payload.type }, { isRecommended: false });
+    }
+
     const result = await BoostPackModel.create(payload);
     return result;
 };
@@ -38,6 +44,13 @@ const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
     if (!isExist) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
+
+    // If setting to recommended, unset others of same type
+    if (payload.isRecommended === true) {
+        const type = payload.type || isExist.type;
+        await BoostPackModel.updateMany({ type }, { isRecommended: false });
+    }
+
     const result = await BoostPackModel.findByIdAndUpdate(id, payload, { new: true });
     return result;
 };
@@ -61,6 +74,22 @@ const toggleBoostPackStatus = async (id: string) => {
     return pack;
 };
 
+const setRecommended = async (id: string) => {
+    const pack = await BoostPackModel.findById(id);
+    if (!pack) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+    }
+
+    // Unset all other recommended packs of the same type
+    await BoostPackModel.updateMany({ type: pack.type }, { isRecommended: false });
+
+    // Set this one as recommended
+    pack.isRecommended = true;
+    await pack.save();
+
+    return pack;
+};
+
 export const BoostPackService = {
     createBoostPack,
     getAllBoostPacks,
@@ -68,4 +97,5 @@ export const BoostPackService = {
     updateBoostPack,
     deleteBoostPack,
     toggleBoostPackStatus,
+    setRecommended,
 };

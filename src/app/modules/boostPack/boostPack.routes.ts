@@ -15,6 +15,7 @@ router.get("/:id", auth, BoostPackController.getBoostPackById);
 router.post("/", auth, authorize(["ADMIN"]), validateRequest(createBoostPackSchema), BoostPackController.createBoostPack);
 router.patch("/:id", auth, authorize(["ADMIN"]), validateRequest(updateBoostPackSchema), BoostPackController.updateBoostPack);
 router.patch("/:id/toggle-status", auth, authorize(["ADMIN"]), BoostPackController.toggleBoostPackStatus);
+router.patch("/:id/set-recommended", auth, authorize(["ADMIN"]), BoostPackController.setRecommended);
 router.delete("/:id", auth, authorize(["ADMIN"]), BoostPackController.deleteBoostPack);
 
 export const BoostPackRoutes = router;

@@ -72,6 +72,17 @@ const toggleBoostPackStatus = catchAsync(async (req: Request, res: Response) => 
     });
 });
 
+const setRecommended = catchAsync(async (req: Request, res: Response) => {
+    const result = await BoostPackService.setRecommended(req.params.id as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Boost pack set as recommended successfully",
+        data: result,
+    });
+});
+
 export const BoostPackController = {
     createBoostPack,
     getAllBoostPacks,
@@ -79,4 +90,5 @@ export const BoostPackController = {
     updateBoostPack,
     deleteBoostPack,
     toggleBoostPackStatus,
+    setRecommended,
 };

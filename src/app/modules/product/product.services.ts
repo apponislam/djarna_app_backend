@@ -107,7 +107,7 @@ const getAllProducts = async (query: any) => {
     const result = await ProductModel.populate(products, [
         { path: "category", select: "name icon" },
         { path: "subcategory", select: "name icon" },
-        { path: "boostPack", select: "name duration visibility" },
+        { path: "boostPack", select: "name duration" },
         { path: "user", select: "name email phone isBoosted" },
     ]);
 

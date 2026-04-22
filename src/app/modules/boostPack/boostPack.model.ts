@@ -27,11 +27,6 @@ const BoostPackSchema = new Schema<IBoostPack>(
             required: [true, "Number of listings to boost is required"],
             min: [1, "At least 1 listing must be boosted"],
         },
-        visibility: {
-            type: String,
-            enum: ["MEDIUM", "HIGH"],
-            required: [true, "Visibility level is required"],
-        },
         price: {
             type: Number,
             required: [true, "Price is required"],
@@ -45,16 +40,22 @@ const BoostPackSchema = new Schema<IBoostPack>(
             type: Boolean,
             default: true,
         },
+        isRecommended: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
-        versionKey: false,
     },
 );
 
 // Indexes for query optimization
 BoostPackSchema.index({ isActive: 1, type: 1, price: 1 });
 BoostPackSchema.index({ type: 1, isActive: 1 });
-BoostPackSchema.index({ duration: 1 }); // Useful if filtering by duration
+BoostPackSchema.index({ duration: 1 });
+
+// Ensure only one recommended pack per type
+BoostPackSchema.index({ type: 1, isRecommended: 1 }, { unique: true, partialFilterExpression: { isRecommended: true } }); // Useful if filtering by duration
 
 export const BoostPackModel = mongoose.model<IBoostPack>("BoostPack", BoostPackSchema);
