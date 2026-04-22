@@ -56,6 +56,7 @@ export const startBoostCleanupTask = () => {
 
     // Schedule to run every minute
     cron.schedule("* * * * *", () => {
+        console.log("Boost cleanup Cron Job triggered.");
         runBoostCleanup();
     });
 
