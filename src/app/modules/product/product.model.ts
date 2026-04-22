@@ -61,7 +61,7 @@ const ProductSchema = new Schema<IProduct>(
         },
         status: {
             type: String,
-            enum: ["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT"],
+            enum: ["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"],
             default: "ACTIVE",
         },
 

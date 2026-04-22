@@ -17,7 +17,7 @@ export const createProductSchema = z.object({
     gender: z.enum(["MEN", "WOMEN", "KID"]).optional(),
     size: z.enum(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"]).optional(),
     images: z.array(z.string()).optional(),
-    status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT"]).optional(),
+    status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"]).optional(),
     isBoosted: z.boolean().default(false).optional(),
     boostPack: z
         .string()
@@ -26,7 +26,7 @@ export const createProductSchema = z.object({
 });
 
 export const updateProductStatusSchema = z.object({
-    status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT"]),
+    status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"]),
 });
 
 export const boostProductSchema = z.object({
