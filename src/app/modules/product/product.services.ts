@@ -29,7 +29,7 @@ const createProduct = async (payload: IProduct) => {
 const getAllProducts = async (query: any) => {
     const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
 
-    const filters: any = { status: "ACTIVE" };
+    const filters: any = { status: "ACTIVE", isDeleted: false };
 
     if (searchTerm) {
         filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }, { address: { $regex: searchTerm, $options: "i" } }];
@@ -73,16 +73,10 @@ const getAllProducts = async (query: any) => {
                 isEffectiveBoosted: {
                     $or: [
                         {
-                            $and: [
-                                { $eq: ["$isBoosted", true] },
-                                { $gt: ["$boostEndTime", new Date()] },
-                            ],
+                            $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
                         },
                         {
-                            $and: [
-                                { $eq: ["$userDetails.isBoosted", true] },
-                                { $gt: ["$userDetails.boostEndTime", new Date()] },
-                            ],
+                            $and: [{ $eq: ["$userDetails.isBoosted", true] }, { $gt: ["$userDetails.boostEndTime", new Date()] }],
                         },
                     ],
                 },
@@ -115,14 +109,14 @@ const getAllProducts = async (query: any) => {
 };
 
 const getProductById = async (id: string) => {
-    const result = await ProductModel.findById(id).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone");
+    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone");
 
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
     return result;
 };
 
 const updateProductStatus = async (id: string, userId: string, status: string) => {
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
     if (product.user.toString() !== userId) {
@@ -135,7 +129,7 @@ const updateProductStatus = async (id: string, userId: string, status: string) =
 };
 
 const boostProduct = async (id: string, userId: string, boostPackId: string) => {
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
     if (product.user.toString() !== userId) {
@@ -162,14 +156,14 @@ const boostProduct = async (id: string, userId: string, boostPackId: string) => 
 };
 
 const deleteProduct = async (id: string, userId: string) => {
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
     if (product.user.toString() !== userId) {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to delete product");
     }
 
-    await ProductModel.findByIdAndDelete(id);
+    await ProductModel.findByIdAndUpdate(id, { isDeleted: true });
     return { message: "Product deleted successfully" };
 };
 

@@ -27,6 +27,7 @@ export interface IProduct {
     boostPack?: Types.ObjectId | null;
     boostStartTime?: Date | null;
     boostEndTime?: Date | null;
+    isDeleted: boolean;
 
     createdAt: Date;
     updatedAt: Date;

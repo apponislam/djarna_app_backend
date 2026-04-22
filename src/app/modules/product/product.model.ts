@@ -83,6 +83,10 @@ const ProductSchema = new Schema<IProduct>(
             type: Date,
             default: null,
         },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
     },
 
     {
@@ -93,11 +97,11 @@ const ProductSchema = new Schema<IProduct>(
 
 // Search optimization (Production Safe)
 ProductSchema.index({ title: "text", description: "text", address: "text" });
-ProductSchema.index({ category: 1 });
-ProductSchema.index({ subcategory: 1 });
-ProductSchema.index({ user: 1 });
-ProductSchema.index({ status: 1 });
-ProductSchema.index({ isBoosted: -1, boostEndTime: -1 });
+ProductSchema.index({ category: 1, isDeleted: 1 });
+ProductSchema.index({ subcategory: 1, isDeleted: 1 });
+ProductSchema.index({ user: 1, isDeleted: 1 });
+ProductSchema.index({ status: 1, isDeleted: 1 });
+ProductSchema.index({ isBoosted: -1, boostEndTime: -1, isDeleted: 1 });
 ProductSchema.index({ createdAt: -1 });
 
 export const ProductModel = mongoose.model<IProduct>("Product", ProductSchema);
