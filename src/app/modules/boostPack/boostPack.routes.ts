@@ -12,6 +12,7 @@ router.get("/", auth, BoostPackController.getAllBoostPacks);
 router.get("/:id", auth, BoostPackController.getBoostPackById);
 
 // Admin only routes for managing packs
+router.get("/admin", auth, authorize(["ADMIN"]), BoostPackController.getAllBoostPacks);
 router.post("/", auth, authorize(["ADMIN"]), validateRequest(createBoostPackSchema), BoostPackController.createBoostPack);
 router.patch("/:id", auth, authorize(["ADMIN"]), validateRequest(updateBoostPackSchema), BoostPackController.updateBoostPack);
 router.patch("/:id/toggle-status", auth, authorize(["ADMIN"]), BoostPackController.toggleBoostPackStatus);

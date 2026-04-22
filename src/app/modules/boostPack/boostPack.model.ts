@@ -47,6 +47,7 @@ const BoostPackSchema = new Schema<IBoostPack>(
     },
     {
         timestamps: true,
+        versionKey: false,
     },
 );
 

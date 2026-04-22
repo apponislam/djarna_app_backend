@@ -20,7 +20,7 @@ async function main() {
         await seedAdmin();
         await seedSettings();
         // await seedBoostPacks();
-        startBoostCleanupTask();
+        // startBoostCleanupTask();
 
         server.listen(Number(config.port), config.ip, () => {
             console.log(`✅ App listening on port ${config.port} at ${config.ip}`);
