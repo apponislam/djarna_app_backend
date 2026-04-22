@@ -67,8 +67,7 @@ const getParentCategories = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSubcategoriesByParent = catchAsync(async (req: Request, res: Response) => {
-    const { searchTerm } = req.query;
-    const result = await CategoryService.getSubcategoriesByParent(req.params.parentId as string, searchTerm as string);
+    const result = await CategoryService.getSubcategoriesByParent(req.params.parentId as string, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

@@ -75,14 +75,31 @@ const getParentCategories = async (searchTerm?: string) => {
     return result;
 };
 
-const getSubcategoriesByParent = async (parentId: string, searchTerm?: string) => {
-    const query: any = { parentCategory: parentId };
+const getSubcategoriesByParent = async (parentId: string, query: any = {}) => {
+    const filters: any = { parentCategory: parentId };
 
-    if (searchTerm) {
-        query.name = { $regex: searchTerm, $options: "i" };
+    // Apply gender filter (supports single string or array)
+    if (query.gender) {
+        const genders = Array.isArray(query.gender) ? query.gender : [query.gender];
+        filters.gender = { $in: genders };
     }
 
-    const subcategories = await CategoryModel.find(query).populate("parentCategory", "name").lean();
+    // Apply active status filter
+    if (query.isActive !== undefined) {
+        filters.isActive = query.isActive === "true";
+    }
+
+    // Apply home visibility filter
+    if (query.homeVisibility !== undefined) {
+        filters.homeVisibility = query.homeVisibility === "true";
+    }
+
+    // Apply search term filter for subcategories
+    if (query.searchTerm) {
+        filters.name = { $regex: query.searchTerm, $options: "i" };
+    }
+
+    const subcategories = await CategoryModel.find(filters).sort({ homePosition: 1 }).populate("parentCategory", "name").lean();
 
     // Add listingCount placeholder for now (as there's no Listing model yet)
     const result = subcategories.map((sub) => ({
