@@ -52,7 +52,9 @@ const BoostPackSchema = new Schema<IBoostPack>(
     },
 );
 
-// Indexes for common queries
-BoostPackSchema.index({ isActive: 1 });
+// Indexes for query optimization
+BoostPackSchema.index({ isActive: 1, type: 1, price: 1 });
+BoostPackSchema.index({ type: 1, isActive: 1 });
+BoostPackSchema.index({ duration: 1 }); // Useful if filtering by duration
 
 export const BoostPackModel = mongoose.model<IBoostPack>("BoostPack", BoostPackSchema);

@@ -12,11 +12,14 @@ const createBoostPack = async (payload: IBoostPack) => {
     return result;
 };
 
-const getAllBoostPacks = async (isAdmin: boolean) => {
+const getAllBoostPacks = async (isAdmin: boolean, type?: string) => {
     // Admins can see all packs, users only active ones
     const filters: any = {};
     if (!isAdmin) {
         filters.isActive = true;
+    }
+    if (type) {
+        filters.type = type;
     }
     const result = await BoostPackModel.find(filters).sort({ price: 1 }).lean();
     return result;

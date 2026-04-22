@@ -17,7 +17,8 @@ const createBoostPack = catchAsync(async (req: Request, res: Response) => {
 
 const getAllBoostPacks = catchAsync(async (req: Request, res: Response) => {
     const isAdmin = req.user?.role === "ADMIN";
-    const result = await BoostPackService.getAllBoostPacks(isAdmin);
+    const type = req.query.type as string;
+    const result = await BoostPackService.getAllBoostPacks(isAdmin, type);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
