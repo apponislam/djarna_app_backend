@@ -97,7 +97,7 @@ ProductSchema.index({ category: 1 });
 ProductSchema.index({ subcategory: 1 });
 ProductSchema.index({ user: 1 });
 ProductSchema.index({ status: 1 });
-ProductSchema.index({ isBoosted: -1, boostEndTime: -1 }); // Boosted items prioritized
+ProductSchema.index({ isBoosted: -1, boostEndTime: -1 });
 ProductSchema.index({ createdAt: -1 });
 
 export const ProductModel = mongoose.model<IProduct>("Product", ProductSchema);

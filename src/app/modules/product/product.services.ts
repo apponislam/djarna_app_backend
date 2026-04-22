@@ -67,11 +67,24 @@ const getAllProducts = async (query: any) => {
             },
         },
         { $addFields: { packDetails: { $arrayElemAt: ["$packDetails", 0] } } },
-        // Determine effective boost status
+        // Determine effective boost status with expiration check
         {
             $addFields: {
                 isEffectiveBoosted: {
-                    $or: [{ $eq: ["$isBoosted", true] }, { $eq: ["$userDetails.isBoosted", true] }],
+                    $or: [
+                        {
+                            $and: [
+                                { $eq: ["$isBoosted", true] },
+                                { $gt: ["$boostEndTime", new Date()] },
+                            ],
+                        },
+                        {
+                            $and: [
+                                { $eq: ["$userDetails.isBoosted", true] },
+                                { $gt: ["$userDetails.boostEndTime", new Date()] },
+                            ],
+                        },
+                    ],
                 },
             },
         },

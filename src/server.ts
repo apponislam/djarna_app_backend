@@ -7,6 +7,7 @@ import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
 // import { seedBoostPacks } from "./app/modules/boostPack/boostPack.seed";
 import { initSocket } from "./app/socket/socket";
+import { startBoostCleanupTask } from "./utils/boostCleanup";
 
 let server: Server;
 
@@ -19,10 +20,8 @@ async function main() {
         await seedAdmin();
         await seedSettings();
         // await seedBoostPacks();
+        startBoostCleanupTask();
 
-        // server.listen(Number(config.port), () => {
-        //     console.log(`✅ App listening on port ${config.port} at ${config.ip}`);
-        // });
         server.listen(Number(config.port), config.ip, () => {
             console.log(`✅ App listening on port ${config.port} at ${config.ip}`);
         });
