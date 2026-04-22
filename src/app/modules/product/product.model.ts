@@ -46,6 +46,14 @@ const ProductSchema = new Schema<IProduct>(
             type: String,
             enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"],
         },
+        brand: {
+            type: String,
+            trim: true,
+        },
+        material: {
+            type: String,
+            trim: true,
+        },
         user: {
             type: Schema.Types.ObjectId,
             ref: "User",
@@ -96,11 +104,13 @@ const ProductSchema = new Schema<IProduct>(
 );
 
 // Search optimization (Production Safe)
-ProductSchema.index({ title: "text", description: "text", address: "text" });
+ProductSchema.index({ title: "text", description: "text", address: "text", brand: "text", material: "text" });
 ProductSchema.index({ category: 1, isDeleted: 1 });
 ProductSchema.index({ subcategory: 1, isDeleted: 1 });
 ProductSchema.index({ user: 1, isDeleted: 1 });
 ProductSchema.index({ status: 1, isDeleted: 1 });
+ProductSchema.index({ brand: 1, isDeleted: 1 });
+ProductSchema.index({ material: 1, isDeleted: 1 });
 ProductSchema.index({ isBoosted: -1, boostEndTime: -1, isDeleted: 1 });
 ProductSchema.index({ createdAt: -1 });
 

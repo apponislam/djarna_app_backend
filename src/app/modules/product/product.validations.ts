@@ -16,6 +16,8 @@ export const createProductSchema = z.object({
     address: z.string().optional(),
     gender: z.enum(["MEN", "WOMEN", "KID"]).optional(),
     size: z.enum(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"]).optional(),
+    brand: z.string().optional(),
+    material: z.string().optional(),
     images: z.array(z.string()).optional(),
     status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"]).optional(),
     isBoosted: z.boolean().default(false).optional(),

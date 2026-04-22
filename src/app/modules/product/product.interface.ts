@@ -18,6 +18,8 @@ export interface IProduct {
     address?: string;
     gender?: "MEN" | "WOMEN" | "KID";
     size?: ProductSize;
+    brand?: string;
+    material?: string;
     user: Types.ObjectId;
     images: string[];
     status: ProductStatus;
