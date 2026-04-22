@@ -7,12 +7,14 @@ import authorize from "../../middlewares/authorized";
 
 const router = Router();
 
-// Publicly available for sellers to see and choose
-router.get("/", auth, BoostPackController.getAllBoostPacks);
-router.get("/:id", auth, BoostPackController.getBoostPackById);
-
 // Admin only routes for managing packs
 router.get("/admin", auth, authorize(["ADMIN"]), BoostPackController.getAllBoostPacks);
+
+// Publicly available for sellers to see and choose
+router.get("/", BoostPackController.getAllBoostPacks);
+router.get("/:id", BoostPackController.getBoostPackById);
+
+// Admin only routes for managing packs (POST/PATCH/DELETE)
 router.post("/", auth, authorize(["ADMIN"]), validateRequest(createBoostPackSchema), BoostPackController.createBoostPack);
 router.patch("/:id", auth, authorize(["ADMIN"]), validateRequest(updateBoostPackSchema), BoostPackController.updateBoostPack);
 router.patch("/:id/toggle-status", auth, authorize(["ADMIN"]), BoostPackController.toggleBoostPackStatus);

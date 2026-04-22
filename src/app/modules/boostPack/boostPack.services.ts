@@ -80,11 +80,16 @@ const setRecommended = async (id: string) => {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
 
-    // Unset all other recommended packs of the same type
-    await BoostPackModel.updateMany({ type: pack.type }, { isRecommended: false });
+    if (pack.isRecommended) {
+        // If already recommended, just toggle it off
+        pack.isRecommended = false;
+    } else {
+        // If not recommended, unset all other recommended packs of the same type first
+        await BoostPackModel.updateMany({ type: pack.type }, { isRecommended: false });
+        // Then set this one as recommended
+        pack.isRecommended = true;
+    }
 
-    // Set this one as recommended
-    pack.isRecommended = true;
     await pack.save();
 
     return pack;

@@ -78,7 +78,7 @@ const setRecommended = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost pack set as recommended successfully",
+        message: `Boost pack ${result.isRecommended ? "set as recommended" : "removed from recommended"} successfully`,
         data: result,
     });
 });
