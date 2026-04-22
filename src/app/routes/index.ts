@@ -10,6 +10,7 @@ import { FavoriteRoutes } from "../modules/favorite/favorite.routes";
 import { PaymentRoutes } from "../modules/payment/payment.routes";
 import { messageRoutes } from "../modules/message/messages.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
+import { BoostPaymentRoutes } from "../modules/boostPayment/boostPayment.routes";
 
 const router = express.Router();
 
@@ -33,6 +34,10 @@ const moduleRoutes = [
     {
         path: "/boost-pack",
         route: BoostPackRoutes,
+    },
+    {
+        path: "/boost-payment",
+        route: BoostPaymentRoutes,
     },
     {
         path: "/settings",
