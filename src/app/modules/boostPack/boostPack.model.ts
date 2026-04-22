@@ -56,6 +56,6 @@ BoostPackSchema.index({ type: 1, isActive: 1 });
 BoostPackSchema.index({ duration: 1 });
 
 // Ensure only one recommended pack per type
-BoostPackSchema.index({ type: 1, isRecommended: 1 }, { unique: true, partialFilterExpression: { isRecommended: true } }); // Useful if filtering by duration
+BoostPackSchema.index({ type: 1, isRecommended: 1 });
 
 export const BoostPackModel = mongoose.model<IBoostPack>("BoostPack", BoostPackSchema);
