@@ -10,6 +10,7 @@ export interface IBoostPack {
     currency: string; // default "FCFA"
     isActive: boolean;
     isRecommended: boolean;
+    isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

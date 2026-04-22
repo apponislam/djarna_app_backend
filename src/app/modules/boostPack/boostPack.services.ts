@@ -4,11 +4,6 @@ import { BoostPackModel } from "./boostPack.model";
 import { IBoostPack } from "./boostPack.interface";
 
 const createBoostPack = async (payload: IBoostPack) => {
-    const isExist = await BoostPackModel.findOne({ name: payload.name });
-    if (isExist) {
-        throw new ApiError(httpStatus.CONFLICT, "Boost pack with this name already exists!");
-    }
-
     // If new pack is recommended, unset others of same type
     if (payload.isRecommended) {
         await BoostPackModel.updateMany({ type: payload.type }, { isRecommended: false });
@@ -19,8 +14,8 @@ const createBoostPack = async (payload: IBoostPack) => {
 };
 
 const getAllBoostPacks = async (isAdmin: boolean, type?: string) => {
-    // Admins can see all packs, users only active ones
-    const filters: any = {};
+    // Admins can see all non-deleted packs, users only active and non-deleted ones
+    const filters: any = { isDeleted: false };
     if (!isAdmin) {
         filters.isActive = true;
     }
@@ -32,7 +27,7 @@ const getAllBoostPacks = async (isAdmin: boolean, type?: string) => {
 };
 
 const getBoostPackById = async (id: string) => {
-    const result = await BoostPackModel.findById(id).lean();
+    const result = await BoostPackModel.findOne({ _id: id, isDeleted: false }).lean();
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
@@ -40,7 +35,7 @@ const getBoostPackById = async (id: string) => {
 };
 
 const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
-    const isExist = await BoostPackModel.findById(id);
+    const isExist = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!isExist) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
@@ -56,16 +51,16 @@ const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
 };
 
 const deleteBoostPack = async (id: string) => {
-    const isExist = await BoostPackModel.findById(id);
+    const isExist = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!isExist) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
-    const result = await BoostPackModel.findByIdAndDelete(id);
+    const result = await BoostPackModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
     return result;
 };
 
 const toggleBoostPackStatus = async (id: string) => {
-    const pack = await BoostPackModel.findById(id);
+    const pack = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!pack) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
@@ -75,7 +70,7 @@ const toggleBoostPackStatus = async (id: string) => {
 };
 
 const setRecommended = async (id: string) => {
-    const pack = await BoostPackModel.findById(id);
+    const pack = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!pack) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }

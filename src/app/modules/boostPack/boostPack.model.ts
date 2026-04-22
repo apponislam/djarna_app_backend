@@ -6,7 +6,6 @@ const BoostPackSchema = new Schema<IBoostPack>(
         name: {
             type: String,
             required: [true, "Boost pack name is required"],
-            unique: true,
             trim: true,
         },
         description: {
@@ -44,6 +43,10 @@ const BoostPackSchema = new Schema<IBoostPack>(
             type: Boolean,
             default: false,
         },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
@@ -52,9 +55,9 @@ const BoostPackSchema = new Schema<IBoostPack>(
 );
 
 // Indexes for query optimization
-BoostPackSchema.index({ isActive: 1, type: 1, price: 1 });
-BoostPackSchema.index({ type: 1, isActive: 1 });
-BoostPackSchema.index({ duration: 1 });
+BoostPackSchema.index({ isActive: 1, type: 1, price: 1, isDeleted: 1 });
+BoostPackSchema.index({ type: 1, isActive: 1, isDeleted: 1 });
+BoostPackSchema.index({ duration: 1, isDeleted: 1 });
 
 // Ensure only one recommended pack per type
 BoostPackSchema.index({ type: 1, isRecommended: 1 });
