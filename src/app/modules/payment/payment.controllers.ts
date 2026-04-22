@@ -100,5 +100,4 @@ export const PaymentController = {
     getMyPayments,
     getAllPayments,
     refundPayment,
-    // webhookController: PaymentWebhookController.webhookController,
 };
