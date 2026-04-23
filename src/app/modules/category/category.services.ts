@@ -32,7 +32,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
         throw new ApiError(httpStatus.NOT_FOUND, "Category not found!");
     }
 
-    const result = await CategoryModel.findByIdAndUpdate(id, payload, { new: true });
+    const result = await CategoryModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });
     return result;
 };
 

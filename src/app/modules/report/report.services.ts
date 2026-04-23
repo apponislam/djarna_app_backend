@@ -41,7 +41,7 @@ const getReportById = async (id: string) => {
 };
 
 const updateReportStatus = async (id: string, status: string) => {
-    const result = await ReportModel.findByIdAndUpdate(id, { status }, { new: true });
+    const result = await ReportModel.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Report not found");
     return result;
 };

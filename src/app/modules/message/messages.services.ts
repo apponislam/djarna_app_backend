@@ -73,7 +73,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
         },
         {
             arrayFilters: [{ "elem.userId": receiverId }],
-            new: true,
+            returnDocument: "after",
         },
     ).populate([{ path: "participantIds", select: "_id name photo phone" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
 

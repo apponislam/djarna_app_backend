@@ -242,7 +242,7 @@ const updateProfile = async (userId: string, data: any) => {
     if (data.phone) {
         data.phone = normalizePhoneNumber(data.phone);
     }
-    const user = await UserModel.findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true }).select("-password");
+    const user = await UserModel.findByIdAndUpdate(userId, { $set: data }, { returnDocument: "after", runValidators: true }).select("-password");
 
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
     return user;

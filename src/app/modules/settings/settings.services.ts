@@ -95,7 +95,7 @@ const updateSettings = async (payload: Partial<IPlatformSettings>) => {
     if (Object.keys(addToSetData).length > 0) finalUpdate.$addToSet = addToSetData;
     if (Object.keys(pullData).length > 0) finalUpdate.$pull = pullData;
 
-    const result = await SettingsModel.findByIdAndUpdate(settings._id, finalUpdate, { new: true, runValidators: true });
+    const result = await SettingsModel.findByIdAndUpdate(settings._id, finalUpdate, { returnDocument: "after", runValidators: true });
 
     return result;
 };

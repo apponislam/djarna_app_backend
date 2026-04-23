@@ -46,7 +46,7 @@ const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
         await BoostPackModel.updateMany({ type }, { isRecommended: false });
     }
 
-    const result = await BoostPackModel.findByIdAndUpdate(id, payload, { new: true });
+    const result = await BoostPackModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });
     return result;
 };
 
@@ -55,7 +55,7 @@ const deleteBoostPack = async (id: string) => {
     if (!isExist) {
         throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
     }
-    const result = await BoostPackModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    const result = await BoostPackModel.findByIdAndUpdate(id, { isDeleted: true }, { returnDocument: "after" });
     return result;
 };
 

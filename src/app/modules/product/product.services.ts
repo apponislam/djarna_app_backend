@@ -256,7 +256,7 @@ const updateProduct = async (id: string, userId: string, payload: Partial<IProdu
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update product");
     }
 
-    const result = await ProductModel.findByIdAndUpdate(id, payload, { new: true });
+    const result = await ProductModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });
     return result;
 };
 
