@@ -43,12 +43,6 @@ export interface User {
     balance: number;
     noCommission: number;
 
-    // Boost Handling (Shop level)
-    isBoosted?: boolean;
-    boostPack?: Types.ObjectId;
-    boostStartTime?: Date;
-    boostEndTime?: Date;
-
     createdAt: Date;
     updatedAt: Date;
 }

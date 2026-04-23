@@ -121,13 +121,20 @@ const applyBoostEffects = async (boostPaymentId: string) => {
             boostEndTime: endTime,
         });
     } else if (boostPayment.type === "SHOP") {
-        // Apply to shop (User model)
-        await UserModel.findByIdAndUpdate(boostPayment.userId, {
-            isBoosted: true,
-            boostPack: boostPack._id,
-            boostStartTime: startTime,
-            boostEndTime: endTime,
-        });
+        // Apply to all products of the user except SOLD items
+        await ProductModel.updateMany(
+            {
+                user: boostPayment.userId,
+                status: { $ne: "SOLD" },
+                isDeleted: false,
+            },
+            {
+                isBoosted: true,
+                boostPack: boostPack._id,
+                boostStartTime: startTime,
+                boostEndTime: endTime,
+            },
+        );
     }
 };
 

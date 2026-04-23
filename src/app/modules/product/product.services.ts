@@ -67,8 +67,6 @@ const getAllProducts = async (query: any, userId?: string) => {
                             email: 1,
                             phone: 1,
                             photo: 1,
-                            isBoosted: 1,
-                            boostEndTime: 1,
                             role: 1,
                             isActive: 1,
                             // Exclude: password, createdAt, updatedAt, lastLogin
@@ -113,14 +111,7 @@ const getAllProducts = async (query: any, userId?: string) => {
         {
             $addFields: {
                 isEffectiveBoosted: {
-                    $or: [
-                        {
-                            $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
-                        },
-                        {
-                            $and: [{ $eq: ["$user.isBoosted", true] }, { $gt: ["$user.boostEndTime", new Date()] }],
-                        },
-                    ],
+                    $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
                 },
             },
         },

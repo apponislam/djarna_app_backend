@@ -4,6 +4,7 @@ import { jwtHelper } from "../../../utils/jwtHelper";
 import config from "../../config";
 import { UserModel } from "./auth.model";
 import { VerificationModel } from "./verification.model";
+import { ProductModel } from "../product/product.model";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendSms } from "../../../utils/twilioHelper";
@@ -285,13 +286,24 @@ const boostShop = async (userId: string, boostPackId: string) => {
     }
 
     const now = new Date();
-    user.isBoosted = true;
-    user.boostPack = pack._id;
-    user.boostStartTime = now;
-    user.boostEndTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
+    const endTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
 
-    await user.save();
-    return user;
+    // Apply boost to all active products of the user
+    await ProductModel.updateMany(
+        {
+            user: userId,
+            status: { $ne: "SOLD" },
+            isDeleted: false,
+        },
+        {
+            isBoosted: true,
+            boostPack: pack._id,
+            boostStartTime: now,
+            boostEndTime: endTime,
+        },
+    );
+
+    return { message: "Shop products boosted successfully" };
 };
 
 export const authServices = {
