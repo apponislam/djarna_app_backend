@@ -44,6 +44,18 @@ const getAllProducts = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getMyProducts = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const result = await ProductService.getMyProducts(userId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Your products retrieved successfully",
+        data: result,
+    });
+});
+
 const getProductById = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const result = await ProductService.getProductById(req.params.id as string, userId);
@@ -123,6 +135,7 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
 export const ProductController = {
     createProduct,
     getAllProducts,
+    getMyProducts,
     getProductById,
     updateProduct,
     updateProductStatus,

@@ -10,6 +10,7 @@ const router = Router();
 
 // Public routes
 router.get("/", checkAuth, ProductController.getAllProducts);
+router.get("/my-products", auth, ProductController.getMyProducts);
 router.get("/:id", checkAuth, ProductController.getProductById);
 
 // Protected User routes

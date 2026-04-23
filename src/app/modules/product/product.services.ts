@@ -5,7 +5,6 @@ import { IProduct } from "./product.interface";
 import { BoostPackModel } from "../boostPack/boostPack.model";
 import mongoose from "mongoose";
 import { FavoriteModel } from "../favorite/favorite.model";
-import { CategoryModel } from "../category/category.model";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -67,6 +66,7 @@ const getAllProducts = async (query: any, userId?: string) => {
                             name: 1,
                             email: 1,
                             phone: 1,
+                            photo: 1,
                             isBoosted: 1,
                             boostEndTime: 1,
                             role: 1,
@@ -79,54 +79,6 @@ const getAllProducts = async (query: any, userId?: string) => {
             },
         },
         { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-
-        // Lookup category with only needed fields
-        {
-            $lookup: {
-                from: "categories",
-                let: { categoryId: "$category" },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: { $eq: ["$name", "$$categoryId"] },
-                        },
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                            icon: 1,
-                        },
-                    },
-                ],
-                as: "category",
-            },
-        },
-        { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
-
-        // Lookup subcategory with only needed fields
-        {
-            $lookup: {
-                from: "categories", // Both category and subcategory are in the same collection usually
-                let: { subcategoryId: "$subcategory" },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: { $eq: ["$name", "$$subcategoryId"] },
-                        },
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                            icon: 1,
-                        },
-                    },
-                ],
-                as: "subcategory",
-            },
-        },
-        { $unwind: { path: "$subcategory", preserveNullAndEmptyArrays: true } },
 
         // Lookup boost pack with only needed fields
         {
@@ -220,22 +172,16 @@ const getAllProducts = async (query: any, userId?: string) => {
     return products;
 };
 
+const getMyProducts = async (userId: string) => {
+    const result = await ProductModel.find({ user: userId, isDeleted: false }).populate("boostPack").populate("user", "name email phone photo").sort({ createdAt: -1 });
+    return result;
+};
+
 const getProductById = async (id: string, userId?: string) => {
-    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone").lean();
+    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone photo").lean();
 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
-    }
-
-    // Manually populate category and subcategory since they are strings
-    if (result.category) {
-        const categoryDetails = await CategoryModel.findOne({ name: result.category }).select("name icon").lean();
-        if (categoryDetails) (result as any).category = categoryDetails;
-    }
-
-    if (result.subcategory) {
-        const subcategoryDetails = await CategoryModel.findOne({ name: result.subcategory }).select("name icon").lean();
-        if (subcategoryDetails) (result as any).subcategory = subcategoryDetails;
     }
 
     if (userId) {
@@ -315,6 +261,7 @@ const deleteProduct = async (id: string, userId: string) => {
 export const ProductService = {
     createProduct,
     getAllProducts,
+    getMyProducts,
     getProductById,
     updateProduct,
     updateProductStatus,
