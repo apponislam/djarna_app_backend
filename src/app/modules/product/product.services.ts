@@ -236,6 +236,18 @@ const getProductById = async (id: string, userId?: string) => {
     return result;
 };
 
+const updateProduct = async (id: string, userId: string, payload: Partial<IProduct>) => {
+    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+
+    if (product.user.toString() !== userId) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update product");
+    }
+
+    const result = await ProductModel.findByIdAndUpdate(id, payload, { new: true });
+    return result;
+};
+
 const updateProductStatus = async (id: string, userId: string, status: string) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
@@ -292,6 +304,7 @@ export const ProductService = {
     createProduct,
     getAllProducts,
     getProductById,
+    updateProduct,
     updateProductStatus,
     boostProduct,
     deleteProduct,

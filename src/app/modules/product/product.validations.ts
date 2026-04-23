@@ -27,6 +27,28 @@ export const createProductSchema = z.object({
         .optional(),
 });
 
+export const updateProductSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters long").optional(),
+    description: z.string().min(10, "Description must be at least 10 characters long").optional(),
+    price: z.coerce.number().min(0, "Price cannot be negative").optional(),
+    originalPrice: z.coerce.number().min(0, "Original price cannot be negative").optional(),
+    category: z.string().min(1, "Category is required").optional(),
+    subcategory: z.string().min(1, "Subcategory is required").optional(),
+    location: z
+        .object({
+            lat: z.number().optional(),
+            lng: z.number().optional(),
+        })
+        .optional(),
+    address: z.string().optional(),
+    gender: z.enum(["MEN", "WOMEN", "KID"]).optional(),
+    size: z.enum(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL"]).optional(),
+    brand: z.string().optional(),
+    material: z.string().optional(),
+    images: z.array(z.string()).optional(),
+    status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"]).optional(),
+});
+
 export const updateProductStatusSchema = z.object({
     status: z.enum(["ACTIVE", "SOLD", "PENDING", "REJECTED", "DRAFT", "PAUSED"]),
 });

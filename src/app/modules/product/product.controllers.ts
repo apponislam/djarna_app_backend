@@ -56,6 +56,32 @@ const getProductById = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const updateProduct = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const body = req.body;
+
+    // Handle multiple image uploads from multer if provided
+    const files = req.files as Express.Multer.File[];
+    const imagePaths = files?.map((file) => file.path);
+
+    const payload = {
+        ...body,
+    };
+
+    if (imagePaths && imagePaths.length > 0) {
+        payload.images = imagePaths;
+    }
+
+    const result = await ProductService.updateProduct(req.params.id as string, userId, payload);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Product updated successfully",
+        data: result,
+    });
+});
+
 const updateProductStatus = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { status } = req.body;
@@ -98,6 +124,7 @@ export const ProductController = {
     createProduct,
     getAllProducts,
     getProductById,
+    updateProduct,
     updateProductStatus,
     boostProduct,
     deleteProduct,
