@@ -26,6 +26,88 @@ const createProduct = async (payload: IProduct) => {
     return result;
 };
 
+// const getAllProducts = async (query: any) => {
+//     const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
+
+//     const filters: any = { status: "ACTIVE", isDeleted: false };
+
+//     if (searchTerm) {
+//         filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }, { address: { $regex: searchTerm, $options: "i" } }];
+//     }
+
+//     if (category) filters.category = category;
+//     if (subcategory) filters.subcategory = subcategory;
+
+//     if (minPrice || maxPrice) {
+//         filters.price = {};
+//         if (minPrice) filters.price.$gte = Number(minPrice);
+//         if (maxPrice) filters.price.$lte = Number(maxPrice);
+//     }
+
+//     // Using aggregation to handle complex sorting (Individual Boost + Shop Boost)
+//     const pipeline: any[] = [
+//         { $match: filters },
+//         // Join with User to get shop boost status
+//         {
+//             $lookup: {
+//                 from: "users",
+//                 localField: "user",
+//                 foreignField: "_id",
+//                 as: "userDetails",
+//             },
+//         },
+//         { $unwind: "$userDetails" },
+//         // Join with BoostPack for product boost visibility
+//         {
+//             $lookup: {
+//                 from: "boostpacks",
+//                 localField: "boostPack",
+//                 foreignField: "_id",
+//                 as: "packDetails",
+//             },
+//         },
+//         { $addFields: { packDetails: { $arrayElemAt: ["$packDetails", 0] } } },
+//         // Determine effective boost status with expiration check
+//         {
+//             $addFields: {
+//                 isEffectiveBoosted: {
+//                     $or: [
+//                         {
+//                             $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
+//                         },
+//                         {
+//                             $and: [{ $eq: ["$userDetails.isBoosted", true] }, { $gt: ["$userDetails.boostEndTime", new Date()] }],
+//                         },
+//                     ],
+//                 },
+//             },
+//         },
+//     ];
+
+//     // Sort options
+//     const sort: any = { isEffectiveBoosted: -1 };
+//     if (sortBy) {
+//         sort[sortBy] = order === "desc" ? -1 : 1;
+//     } else {
+//         sort.createdAt = -1;
+//     }
+
+//     pipeline.push({ $sort: sort });
+
+//     // Execute aggregation
+//     const products = await ProductModel.aggregate(pipeline);
+
+//     // Populate for response (since aggregate returns plain objects)
+//     const result = await ProductModel.populate(products, [
+//         { path: "category", select: "name icon" },
+//         { path: "subcategory", select: "name icon" },
+//         { path: "boostPack", select: "name duration" },
+//         { path: "user", select: "name email phone isBoosted" },
+//     ]);
+
+//     return result;
+// };
+
 const getAllProducts = async (query: any) => {
     const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
 
@@ -44,29 +126,116 @@ const getAllProducts = async (query: any) => {
         if (maxPrice) filters.price.$lte = Number(maxPrice);
     }
 
-    // Using aggregation to handle complex sorting (Individual Boost + Shop Boost)
     const pipeline: any[] = [
         { $match: filters },
-        // Join with User to get shop boost status
+
+        // Lookup user with only needed fields
         {
             $lookup: {
                 from: "users",
-                localField: "user",
-                foreignField: "_id",
-                as: "userDetails",
+                let: { userId: "$user" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$_id", "$$userId"] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                            isBoosted: 1,
+                            boostEndTime: 1,
+                            role: 1,
+                            isActive: 1,
+                            // Exclude: password, createdAt, updatedAt, lastLogin
+                        },
+                    },
+                ],
+                as: "user",
             },
         },
-        { $unwind: "$userDetails" },
-        // Join with BoostPack for product boost visibility
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+        // Lookup category with only needed fields
+        {
+            $lookup: {
+                from: "categories",
+                let: { categoryId: "$category" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$_id", "$$categoryId"] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            icon: 1,
+                        },
+                    },
+                ],
+                as: "category",
+            },
+        },
+        { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+
+        // Lookup subcategory with only needed fields
+        {
+            $lookup: {
+                from: "subcategories",
+                let: { subcategoryId: "$subcategory" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$_id", "$$subcategoryId"] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            icon: 1,
+                        },
+                    },
+                ],
+                as: "subcategory",
+            },
+        },
+        { $unwind: { path: "$subcategory", preserveNullAndEmptyArrays: true } },
+
+        // Lookup boost pack with only needed fields
         {
             $lookup: {
                 from: "boostpacks",
-                localField: "boostPack",
-                foreignField: "_id",
-                as: "packDetails",
+                let: { packId: "$boostPack" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$_id", "$$packId"] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            duration: 1,
+                            description: 1,
+                            type: 1,
+                            listingsCount: 1,
+                            price: 1,
+                            currency: 1,
+                        },
+                    },
+                ],
+                as: "boostPack",
             },
         },
-        { $addFields: { packDetails: { $arrayElemAt: ["$packDetails", 0] } } },
+        { $unwind: { path: "$boostPack", preserveNullAndEmptyArrays: true } },
+
         // Determine effective boost status with expiration check
         {
             $addFields: {
@@ -76,7 +245,7 @@ const getAllProducts = async (query: any) => {
                             $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
                         },
                         {
-                            $and: [{ $eq: ["$userDetails.isBoosted", true] }, { $gt: ["$userDetails.boostEndTime", new Date()] }],
+                            $and: [{ $eq: ["$user.isBoosted", true] }, { $gt: ["$user.boostEndTime", new Date()] }],
                         },
                     ],
                 },
@@ -94,18 +263,8 @@ const getAllProducts = async (query: any) => {
 
     pipeline.push({ $sort: sort });
 
-    // Execute aggregation
     const products = await ProductModel.aggregate(pipeline);
-
-    // Populate for response (since aggregate returns plain objects)
-    const result = await ProductModel.populate(products, [
-        { path: "category", select: "name icon" },
-        { path: "subcategory", select: "name icon" },
-        { path: "boostPack", select: "name duration" },
-        { path: "user", select: "name email phone isBoosted" },
-    ]);
-
-    return result;
+    return products;
 };
 
 const getProductById = async (id: string) => {
