@@ -23,12 +23,10 @@ const ProductSchema = new Schema<IProduct>(
         },
         category: {
             type: String,
-            ref: "Category",
             required: [true, "Category is required"],
         },
         subcategory: {
             type: String,
-            ref: "Category",
             required: [true, "Subcategory is required"],
         },
         location: {

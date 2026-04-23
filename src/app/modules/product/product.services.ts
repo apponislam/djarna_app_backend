@@ -87,7 +87,7 @@ const getAllProducts = async (query: any, userId?: string) => {
                 pipeline: [
                     {
                         $match: {
-                            $expr: { $eq: ["$_id", "$$categoryId"] },
+                            $expr: { $eq: ["$name", "$$categoryId"] },
                         },
                     },
                     {
@@ -106,12 +106,12 @@ const getAllProducts = async (query: any, userId?: string) => {
         // Lookup subcategory with only needed fields
         {
             $lookup: {
-                from: "subcategories",
+                from: "categories", // Both category and subcategory are in the same collection usually
                 let: { subcategoryId: "$subcategory" },
                 pipeline: [
                     {
                         $match: {
-                            $expr: { $eq: ["$_id", "$$subcategoryId"] },
+                            $expr: { $eq: ["$name", "$$subcategoryId"] },
                         },
                     },
                     {
