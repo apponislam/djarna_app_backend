@@ -33,7 +33,8 @@ const createProduct = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllProducts = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProductService.getAllProducts(req.query);
+    const userId = req.user?._id;
+    const result = await ProductService.getAllProducts(req.query, userId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -44,7 +45,8 @@ const getAllProducts = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getProductById = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProductService.getProductById(req.params.id as string);
+    const userId = req.user?._id;
+    const result = await ProductService.getProductById(req.params.id as string, userId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

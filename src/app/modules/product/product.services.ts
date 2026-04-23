@@ -3,6 +3,8 @@ import ApiError from "../../../errors/ApiError";
 import { ProductModel } from "./product.model";
 import { IProduct } from "./product.interface";
 import { BoostPackModel } from "../boostPack/boostPack.model";
+import mongoose from "mongoose";
+import { FavoriteModel } from "../favorite/favorite.model";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -26,89 +28,7 @@ const createProduct = async (payload: IProduct) => {
     return result;
 };
 
-// const getAllProducts = async (query: any) => {
-//     const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
-
-//     const filters: any = { status: "ACTIVE", isDeleted: false };
-
-//     if (searchTerm) {
-//         filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }, { address: { $regex: searchTerm, $options: "i" } }];
-//     }
-
-//     if (category) filters.category = category;
-//     if (subcategory) filters.subcategory = subcategory;
-
-//     if (minPrice || maxPrice) {
-//         filters.price = {};
-//         if (minPrice) filters.price.$gte = Number(minPrice);
-//         if (maxPrice) filters.price.$lte = Number(maxPrice);
-//     }
-
-//     // Using aggregation to handle complex sorting (Individual Boost + Shop Boost)
-//     const pipeline: any[] = [
-//         { $match: filters },
-//         // Join with User to get shop boost status
-//         {
-//             $lookup: {
-//                 from: "users",
-//                 localField: "user",
-//                 foreignField: "_id",
-//                 as: "userDetails",
-//             },
-//         },
-//         { $unwind: "$userDetails" },
-//         // Join with BoostPack for product boost visibility
-//         {
-//             $lookup: {
-//                 from: "boostpacks",
-//                 localField: "boostPack",
-//                 foreignField: "_id",
-//                 as: "packDetails",
-//             },
-//         },
-//         { $addFields: { packDetails: { $arrayElemAt: ["$packDetails", 0] } } },
-//         // Determine effective boost status with expiration check
-//         {
-//             $addFields: {
-//                 isEffectiveBoosted: {
-//                     $or: [
-//                         {
-//                             $and: [{ $eq: ["$isBoosted", true] }, { $gt: ["$boostEndTime", new Date()] }],
-//                         },
-//                         {
-//                             $and: [{ $eq: ["$userDetails.isBoosted", true] }, { $gt: ["$userDetails.boostEndTime", new Date()] }],
-//                         },
-//                     ],
-//                 },
-//             },
-//         },
-//     ];
-
-//     // Sort options
-//     const sort: any = { isEffectiveBoosted: -1 };
-//     if (sortBy) {
-//         sort[sortBy] = order === "desc" ? -1 : 1;
-//     } else {
-//         sort.createdAt = -1;
-//     }
-
-//     pipeline.push({ $sort: sort });
-
-//     // Execute aggregation
-//     const products = await ProductModel.aggregate(pipeline);
-
-//     // Populate for response (since aggregate returns plain objects)
-//     const result = await ProductModel.populate(products, [
-//         { path: "category", select: "name icon" },
-//         { path: "subcategory", select: "name icon" },
-//         { path: "boostPack", select: "name duration" },
-//         { path: "user", select: "name email phone isBoosted" },
-//     ]);
-
-//     return result;
-// };
-
-const getAllProducts = async (query: any) => {
+const getAllProducts = async (query: any, userId?: string) => {
     const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
 
     const filters: any = { status: "ACTIVE", isDeleted: false };
@@ -253,6 +173,38 @@ const getAllProducts = async (query: any) => {
         },
     ];
 
+    // Add favorite status if userId is provided
+    if (userId) {
+        pipeline.push({
+            $lookup: {
+                from: "favorites",
+                let: { productId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$user", new mongoose.Types.ObjectId(userId)] }],
+                            },
+                        },
+                    },
+                ],
+                as: "favoriteData",
+            },
+        });
+        pipeline.push({
+            $addFields: {
+                isFavorite: { $gt: [{ $size: "$favoriteData" }, 0] },
+            },
+        });
+        pipeline.push({
+            $project: { favoriteData: 0 },
+        });
+    } else {
+        pipeline.push({
+            $addFields: { isFavorite: false },
+        });
+    }
+
     // Sort options
     const sort: any = { isEffectiveBoosted: -1 };
     if (sortBy) {
@@ -267,10 +219,20 @@ const getAllProducts = async (query: any) => {
     return products;
 };
 
-const getProductById = async (id: string) => {
-    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone");
+const getProductById = async (id: string, userId?: string) => {
+    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone").lean();
 
-    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    if (!result) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    }
+
+    if (userId) {
+        const favorite = await FavoriteModel.findOne({ user: userId, product: id });
+        (result as any).isFavorite = !!favorite;
+    } else {
+        (result as any).isFavorite = false;
+    }
+
     return result;
 };
 

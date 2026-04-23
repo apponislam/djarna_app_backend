@@ -3,13 +3,14 @@ import { ProductController } from "./product.controllers";
 import validateRequest from "../../middlewares/validateRequest";
 import { createProductSchema, updateProductStatusSchema, boostProductSchema } from "./product.validations";
 import auth from "../../middlewares/auth";
+import checkAuth from "../../middlewares/checkAuth";
 import { parseBodyData, uploadProductImages } from "../../middlewares/multer";
 
 const router = Router();
 
 // Public routes
-router.get("/", ProductController.getAllProducts);
-router.get("/:id", ProductController.getProductById);
+router.get("/", checkAuth, ProductController.getAllProducts);
+router.get("/:id", checkAuth, ProductController.getProductById);
 
 // Protected User routes
 router.post("/", auth, uploadProductImages, parseBodyData, validateRequest(createProductSchema), ProductController.createProduct);
