@@ -41,22 +41,63 @@ const getMyFavorites = async (userId: string, query: { page?: number; limit?: nu
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const favorites = await FavoriteModel.find({ user: userId })
-        .populate({
-            path: "product",
-            populate: [
-                { path: "category", select: "_id name icon" },
-                { path: "subcategory", select: "_id name icon" },
-                { path: "user", select: "_id name photo phone" },
-                { path: "boostPack", select: "_id name duration visibility" },
-            ],
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean();
+    // Use aggregation to join with products and filter out non-existent or deleted ones
+    const pipeline: any[] = [
+        { $match: { user: new Types.ObjectId(userId) } },
+        {
+            $lookup: {
+                from: "products",
+                localField: "product",
+                foreignField: "_id",
+                as: "product",
+            },
+        },
+        { $unwind: "$product" },
+        // Filter out deleted products
+        { $match: { "product.isDeleted": false } },
+        { $sort: { createdAt: -1 } },
+        {
+            $facet: {
+                metadata: [{ $count: "total" }],
+                data: [
+                    { $skip: skip },
+                    { $limit: limit },
+                    // Lookup user details for the product
+                    {
+                        $lookup: {
+                            from: "users",
+                            let: { userId: "$product.user" },
+                            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { _id: 1, name: 1, photo: 1, phone: 1 } }],
+                            as: "product.user",
+                        },
+                    },
+                    { $unwind: "$product.user" },
+                    // Lookup boostPack if exists
+                    {
+                        $lookup: {
+                            from: "boostpacks",
+                            localField: "product.boostPack",
+                            foreignField: "_id",
+                            as: "product.boostPack",
+                        },
+                    },
+                    {
+                        $addFields: {
+                            "product.boostPack": {
+                                $ifNull: [{ $arrayElemAt: ["$product.boostPack", 0] }, null],
+                            },
+                        },
+                    },
+                    { $replaceRoot: { newRoot: "$product" } },
+                ],
+            },
+        },
+    ];
 
-    const total = await FavoriteModel.countDocuments({ user: userId });
+    const result = await FavoriteModel.aggregate(pipeline);
+
+    const total = result[0]?.metadata[0]?.total || 0;
+    const data = result[0]?.data || [];
     const totalPage = Math.ceil(total / limit);
 
     return {
@@ -66,7 +107,7 @@ const getMyFavorites = async (userId: string, query: { page?: number; limit?: nu
             total,
             totalPage,
         },
-        data: favorites.map((fav) => fav.product), // Return the product details directly
+        data,
     };
 };
 
