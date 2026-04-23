@@ -5,6 +5,7 @@ import { IProduct } from "./product.interface";
 import { BoostPackModel } from "../boostPack/boostPack.model";
 import mongoose from "mongoose";
 import { FavoriteModel } from "../favorite/favorite.model";
+import { CategoryModel } from "../category/category.model";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -220,10 +221,21 @@ const getAllProducts = async (query: any, userId?: string) => {
 };
 
 const getProductById = async (id: string, userId?: string) => {
-    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("category", "name icon").populate("subcategory", "name icon").populate("boostPack", "name duration visibility").populate("user", "name email phone").lean();
+    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone").lean();
 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    }
+
+    // Manually populate category and subcategory since they are strings
+    if (result.category) {
+        const categoryDetails = await CategoryModel.findOne({ name: result.category }).select("name icon").lean();
+        if (categoryDetails) (result as any).category = categoryDetails;
+    }
+
+    if (result.subcategory) {
+        const subcategoryDetails = await CategoryModel.findOne({ name: result.subcategory }).select("name icon").lean();
+        if (subcategoryDetails) (result as any).subcategory = subcategoryDetails;
     }
 
     if (userId) {
