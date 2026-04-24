@@ -15,13 +15,15 @@ const createBoostPack = async (payload: IBoostPack) => {
 
 const getAllBoostPacks = async (isAdmin: boolean, type?: string) => {
     // Admins can see all non-deleted packs, users only active and non-deleted ones
-    const filters: any = { isDeleted: false };
+    const filters: any = { isDeleted: { $ne: true } };
     if (!isAdmin) {
-        filters.isActive = true;
+        filters.isActive = { $ne: false };
     }
+
     if (type) {
-        filters.type = type;
+        filters.type = type.trim().toUpperCase();
     }
+
     const result = await BoostPackModel.find(filters).sort({ price: 1 }).lean();
     return result;
 };

@@ -5,7 +5,6 @@ import http from "http";
 import config from "./app/config";
 import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
-// import { seedBoostPacks } from "./app/modules/boostPack/boostPack.seed";
 import { initSocket } from "./app/socket/socket";
 import { startBoostCleanupTask } from "./utils/boostCleanup";
 
@@ -19,8 +18,7 @@ async function main() {
 
         await seedAdmin();
         await seedSettings();
-        // await seedBoostPacks();
-        // startBoostCleanupTask();
+        startBoostCleanupTask();
 
         server.listen(Number(config.port), config.ip, () => {
             console.log(`✅ App listening on port ${config.port} at ${config.ip}`);

@@ -189,7 +189,7 @@ const updateProduct = async (id: string, userId: string, payload: Partial<IProdu
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
-    if (product.user.toString() !== userId) {
+    if (product.user.toString() !== userId.toString()) {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update product");
     }
 
@@ -201,7 +201,7 @@ const updateProductStatus = async (id: string, userId: string, status: string) =
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
-    if (product.user.toString() !== userId) {
+    if (product.user.toString() !== userId.toString()) {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update status");
     }
 
@@ -214,7 +214,7 @@ const boostProduct = async (id: string, userId: string, boostPackId: string) => 
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
-    if (product.user.toString() !== userId) {
+    if (product.user.toString() !== userId.toString()) {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to boost product");
     }
 
@@ -241,7 +241,7 @@ const deleteProduct = async (id: string, userId: string) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
 
-    if (product.user.toString() !== userId) {
+    if (product.user.toString() !== userId.toString()) {
         throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to delete product");
     }
 
