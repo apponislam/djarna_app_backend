@@ -10,6 +10,7 @@ import crypto from "crypto";
 import { sendSms } from "../../../utils/twilioHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 import mongoose from "mongoose";
+import { FollowModel } from "../follow/follow.model";
 
 const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -271,9 +272,17 @@ const setUserPassword = async (userId: string, newPassword: string) => {
 };
 
 const getMyProfile = async (userId: string) => {
-    const result = await UserModel.findById(userId).populate("referredBy", "name email phone");
-    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-    return result;
+    const user = await UserModel.findById(userId).populate("referredBy", "name email phone").lean();
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    const followersCount = await FollowModel.countDocuments({ following: userId });
+    const followingCount = await FollowModel.countDocuments({ follower: userId });
+
+    return {
+        ...user,
+        followersCount,
+        followingCount,
+    };
 };
 
 const boostShop = async (userId: string, boostPackId: string) => {
