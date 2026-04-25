@@ -31,7 +31,7 @@ const getMyAddresses = catchAsync(async (req: Request, res: Response) => {
 const updateAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    const result = await ShippingAddressService.updateAddress(userId, id, req.body);
+    const result = await ShippingAddressService.updateAddress(userId, id as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -44,7 +44,7 @@ const updateAddress = catchAsync(async (req: Request, res: Response) => {
 const deleteAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    await ShippingAddressService.deleteAddress(userId, id);
+    await ShippingAddressService.deleteAddress(userId, id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -57,7 +57,7 @@ const deleteAddress = catchAsync(async (req: Request, res: Response) => {
 const setDefaultAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    const result = await ShippingAddressService.setDefaultAddress(userId, id);
+    const result = await ShippingAddressService.setDefaultAddress(userId, id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
