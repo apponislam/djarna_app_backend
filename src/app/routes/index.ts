@@ -12,6 +12,7 @@ import { messageRoutes } from "../modules/message/messages.routes";
 import { ReviewRoutes } from "../modules/review/review.routes";
 import { BoostPaymentRoutes } from "../modules/boostPayment/boostPayment.routes";
 import { IdentityVerificationRoutes } from "../modules/identityVerification/identityVerification.routes";
+import { ShippingAddressRoutes } from "../modules/address/address.routes";
 
 const router = express.Router();
 
@@ -67,6 +68,10 @@ const moduleRoutes = [
     {
         path: "/identity-verification",
         route: IdentityVerificationRoutes,
+    },
+    {
+        path: "/address",
+        route: ShippingAddressRoutes,
     },
 ];
 
