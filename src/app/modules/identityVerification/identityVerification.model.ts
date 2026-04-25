@@ -39,4 +39,9 @@ const identityVerificationSchema = new Schema<IIdentityVerification>(
     },
 );
 
+// Deep indexing for optimized queries
+identityVerificationSchema.index({ status: 1 });
+identityVerificationSchema.index({ status: 1, createdAt: -1 });
+identityVerificationSchema.index({ documentType: 1 });
+
 export const IdentityVerificationModel = model<IIdentityVerification>("IdentityVerification", identityVerificationSchema);
