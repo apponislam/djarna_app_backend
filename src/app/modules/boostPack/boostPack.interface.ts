@@ -5,7 +5,6 @@ export interface IBoostPack {
     description?: string;
     type: BoostType;
     duration: number; // in days
-    listingsCount: number; // number of listings that can be boosted
     price: number;
     currency: string; // default "FCFA"
     isActive: boolean;

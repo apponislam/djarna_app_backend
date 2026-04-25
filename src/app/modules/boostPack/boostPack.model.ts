@@ -21,11 +21,6 @@ const BoostPackSchema = new Schema<IBoostPack>(
             required: [true, "Duration in days is required"],
             min: [1, "Duration must be at least 1 day"],
         },
-        listingsCount: {
-            type: Number,
-            required: [true, "Number of listings to boost is required"],
-            min: [1, "At least 1 listing must be boosted"],
-        },
         price: {
             type: Number,
             required: [true, "Price is required"],
