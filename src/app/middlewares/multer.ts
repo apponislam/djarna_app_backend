@@ -17,6 +17,9 @@ if (!fs.existsSync(productImageDir)) fs.mkdirSync(productImageDir, { recursive: 
 const messageFileDir = path.join(process.cwd(), "uploads", "messages");
 if (!fs.existsSync(messageFileDir)) fs.mkdirSync(messageFileDir, { recursive: true });
 
+const verificationDir = path.join(process.cwd(), "uploads", "verifications");
+if (!fs.existsSync(verificationDir)) fs.mkdirSync(verificationDir, { recursive: true });
+
 // Multer memory storage
 const storage = multer.memoryStorage();
 
@@ -61,6 +64,43 @@ export const uploadProfileImage = (req: Request, res: Response, next: NextFuncti
                 file.filename = newName;
                 file.path = `/uploads/profile-images/${newName}`;
                 file.mimetype = "image/webp";
+            } catch (error) {
+                return next(error);
+            }
+        }
+
+        next();
+    });
+};
+
+// Middleware for identity verification document uploads
+export const uploadVerificationDocs = (req: Request, res: Response, next: NextFunction) => {
+    const uploadFields = upload.fields([
+        { name: "frontImage", maxCount: 1 },
+        { name: "backImage", maxCount: 1 },
+        { name: "selfieImage", maxCount: 1 },
+    ]);
+
+    uploadFields(req, res, async (err) => {
+        if (err) return next(err);
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        if (files) {
+            try {
+                for (const field of ["frontImage", "backImage", "selfieImage"]) {
+                    if (files[field] && files[field][0]) {
+                        const file = files[field][0];
+                        const newName = generateFileName(`verify-${field}`);
+                        const outputPath = path.join(verificationDir, newName);
+
+                        // Compress and convert to webp
+                        await sharp(file.buffer).resize(1200, 1200, { fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toFile(outputPath);
+
+                        file.filename = newName;
+                        file.path = `/uploads/verifications/${newName}`;
+                        file.mimetype = "image/webp";
+                    }
+                }
             } catch (error) {
                 return next(error);
             }

@@ -65,7 +65,10 @@ const UserSchema = new Schema<User>(
             type: Boolean,
             default: false,
         },
-
+        verifiedBadge: {
+            type: Boolean,
+            default: false,
+        },
         lastLogin: {
             type: Date,
         },

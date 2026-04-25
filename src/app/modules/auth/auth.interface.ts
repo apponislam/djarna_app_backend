@@ -24,6 +24,7 @@ export interface User {
     };
     isActive: boolean;
     isPhoneVerified: boolean;
+    verifiedBadge: boolean;
     lastLogin?: Date;
 
     // Password reset fields
