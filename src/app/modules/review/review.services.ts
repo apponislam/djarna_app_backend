@@ -55,7 +55,7 @@ const getUserReviews = async (sellerId: string, query: { page?: number; limit?: 
 
     const filters = { seller: sellerId, isDeleted: false, adminVisibility: "show" };
 
-    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
     const total = await ReviewModel.countDocuments(filters);
     const totalPage = Math.ceil(total / limit);
@@ -88,7 +88,7 @@ const getUserReviews = async (sellerId: string, query: { page?: number; limit?: 
  * Get reviews for a specific product
  */
 const getProductReviews = async (productId: string) => {
-    return await ReviewModel.find({ product: productId, isDeleted: false, adminVisibility: "show" }).populate("user", "_id name photo").sort({ createdAt: -1 }).lean();
+    return await ReviewModel.find({ product: productId, isDeleted: false, adminVisibility: "show" }).populate("user", "_id name photo verifiedBadge").sort({ createdAt: -1 }).lean();
 };
 
 /**
@@ -104,7 +104,7 @@ const getAllReviews = async (query: { page?: number; limit?: number; searchTerm?
         filters.comment = { $regex: searchTerm, $options: "i" };
     }
 
-    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo").populate("seller", "_id name photo").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("seller", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
     const total = await ReviewModel.countDocuments(filters);
     const totalPage = Math.ceil(total / limit);

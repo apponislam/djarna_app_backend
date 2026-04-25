@@ -28,7 +28,7 @@ const createConversation = async (senderId: string, payload: { receiverId: strin
     }
 
     return await ConversationModel.findById(conversation._id).populate([
-        { path: "participantIds", select: "_id name photo phone" },
+        { path: "participantIds", select: "_id name photo phone verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);
 };
@@ -75,10 +75,10 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             arrayFilters: [{ "elem.userId": receiverId }],
             returnDocument: "after",
         },
-    ).populate([{ path: "participantIds", select: "_id name photo phone" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
+    ).populate([{ path: "participantIds", select: "_id name photo phone verifiedBadge" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
 
     // 4. Emit events
-    const messageToEmit = await MessageModel.findById(newMessage._id).populate("senderId", "_id name photo").lean();
+    const messageToEmit = await MessageModel.findById(newMessage._id).populate("senderId", "_id name photo verifiedBadge").lean();
 
     [senderId, receiverId].forEach((id) => {
         emitToUser(id.toString(), "new_message", messageToEmit);
@@ -97,11 +97,11 @@ const getMyConversations = async (userId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
     })
         .populate([
-            { path: "participantIds", select: "_id name photo phone" },
+            { path: "participantIds", select: "_id name photo phone verifiedBadge" },
             { path: "productId", select: "_id title images price" },
             {
                 path: "lastMessage",
-                populate: { path: "senderId", select: "_id name photo" },
+                populate: { path: "senderId", select: "_id name photo verifiedBadge" },
             },
         ])
         .sort({ updatedAt: -1 })
@@ -116,11 +116,11 @@ const getConversationById = async (userId: string, conversationId: string) => {
         _id: conversationId,
         participantIds: userId,
     }).populate([
-        { path: "participantIds", select: "_id name photo phone" },
+        { path: "participantIds", select: "_id name photo phone verifiedBadge" },
         { path: "productId", select: "_id title images price" },
         {
             path: "lastMessage",
-            populate: { path: "senderId", select: "_id name photo" },
+            populate: { path: "senderId", select: "_id name photo verifiedBadge" },
         },
     ]);
 
@@ -152,7 +152,7 @@ const getMessages = async (userId: string, conversationId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
         isDeleted: false,
     })
-        .populate("senderId", "_id name photo")
+        .populate("senderId", "_id name photo verifiedBadge")
         .sort({ createdAt: 1 })
         .lean();
 };

@@ -37,7 +37,7 @@ const getAllVerificationRequests = async (query: any) => {
     if (status) filter.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
-    const result = await IdentityVerificationModel.find(filter).populate("user", "name phone photo email").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+    const result = await IdentityVerificationModel.find(filter).populate("user", "name phone photo email verifiedBadge").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
 
     const total = await IdentityVerificationModel.countDocuments(filter);
 

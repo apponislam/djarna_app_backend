@@ -69,6 +69,7 @@ const getAllProducts = async (query: any, userId?: string) => {
                             photo: 1,
                             role: 1,
                             isActive: 1,
+                            verifiedBadge: 1,
                             // Exclude: password, createdAt, updatedAt, lastLogin
                         },
                     },
@@ -164,12 +165,12 @@ const getAllProducts = async (query: any, userId?: string) => {
 };
 
 const getMyProducts = async (userId: string) => {
-    const result = await ProductModel.find({ user: userId, isDeleted: false }).populate("boostPack").populate("user", "name email phone photo").sort({ createdAt: -1 });
+    const result = await ProductModel.find({ user: userId, isDeleted: false }).populate("boostPack").populate("user", "name email phone photo verifiedBadge").sort({ createdAt: -1 });
     return result;
 };
 
 const getProductById = async (id: string, userId?: string) => {
-    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone photo").lean();
+    const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone photo verifiedBadge").lean();
 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Product not found");

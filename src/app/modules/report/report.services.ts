@@ -24,8 +24,8 @@ const getAllReports = async (query: any) => {
     sortOptions[sortBy] = order === "desc" ? -1 : 1;
 
     const result = await ReportModel.find(filters)
-        .populate("reporter", "name email phone")
-        .populate("reportedUser", "name email phone")
+        .populate("reporter", "name email phone verifiedBadge")
+        .populate("reportedUser", "name email phone verifiedBadge")
         // Note: populate reportedItem might require specific logic due to refPath,
         // but for listing type we can explicitly populate product details if needed.
         .sort(sortOptions);
@@ -34,7 +34,7 @@ const getAllReports = async (query: any) => {
 };
 
 const getReportById = async (id: string) => {
-    const result = await ReportModel.findById(id).populate("reporter", "name email phone").populate("reportedUser", "name email phone");
+    const result = await ReportModel.findById(id).populate("reporter", "name email phone verifiedBadge").populate("reportedUser", "name email phone verifiedBadge");
 
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Report not found");
     return result;
