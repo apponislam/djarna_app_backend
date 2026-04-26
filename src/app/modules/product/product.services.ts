@@ -186,6 +186,72 @@ const getProductById = async (id: string, userId?: string) => {
     return result;
 };
 
+const getProductsByUserId = async (targetUserId: string, currentUserId?: string) => {
+    const filters: any = { user: targetUserId, status: "ACTIVE", isDeleted: false };
+
+    const pipeline: any[] = [
+        { $match: filters },
+        // Lookup user with only needed fields
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        { $unwind: "$user" },
+        {
+            $project: {
+                "user.password": 0,
+                "user.resetPasswordOtp": 0,
+                "user.resetPasswordOtpExpiry": 0,
+                "user.resetPasswordToken": 0,
+                "user.resetPasswordTokenExpiry": 0,
+                "user.phoneVerificationOtp": 0,
+                "user.phoneVerificationExpiry": 0,
+            },
+        },
+    ];
+
+    // Add favorite status if currentUserId is provided
+    if (currentUserId) {
+        pipeline.push({
+            $lookup: {
+                from: "favorites",
+                let: { productId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$user", new mongoose.Types.ObjectId(currentUserId)] }],
+                            },
+                        },
+                    },
+                ],
+                as: "favoriteData",
+            },
+        });
+        pipeline.push({
+            $addFields: {
+                isFavorite: { $gt: [{ $size: "$favoriteData" }, 0] },
+            },
+        });
+        pipeline.push({
+            $project: { favoriteData: 0 },
+        });
+    } else {
+        pipeline.push({
+            $addFields: { isFavorite: false },
+        });
+    }
+
+    pipeline.push({ $sort: { createdAt: -1 } });
+
+    const products = await ProductModel.aggregate(pipeline);
+    return products;
+};
+
 const updateProduct = async (id: string, userId: string, payload: Partial<IProduct>) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
@@ -254,6 +320,7 @@ export const ProductService = {
     createProduct,
     getAllProducts,
     getMyProducts,
+    getProductsByUserId,
     getProductById,
     updateProduct,
     updateProductStatus,
