@@ -59,7 +59,7 @@ const getMyProducts = catchAsync(async (req: Request, res: Response) => {
 const getProductsByUserId = catchAsync(async (req: Request, res: Response) => {
     const currentUserId = req.user?._id;
     const targetUserId = req.params.userId;
-    const result = await ProductService.getProductsByUserId(targetUserId, currentUserId);
+    const result = await ProductService.getProductsByUserId(targetUserId as string, currentUserId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

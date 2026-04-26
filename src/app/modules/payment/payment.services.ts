@@ -1,22 +1,27 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { PaymentModel } from "./payment.model";
-import { IPayment } from "./payment.interface";
+import { IPayment, Currency, PaymentMethod } from "./payment.interface";
 import config from "../../config";
 import axios from "axios";
 import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
+import { SettingsModel } from "../settings/settings.model";
+import { MessageModel } from "../message/messages.model";
+import { UserModel } from "../auth/auth.model";
 
 interface IPaymentInitialize {
     userId: string;
-    amount: number;
-    productPrice?: number;
-    buyerFee?: number;
-    siteFee?: number;
-    shippingFee?: number;
-    currency?: string;
+    sellerId: string;
+    productId: string;
+    messageId?: string;
+    addressId?: string;
+    productPrice: number;
+    buyerProtectionFee: number;
+    shippingCost: number;
+    currency?: Currency;
     description?: string;
-    method?: string;
+    method?: PaymentMethod;
     metadata?: Record<string, any>;
 }
 
@@ -31,13 +36,27 @@ interface IPaymentFilter {
 const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment: IPayment; invoiceUrl: string; invoiceToken: string }> => {
     console.log("initializePayment called with:", payload);
 
+    // Get commission rate from settings
+    const settings = await SettingsModel.findOne();
+    const commissionRate = settings?.payment?.commissionRate || 8;
+
+    // Calculations
+    const siteFee = (payload.productPrice * commissionRate) / 100;
+    const buyerFee = payload.productPrice - siteFee; // Amount for seller
+    const totalAmount = payload.productPrice + payload.buyerProtectionFee + payload.shippingCost;
+
     const payment = await PaymentModel.create({
         userId: payload.userId,
-        amount: payload.amount,
+        sellerId: payload.sellerId,
+        productId: payload.productId,
+        messageId: payload.messageId,
+        addressId: payload.addressId,
         productPrice: payload.productPrice,
-        buyerFee: payload.buyerFee,
-        siteFee: payload.siteFee,
-        shippingFee: payload.shippingFee,
+        buyerProtectionFee: payload.buyerProtectionFee,
+        shippingCost: payload.shippingCost,
+        totalAmount: totalAmount,
+        siteFee: siteFee,
+        buyerFee: buyerFee,
         currency: payload.currency || "FCFA",
         description: payload.description,
         method: payload.method || "PAYDUNYA",
@@ -48,60 +67,36 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
     console.log("Payment record created:", payment._id);
 
     try {
-        console.log("Paydunya Config:", {
-            hasMasterKey: !!config.paydunya_master_key,
-            masterKeyLength: config.paydunya_master_key?.length,
-            hasPublicKey: !!config.paydunya_public_key,
-            hasPrivateKey: !!config.paydunya_private_key,
-            hasToken: !!config.paydunya_token,
-        });
-
         const items: any = {};
         let itemIndex = 0;
 
-        if (payload.productPrice) {
-            items[`item_${itemIndex++}`] = {
-                name: "Product Price",
-                quantity: 1,
-                unit_price: payload.productPrice.toString(),
-                total_price: payload.productPrice.toString(),
-            };
-        }
+        items[`item_${itemIndex++}`] = {
+            name: "Product Price",
+            quantity: 1,
+            unit_price: payload.productPrice.toString(),
+            total_price: payload.productPrice.toString(),
+        };
 
-        if (payload.buyerFee) {
-            items[`item_${itemIndex++}`] = {
-                name: "Buyer Protection Fee",
-                quantity: 1,
-                unit_price: payload.buyerFee.toString(),
-                total_price: payload.buyerFee.toString(),
-            };
-        }
+        items[`item_${itemIndex++}`] = {
+            name: "Buyer Protection Fee",
+            quantity: 1,
+            unit_price: payload.buyerProtectionFee.toString(),
+            total_price: payload.buyerProtectionFee.toString(),
+        };
 
-        if (payload.shippingFee) {
-            items[`item_${itemIndex++}`] = {
-                name: "Shipping Fee",
-                quantity: 1,
-                unit_price: payload.shippingFee.toString(),
-                total_price: payload.shippingFee.toString(),
-            };
-        }
-
-        // Fallback if no detailed breakdown provided
-        if (itemIndex === 0) {
-            items[`item_0`] = {
-                name: payload.description || "Payment",
-                quantity: 1,
-                unit_price: payload.amount.toString(),
-                total_price: payload.amount.toString(),
-            };
-        }
+        items[`item_${itemIndex++}`] = {
+            name: "Shipping Fee",
+            quantity: 1,
+            unit_price: payload.shippingCost.toString(),
+            total_price: payload.shippingCost.toString(),
+        };
 
         const paydunyaResponse = await axios.post(
             "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create",
             {
                 invoice: {
                     items,
-                    total_amount: payload.amount,
+                    total_amount: totalAmount,
                     description: payload.description || "Payment via Djarna App",
                 },
                 store: {
@@ -175,16 +170,48 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
             payment.transactionId = response.data?.response?.transaction_id;
             await payment.save();
 
-            // Handle Order Update if metadata contains orderId
-            if (payment.metadata && payment.metadata.orderId && payment.metadata.type === "PRODUCT_ORDER") {
-                const order = await OrderModel.findById(payment.metadata.orderId);
-                if (order) {
-                    order.status = "PAID";
-                    await order.save();
-                    // Update product status
-                    await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
-                }
+            // 1. Increase the balance of the seller (buyerFee + shippingCost)
+            // Note: User mentioned "increase balance of buyer", but logically it's the seller who receives funds.
+            // Using sellerId from payment record.
+            if (payment.sellerId) {
+                const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
+                await UserModel.findByIdAndUpdate(payment.sellerId, {
+                    $inc: { balance: sellerBalanceIncrease },
+                });
             }
+
+            // 2. If there is a messageId, mark it as COMPLETED
+            if (payment.messageId) {
+                await MessageModel.findByIdAndUpdate(payment.messageId, {
+                    type: "COMPLETED",
+                });
+            }
+
+            // 3. Create an Order (if not already created)
+            const existingOrder = await OrderModel.findOne({ payment: payment._id });
+            if (!existingOrder) {
+                const orderData: any = {
+                    buyer: payment.userId,
+                    seller: payment.sellerId,
+                    product: payment.productId,
+                    address: payment.addressId,
+                    status: "PAID",
+                    productPrice: payment.productPrice,
+                    buyerProtectionFee: payment.buyerProtectionFee,
+                    shippingCost: payment.shippingCost,
+                    siteFee: payment.siteFee,
+                    buyerFee: payment.buyerFee,
+                    totalAmount: payment.totalAmount,
+                    payment: payment._id,
+                    deliveryMethod: payment.metadata?.deliveryMethod || "HOME_DELIVERY",
+                };
+                await OrderModel.create(orderData);
+            }
+
+            // 4. Mark Product as SOLD
+            await ProductModel.findByIdAndUpdate(payment.productId, {
+                status: "SOLD",
+            });
         } else {
             payment.status = "FAILED";
             await payment.save();
@@ -264,11 +291,11 @@ const refundPayment = async (id: string): Promise<IPayment> => {
     }
 
     try {
-        await axios.post(
+        const response = await axios.post(
             `https://paydunya.com/api/v1/refund`,
             {
                 invoice_token: payment.paydunyaInvoiceToken,
-                amount: payment.amount,
+                amount: payment.totalAmount,
             },
             {
                 headers: {

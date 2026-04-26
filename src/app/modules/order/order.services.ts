@@ -7,39 +7,17 @@ import { PaymentService } from "../payment/payment.services";
 import { SettingsModel } from "../settings/settings.model";
 import { Types } from "mongoose";
 
-const calculateFees = async (productPrice: number, deliveryMethod: DeliveryMethod) => {
-    const settings = await SettingsModel.findOne();
-    const siteFeePercentage = settings?.payment?.commissionRate || 8;
-    const buyerFee = settings?.payment?.buyerFee || 0.95;
-
-    const siteFee = (productPrice * siteFeePercentage) / 100;
-
-    let shippingCost = 0;
-
-    switch (deliveryMethod) {
-        case "HOME_DELIVERY":
-            shippingCost = 3.75;
-            break;
-        case "PICKUP_POINT":
-            shippingCost = 2.5;
-            break;
-        case "MEET_UP":
-            shippingCost = 0;
-            break;
-    }
-
-    const totalAmount = productPrice + buyerFee + shippingCost;
-
-    return {
-        productPrice,
-        buyerFee,
-        siteFee,
-        shippingCost,
-        totalAmount,
-    };
-};
-
-const createOrder = async (buyerId: string, payload: { productId: string; deliveryMethod: DeliveryMethod; shippingAddress?: any }) => {
+const createOrder = async (
+    buyerId: string,
+    payload: {
+        productId: string;
+        deliveryMethod: DeliveryMethod;
+        address?: string;
+        productPrice: number;
+        buyerProtectionFee: number;
+        shippingCost: number;
+    },
+) => {
     const product = await ProductModel.findOne({ _id: payload.productId, isDeleted: false, status: "ACTIVE" });
     if (!product) {
         throw new ApiError(httpStatus.NOT_FOUND, "Product not found or not available");
@@ -49,48 +27,24 @@ const createOrder = async (buyerId: string, payload: { productId: string; delive
         throw new ApiError(httpStatus.BAD_REQUEST, "You cannot buy your own product");
     }
 
-    const priceSummaryResult = await calculateFees(product.price, payload.deliveryMethod);
-
-    const orderData: Partial<IOrder> = {
-        buyer: new Types.ObjectId(buyerId),
-        seller: product.user,
-        product: product._id,
-        deliveryMethod: payload.deliveryMethod,
-        shippingAddress: payload.shippingAddress,
-        priceSummary: {
-            productPrice: priceSummaryResult.productPrice,
-            buyerProtectionFee: priceSummaryResult.buyerFee,
-            shippingCost: priceSummaryResult.shippingCost,
-            siteFee: priceSummaryResult.siteFee,
-            totalAmount: priceSummaryResult.totalAmount,
-        },
-        status: "PENDING",
-    };
-
-    const order = await OrderModel.create(orderData);
-
-    // Initialize Payment
+    // Initialize Payment ONLY - DO NOT create order yet
     const paymentInitialization = await PaymentService.initializePayment({
         userId: buyerId,
-        amount: priceSummaryResult.totalAmount,
-        productPrice: priceSummaryResult.productPrice,
-        buyerFee: priceSummaryResult.buyerFee,
-        siteFee: priceSummaryResult.siteFee,
-        shippingFee: priceSummaryResult.shippingCost,
-        currency: "EUR", // User example used Euro
-        description: `Order for ${product.title}`,
+        sellerId: product.user.toString(),
+        productId: product._id.toString(),
+        addressId: payload.address,
+        productPrice: payload.productPrice,
+        buyerProtectionFee: payload.buyerProtectionFee,
+        shippingCost: payload.shippingCost,
+        currency: "FCFA",
+        description: `Payment for ${product.title}`,
         metadata: {
-            orderId: order._id,
             type: "PRODUCT_ORDER",
+            deliveryMethod: payload.deliveryMethod,
         },
     });
 
-    // Link payment to order
-    order.payment = (paymentInitialization.payment as any)._id;
-    await order.save();
-
     return {
-        order,
         payment: paymentInitialization,
     };
 };

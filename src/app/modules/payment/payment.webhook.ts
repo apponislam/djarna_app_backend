@@ -8,6 +8,8 @@ import { BoostPaymentModel } from "../boostPayment/boostPayment.model";
 import { BoostPaymentService } from "../boostPayment/boostPayment.services";
 import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
+import { MessageModel } from "../message/messages.model";
+import { UserModel } from "../auth/auth.model";
 
 const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string, receiptUrl?: string): Promise<any> => {
     // 1. Try to find in standard PaymentModel
@@ -53,15 +55,49 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         await BoostPaymentService.applyBoostEffects(payment._id.toString());
     }
 
-    // 4. If it's a completed product order payment, update order status
-    if (!isBoostPayment && status === "completed" && payment.metadata && payment.metadata.orderId && payment.metadata.type === "PRODUCT_ORDER") {
-        const order = await OrderModel.findById(payment.metadata.orderId);
-        if (order) {
-            order.status = "PAID";
-            await order.save();
-            // Update product status
-            await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
+    // 4. If it's a completed product order payment, handle business logic
+    if (!isBoostPayment && status === "completed") {
+        // 1. Increase the balance of the seller
+        if (payment.sellerId) {
+            const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
+            await UserModel.findByIdAndUpdate(payment.sellerId, {
+                $inc: { balance: sellerBalanceIncrease },
+            });
         }
+
+        // 2. If there is a messageId, mark it as COMPLETED
+        if (payment.messageId) {
+            await MessageModel.findByIdAndUpdate(payment.messageId, {
+                type: "COMPLETED",
+            });
+        }
+
+        // 3. Create an Order (if not already created)
+        const existingOrder = await OrderModel.findOne({ payment: payment._id });
+        if (!existingOrder) {
+            const orderData: any = {
+                buyer: payment.userId,
+                seller: payment.sellerId,
+                product: payment.productId,
+                address: payment.addressId,
+                status: "PAID",
+                productPrice: payment.productPrice,
+                buyerProtectionFee: payment.buyerProtectionFee,
+                shippingCost: payment.shippingCost,
+                siteFee: payment.siteFee,
+                buyerFee: payment.buyerFee,
+                totalAmount: payment.totalAmount,
+                payment: payment._id,
+                deliveryMethod: payment.metadata?.deliveryMethod || "HOME_DELIVERY",
+            };
+
+            await OrderModel.create(orderData);
+        }
+
+        // 4. Mark Product as SOLD
+        await ProductModel.findByIdAndUpdate(payment.productId, {
+            status: "SOLD",
+        });
     }
 
     return payment;

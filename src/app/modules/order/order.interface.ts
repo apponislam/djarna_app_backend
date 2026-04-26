@@ -7,23 +7,18 @@ export interface IOrder {
     buyer: Types.ObjectId;
     seller: Types.ObjectId;
     product: Types.ObjectId;
-    shippingAddress?: {
-        fullName: string;
-        country: string;
-        addressLine1: string;
-        addressLine2?: string;
-        postcode: string;
-        city: string;
-    };
+    address?: Types.ObjectId;
     deliveryMethod: DeliveryMethod;
     status: OrderStatus;
-    priceSummary: {
-        productPrice: number;
-        buyerProtectionFee: number;
-        shippingCost: number;
-        siteFee: number;
-        totalAmount: number;
-    };
+
+    productPrice: number;
+    buyerProtectionFee: number;
+    shippingCost: number;
+    totalAmount: number;
+
+    buyerFee: number;
+    siteFee: number;
+
     payment?: Types.ObjectId;
     isDeleted: boolean;
     createdAt: Date;

@@ -7,7 +7,13 @@ import { Request, Response } from "express";
 const initializePayment = catchAsync(async (req: Request, res: Response) => {
     const result = await PaymentService.initializePayment({
         userId: req.user!._id,
-        amount: req.body.amount,
+        sellerId: req.body.sellerId,
+        productId: req.body.productId,
+        messageId: req.body.messageId,
+        addressId: req.body.addressId,
+        productPrice: req.body.productPrice,
+        buyerProtectionFee: req.body.buyerProtectionFee,
+        shippingCost: req.body.shippingCost,
         currency: req.body.currency,
         description: req.body.description,
         method: req.body.method,

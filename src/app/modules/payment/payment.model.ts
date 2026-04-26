@@ -4,18 +4,49 @@ import { IPayment, PaymentStatus, PaymentMethod, Currency } from "./payment.inte
 const PaymentSchema = new Schema<IPayment>(
     {
         userId: {
-            type: String,
+            type: Schema.Types.ObjectId,
+            ref: "User",
             required: [true, "User ID is required"],
             index: true,
         },
-        amount: {
-            type: Number,
-            required: [true, "Amount is required"],
-            min: [0, "Amount cannot be negative"],
+        sellerId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: [true, "Seller ID is required"],
+            index: true,
+        },
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            required: [true, "Product ID is required"],
+            index: true,
+        },
+        messageId: {
+            type: Schema.Types.ObjectId,
+            ref: "Message",
+        },
+        addressId: {
+            type: Schema.Types.ObjectId,
         },
         productPrice: {
             type: Number,
+            required: [true, "Product price is required"],
             min: [0, "Product price cannot be negative"],
+        },
+        buyerProtectionFee: {
+            type: Number,
+            required: [true, "Buyer protection fee is required"],
+            min: [0, "Buyer protection fee cannot be negative"],
+        },
+        shippingCost: {
+            type: Number,
+            required: [true, "Shipping cost is required"],
+            min: [0, "Shipping cost cannot be negative"],
+        },
+        totalAmount: {
+            type: Number,
+            required: [true, "Total amount is required"],
+            min: [0, "Total amount cannot be negative"],
         },
         buyerFee: {
             type: Number,
@@ -24,10 +55,6 @@ const PaymentSchema = new Schema<IPayment>(
         siteFee: {
             type: Number,
             min: [0, "Site fee cannot be negative"],
-        },
-        shippingFee: {
-            type: Number,
-            min: [0, "Shipping fee cannot be negative"],
         },
         currency: {
             type: String,
