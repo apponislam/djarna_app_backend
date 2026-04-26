@@ -8,8 +8,8 @@ import { BoostPaymentModel } from "../boostPayment/boostPayment.model";
 import { BoostPaymentService } from "../boostPayment/boostPayment.services";
 import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
-import { MessageModel } from "../message/messages.model";
 import { UserModel } from "../auth/auth.model";
+import { messageServices } from "../message/messages.services";
 
 const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string, receiptUrl?: string): Promise<any> => {
     // 1. Try to find in standard PaymentModel
@@ -70,11 +70,9 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
             await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
         }
 
-        // 2. If there is a messageId, mark it as COMPLETED
+        // 2. If there is a messageId, mark it as COMPLETED and sync via socket
         if (payment.messageId) {
-            await MessageModel.findByIdAndUpdate(payment.messageId, {
-                type: "COMPLETED",
-            });
+            await messageServices.markMessageAsCompleted(payment.messageId.toString());
         }
 
         // 3. Create an Order (if not already created)

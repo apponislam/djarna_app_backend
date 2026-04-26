@@ -387,6 +387,26 @@ const deleteMessage = async (userId: string, messageId: string) => {
 };
 
 /**
+ * Mark a message as COMPLETED and sync via socket
+ */
+const markMessageAsCompleted = async (messageId: string) => {
+    const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { new: true }).populate([
+        { path: "senderId", select: "_id name photo verifiedBadge" },
+        { path: "productId", select: "_id title images price" },
+    ]);
+
+    if (message) {
+        const conversation = await ConversationModel.findById(message.conversationId);
+        if (conversation) {
+            conversation.participantIds.forEach((id) => {
+                emitToUser(id.toString(), "message_updated", message);
+            });
+        }
+    }
+    return message;
+};
+
+/**
  * Get a specific message by ID
  */
 const getSingleMessage = async (userId: string, messageId: string) => {
@@ -426,5 +446,6 @@ export const messageServices = {
     editMessage,
     deleteConversation,
     deleteMessage,
+    markMessageAsCompleted,
     getSingleMessage,
 };
