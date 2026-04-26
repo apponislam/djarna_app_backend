@@ -7,6 +7,7 @@ import { emitToUser } from "../../socket/socket";
 
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
+import { codec } from "zod";
 
 /**
  * Create a new conversation
@@ -79,6 +80,8 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
  * Send a new message
  */
 const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId?: string }) => {
+    if (["ACCEPTED", "REJECTED", "COMPLETED"].includes(payload.type as any)) throw new ApiError(httpStatus.BAD_REQUEST, "Direct send not allowed for this type");
+
     let { receiverId, ...messageData } = payload;
 
     // 1. Fetch product info if productId is provided
@@ -307,27 +310,21 @@ const markAsRead = async (userId: string, conversationId: string) => {
  * Update offer status
  */
 const updateOfferStatus = async (userId: string, messageId: string, status: MessageType) => {
-    const message = await MessageModel.findById(messageId);
-    if (!message || message.type !== "OFFER") {
-        throw new ApiError(httpStatus.NOT_FOUND, "Offer message not found");
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: "OFFER" }, { $set: { type: status } }, { new: true }).populate([
+        { path: "senderId", select: "_id name photo verifiedBadge" },
+        { path: "productId", select: "_id title images price" },
+    ]);
+
+    if (!message) throw new ApiError(httpStatus.NOT_FOUND, "Offer message not found");
+
+    const conversation = await ConversationModel.findById(message.conversationId);
+    if (conversation) {
+        conversation.participantIds.forEach((id) => {
+            emitToUser(id.toString(), "message_updated", message);
+        });
     }
 
-    // Update original offer message or create status update message?
-    // Based on demo routes, we create a new message with status type
-    const conversation = await ConversationModel.findById(message.conversationId);
-    if (!conversation) throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found");
-
-    const receiverId = conversation.participantIds.find((id) => id.toString() !== userId.toString())?.toString();
-
-    if (!receiverId) throw new ApiError(httpStatus.BAD_REQUEST, "Receiver not found");
-
-    return await sendMessage(userId, {
-        conversationId: message.conversationId,
-        receiverId,
-        type: status,
-        productId: message.productId,
-        text: `Offer ${status.toLowerCase()}`,
-    });
+    return message;
 };
 
 /**
