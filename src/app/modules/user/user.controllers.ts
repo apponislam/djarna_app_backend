@@ -4,6 +4,18 @@ import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { UserServices } from "./user.services";
 
+const getPopularUsers = catchAsync(async (req: Request, res: Response) => {
+    const currentUserId = req.user?._id;
+    const result = await UserServices.getPopularUsers(currentUserId, req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Popular users retrieved successfully",
+        meta: result.meta,
+        data: result.data,
+    });
+});
+
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     const result = await UserServices.getAllUsers(req.query);
     sendResponse(res, {
@@ -37,6 +49,7 @@ const getUserStats = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const UserControllers = {
+    getPopularUsers,
     getAllUsers,
     getSingleUser,
     getUserStats,

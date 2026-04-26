@@ -13,6 +13,22 @@ const PaymentSchema = new Schema<IPayment>(
             required: [true, "Amount is required"],
             min: [0, "Amount cannot be negative"],
         },
+        productPrice: {
+            type: Number,
+            min: [0, "Product price cannot be negative"],
+        },
+        buyerFee: {
+            type: Number,
+            min: [0, "Buyer fee cannot be negative"],
+        },
+        siteFee: {
+            type: Number,
+            min: [0, "Site fee cannot be negative"],
+        },
+        shippingFee: {
+            type: Number,
+            min: [0, "Shipping fee cannot be negative"],
+        },
         currency: {
             type: String,
             enum: ["FCFA", "USD", "EUR"],
@@ -26,7 +42,7 @@ const PaymentSchema = new Schema<IPayment>(
         },
         method: {
             type: String,
-            enum: ["PAYDUNYA", "CARD", "MOBILE_MONEY", "WALLET"],
+            enum: ["PAYDUNYA", "CARD", "MOBILE_MONEY", "WALLET", "APPLE_PAY", "GOOGLE_PAY"],
             required: [true, "Payment method is required"],
         },
         transactionId: {

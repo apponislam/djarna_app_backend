@@ -4,10 +4,16 @@ import { PaymentModel } from "./payment.model";
 import { IPayment } from "./payment.interface";
 import config from "../../config";
 import axios from "axios";
+import { OrderModel } from "../order/order.model";
+import { ProductModel } from "../product/product.model";
 
 interface IPaymentInitialize {
     userId: string;
     amount: number;
+    productPrice?: number;
+    buyerFee?: number;
+    siteFee?: number;
+    shippingFee?: number;
     currency?: string;
     description?: string;
     method?: string;
@@ -28,6 +34,10 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
     const payment = await PaymentModel.create({
         userId: payload.userId,
         amount: payload.amount,
+        productPrice: payload.productPrice,
+        buyerFee: payload.buyerFee,
+        siteFee: payload.siteFee,
+        shippingFee: payload.shippingFee,
         currency: payload.currency || "FCFA",
         description: payload.description,
         method: payload.method || "PAYDUNYA",
@@ -46,18 +56,51 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
             hasToken: !!config.paydunya_token,
         });
 
+        const items: any = {};
+        let itemIndex = 0;
+
+        if (payload.productPrice) {
+            items[`item_${itemIndex++}`] = {
+                name: "Product Price",
+                quantity: 1,
+                unit_price: payload.productPrice.toString(),
+                total_price: payload.productPrice.toString(),
+            };
+        }
+
+        if (payload.buyerFee) {
+            items[`item_${itemIndex++}`] = {
+                name: "Buyer Protection Fee",
+                quantity: 1,
+                unit_price: payload.buyerFee.toString(),
+                total_price: payload.buyerFee.toString(),
+            };
+        }
+
+        if (payload.shippingFee) {
+            items[`item_${itemIndex++}`] = {
+                name: "Shipping Fee",
+                quantity: 1,
+                unit_price: payload.shippingFee.toString(),
+                total_price: payload.shippingFee.toString(),
+            };
+        }
+
+        // Fallback if no detailed breakdown provided
+        if (itemIndex === 0) {
+            items[`item_0`] = {
+                name: payload.description || "Payment",
+                quantity: 1,
+                unit_price: payload.amount.toString(),
+                total_price: payload.amount.toString(),
+            };
+        }
+
         const paydunyaResponse = await axios.post(
             "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create",
             {
                 invoice: {
-                    items: {
-                        item_0: {
-                            name: payload.description || "Payment",
-                            quantity: 1,
-                            unit_price: payload.amount.toString(),
-                            total_price: payload.amount.toString(),
-                        },
-                    },
+                    items,
                     total_amount: payload.amount,
                     description: payload.description || "Payment via Djarna App",
                 },
@@ -131,6 +174,17 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
             payment.paidAt = new Date();
             payment.transactionId = response.data?.response?.transaction_id;
             await payment.save();
+
+            // Handle Order Update if metadata contains orderId
+            if (payment.metadata && payment.metadata.orderId && payment.metadata.type === "PRODUCT_ORDER") {
+                const order = await OrderModel.findById(payment.metadata.orderId);
+                if (order) {
+                    order.status = "PAID";
+                    await order.save();
+                    // Update product status
+                    await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
+                }
+            }
         } else {
             payment.status = "FAILED";
             await payment.save();

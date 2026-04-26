@@ -2,6 +2,104 @@ import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { UserModel } from "../auth/auth.model";
 import { ProductModel } from "../product/product.model";
+import { FollowModel } from "../follow/follow.model";
+import { Types } from "mongoose";
+
+const getPopularUsers = async (currentUserId?: string, query: Record<string, any> = {}) => {
+    const { searchTerm, page = 1, limit = 10 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter: any = { isActive: true };
+
+    if (searchTerm) {
+        filter.$or = [{ name: { $regex: searchTerm, $options: "i" } }, { email: { $regex: searchTerm, $options: "i" } }, { phone: { $regex: searchTerm, $options: "i" } }];
+    }
+
+    const aggregationPipeline: any[] = [
+        // Match active users and apply search filter
+        { $match: filter },
+        // Look up follower count from follows collection
+        {
+            $lookup: {
+                from: "follows",
+                localField: "_id",
+                foreignField: "following",
+                as: "followers",
+            },
+        },
+        {
+            $addFields: {
+                followerCount: { $size: "$followers" },
+            },
+        },
+        // Look up published product count
+        {
+            $lookup: {
+                from: "products",
+                localField: "_id",
+                foreignField: "user",
+                as: "products",
+                pipeline: [{ $match: { isDeleted: false, status: "ACTIVE" } }],
+            },
+        },
+        {
+            $addFields: {
+                publishedProductCount: { $size: "$products" },
+            },
+        },
+        // Check if current user is following
+        {
+            $addFields: {
+                isFollowing: {
+                    $cond: {
+                        if: {
+                            $and: [
+                                { $ne: [currentUserId, undefined] },
+                                {
+                                    $in: [currentUserId ? new Types.ObjectId(currentUserId) : null, "$followers.follower"],
+                                },
+                            ],
+                        },
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
+        },
+        // Sort by followerCount descending
+        { $sort: { followerCount: -1 } },
+        // Pagination
+        { $skip: skip },
+        { $limit: Number(limit) },
+        // Project needed fields
+        {
+            $project: {
+                password: 0,
+                resetPasswordOtp: 0,
+                resetPasswordOtpExpiry: 0,
+                resetPasswordToken: 0,
+                resetPasswordTokenExpiry: 0,
+                phoneVerificationOtp: 0,
+                phoneVerificationExpiry: 0,
+                products: 0,
+                followers: 0,
+            },
+        },
+    ];
+
+    const popularUsers = await UserModel.aggregate(aggregationPipeline);
+    const total = await UserModel.countDocuments(filter);
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: popularUsers,
+    };
+};
 
 const getAllUsers = async (query: Record<string, any>) => {
     const { searchTerm, verifiedBadge, isActive, page = 1, limit = 10 } = query;
@@ -119,6 +217,7 @@ const getUserStats = async () => {
 };
 
 export const UserServices = {
+    getPopularUsers,
     getAllUsers,
     getSingleUser,
     getUserStats,

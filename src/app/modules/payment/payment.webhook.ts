@@ -6,6 +6,8 @@ import sendResponse from "../../../utils/sendResponse";
 import { Request, Response } from "express";
 import { BoostPaymentModel } from "../boostPayment/boostPayment.model";
 import { BoostPaymentService } from "../boostPayment/boostPayment.services";
+import { OrderModel } from "../order/order.model";
+import { ProductModel } from "../product/product.model";
 
 const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string, receiptUrl?: string): Promise<any> => {
     // 1. Try to find in standard PaymentModel
@@ -49,6 +51,17 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
     // 3. If it's a completed boost payment, apply boost effects
     if (isBoostPayment && status === "completed") {
         await BoostPaymentService.applyBoostEffects(payment._id.toString());
+    }
+
+    // 4. If it's a completed product order payment, update order status
+    if (!isBoostPayment && status === "completed" && payment.metadata && payment.metadata.orderId && payment.metadata.type === "PRODUCT_ORDER") {
+        const order = await OrderModel.findById(payment.metadata.orderId);
+        if (order) {
+            order.status = "PAID";
+            await order.save();
+            // Update product status
+            await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
+        }
     }
 
     return payment;

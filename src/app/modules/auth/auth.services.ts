@@ -128,11 +128,11 @@ const loginUser = async (data: { phone: string; password: string }) => {
 
     // Find user
     const user = await UserModel.findOne({ phone: normalizedPhone });
-    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials");
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
 
     // Check password
     const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials");
+    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
 
     // Check if active
     if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Account is deactivated");
