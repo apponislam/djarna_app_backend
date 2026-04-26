@@ -6,25 +6,24 @@ import { uploadMessageFiles } from "../../middlewares/multer";
 const router = express.Router();
 
 // All routes require authentication
-router.use(auth);
 
 // Conversation management
-router.post("/conversations", messageControllers.createConversation);
-router.get("/conversations", messageControllers.getUserConversations);
-router.get("/conversations/:conversationId", messageControllers.getConversationById);
-router.post("/conversations/:conversationId/read", messageControllers.markAsRead);
-router.delete("/conversations/:conversationId", messageControllers.deleteConversation);
+router.post("/conversations", auth, messageControllers.createConversation);
+router.get("/conversations", auth, messageControllers.getUserConversations);
+router.get("/conversations/:conversationId", auth, messageControllers.getConversationById);
+router.post("/conversations/:conversationId/read", auth, messageControllers.markAsRead);
+router.delete("/conversations/:conversationId", auth, messageControllers.deleteConversation);
 
 // Message management
-router.get("/conversations/:conversationId/messages", messageControllers.getMessages);
-router.post("/send", uploadMessageFiles, messageControllers.sendMessage);
+router.get("/conversations/:conversationId/messages", auth, messageControllers.getMessages);
+router.post("/send", auth, uploadMessageFiles, messageControllers.sendMessage);
 
 // Offer management
-router.post("/:messageId/accept", messageControllers.acceptOffer);
-router.post("/:messageId/reject", messageControllers.rejectOffer);
+router.post("/:messageId/accept", auth, messageControllers.acceptOffer);
+router.post("/:messageId/reject", auth, messageControllers.rejectOffer);
 
 // Message editing/deletion
-router.patch("/:messageId", messageControllers.editMessage);
-router.delete("/:messageId", messageControllers.deleteMessage);
+router.patch("/:messageId", auth, messageControllers.editMessage);
+router.delete("/:messageId", auth, messageControllers.deleteMessage);
 
 export const messageRoutes = router;

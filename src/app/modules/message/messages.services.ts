@@ -5,11 +5,32 @@ import { ConversationModel, MessageModel } from "./messages.model";
 import { Message, MessageType } from "./messages.interface";
 import { emitToUser } from "../../socket/socket";
 
+import { ProductModel } from "../product/product.model";
+
 /**
  * Create a new conversation
  */
-const createConversation = async (senderId: string, payload: { receiverId: string; productId?: string; productOwner?: string }) => {
-    const { receiverId, productId, productOwner } = payload;
+const createConversation = async (senderId: string, payload: { receiverId?: string; productId?: string }) => {
+    let { receiverId, productId } = payload;
+    console.log("Create Conversation Payload:", { senderId, receiverId, productId });
+    let productOwner;
+
+    // If productId is provided, find the product and set productOwner and receiverId
+    if (productId) {
+        const product = await ProductModel.findById(productId);
+        if (!product) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Product not found!");
+        }
+        productOwner = product.user.toString();
+        // If receiverId is not provided, use the product owner as receiver
+        if (!receiverId) {
+            receiverId = productOwner;
+        }
+    }
+
+    if (!receiverId) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+    }
 
     let conversation = await ConversationModel.findOne({
         participantIds: { $all: [senderId, receiverId], $size: 2 },
@@ -25,6 +46,11 @@ const createConversation = async (senderId: string, payload: { receiverId: strin
                 { userId: new Types.ObjectId(receiverId), count: 0 },
             ],
         });
+    } else if (productId && !conversation.productId) {
+        // Update existing conversation with product info if it was missing
+        conversation.productId = productId as any;
+        conversation.productOwner = productOwner as any;
+        await conversation.save();
     }
 
     return await ConversationModel.findById(conversation._id).populate([
@@ -36,8 +62,21 @@ const createConversation = async (senderId: string, payload: { receiverId: strin
 /**
  * Send a new message
  */
-const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId: string }) => {
-    const { receiverId, ...messageData } = payload;
+const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId?: string }) => {
+    let { receiverId, ...messageData } = payload;
+
+    // If productId is provided but no receiverId, fetch receiverId from product owner
+    if (messageData.productId && !receiverId) {
+        const product = await ProductModel.findById(messageData.productId);
+        if (product) {
+            receiverId = product.user.toString();
+            messageData.productOwner = product.user as any;
+        }
+    }
+
+    if (!receiverId) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+    }
 
     // 1. Find or Create conversation
     let conversation = await ConversationModel.findOne({
