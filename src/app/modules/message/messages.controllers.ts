@@ -189,6 +189,22 @@ const deleteConversation = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+/**
+ * Get a single message by ID
+ */
+const getSingleMessage = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+    const result = await messageServices.getSingleMessage(userId, messageId as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Message retrieved successfully",
+        data: result,
+    });
+});
+
 export const messageControllers = {
     createConversation,
     getUserConversations,
@@ -201,4 +217,5 @@ export const messageControllers = {
     editMessage,
     deleteMessage,
     deleteConversation,
+    getSingleMessage,
 };

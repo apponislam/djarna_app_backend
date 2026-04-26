@@ -334,6 +334,35 @@ const deleteMessage = async (userId: string, messageId: string) => {
     return { success: true };
 };
 
+/**
+ * Get a specific message by ID
+ */
+const getSingleMessage = async (userId: string, messageId: string) => {
+    const message = await MessageModel.findOne({
+        _id: messageId,
+        deletedBy: { $ne: new Types.ObjectId(userId) },
+    }).populate([
+        { path: "senderId", select: "_id name photo verifiedBadge" },
+        { path: "productId", select: "_id title images price" },
+    ]);
+
+    if (!message) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Message not found");
+    }
+
+    // Verify user is part of the conversation
+    const conversation = await ConversationModel.findOne({
+        _id: message.conversationId,
+        participantIds: userId,
+    });
+
+    if (!conversation) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Access denied");
+    }
+
+    return message;
+};
+
 export const messageServices = {
     createConversation,
     sendMessage,
@@ -343,6 +372,7 @@ export const messageServices = {
     markAsRead,
     updateOfferStatus,
     editMessage,
-    deleteMessage,
     deleteConversation,
+    deleteMessage,
+    getSingleMessage,
 };

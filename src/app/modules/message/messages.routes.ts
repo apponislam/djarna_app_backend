@@ -23,6 +23,7 @@ router.post("/:messageId/accept", auth, messageControllers.acceptOffer);
 router.post("/:messageId/reject", auth, messageControllers.rejectOffer);
 
 // Message editing/deletion
+router.get("/:messageId", auth, messageControllers.getSingleMessage);
 router.patch("/:messageId", auth, messageControllers.editMessage);
 router.delete("/:messageId", auth, messageControllers.deleteMessage);
 
