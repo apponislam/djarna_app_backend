@@ -24,7 +24,6 @@ const createConversation = catchAsync(async (req: Request, res: Response) => {
  */
 const getUserConversations = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-    console.log("GET getUserConversations hit for user:", userId);
     const result = await messageServices.getMyConversations(userId);
 
     sendResponse(res, {

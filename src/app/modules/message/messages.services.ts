@@ -12,7 +12,6 @@ import { ProductModel } from "../product/product.model";
  */
 const createConversation = async (senderId: string, payload: { receiverId?: string; productId?: string }) => {
     let { receiverId, productId } = payload;
-    console.log("Create Conversation Payload:", { senderId, receiverId, productId });
     let productOwner;
 
     // If productId is provided, find the product and set productOwner and receiverId
