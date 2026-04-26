@@ -6,6 +6,7 @@ import { Message, MessageType } from "./messages.interface";
 import { emitToUser } from "../../socket/socket";
 
 import { ProductModel } from "../product/product.model";
+import { UserModel } from "../auth/auth.model";
 
 /**
  * Create a new conversation
@@ -29,6 +30,12 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
 
     if (!receiverId) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+    }
+
+    // Check if receiver exists
+    const receiver = await UserModel.findById(receiverId);
+    if (!receiver) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Receiver user not found!");
     }
 
     let conversation = await ConversationModel.findOne({
@@ -91,6 +98,12 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
 
     if (!receiverId) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+    }
+
+    // Check if receiver exists
+    const receiver = await UserModel.findById(receiverId);
+    if (!receiver) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Receiver user not found!");
     }
 
     // 2. Find or Create conversation
