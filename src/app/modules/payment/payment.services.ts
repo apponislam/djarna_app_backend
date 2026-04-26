@@ -4,10 +4,7 @@ import { PaymentModel } from "./payment.model";
 import { IPayment, Currency, PaymentMethod } from "./payment.interface";
 import config from "../../config";
 import axios from "axios";
-import { OrderModel } from "../order/order.model";
-import { ProductModel } from "../product/product.model";
 import { SettingsModel } from "../settings/settings.model";
-import { MessageModel } from "../message/messages.model";
 import { UserModel } from "../auth/auth.model";
 
 interface IPaymentInitialize {
@@ -38,12 +35,15 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
 
     // Get commission rate from settings
     const settings = await SettingsModel.findOne();
-    const commissionRate = settings?.payment?.commissionRate || 8;
+    const seller = await UserModel.findById(payload.sellerId);
 
     // Calculations
+    const commissionRate = seller?.noCommission && seller.noCommission > 0 ? 0 : settings?.payment?.commissionRate || 8;
     const siteFee = (payload.productPrice * commissionRate) / 100;
     const buyerFee = payload.productPrice - siteFee; // Amount for seller
     const totalAmount = payload.productPrice + payload.buyerProtectionFee + payload.shippingCost;
+
+    // If commission was skipped, decrement seller's noCommission count after successful order
 
     const payment = await PaymentModel.create({
         userId: payload.userId,
@@ -145,74 +145,27 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
     }
 };
 
+/**
+ * Verify payment status (Used for frontend polling/redirection)
+ */
 const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
-    const payment = await PaymentModel.findOne({ paydunyaInvoiceToken: invoiceToken });
-    if (!payment) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
-    }
-
-    if (payment.status === "COMPLETED") {
-        return payment;
-    }
-
     try {
-        const response = await axios.get(`https://paydunya.com/api/v1/invoice/status/${invoiceToken}`, {
+        const response = await axios.get(`https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${invoiceToken}`, {
             headers: {
-                Authorization: `Bearer ${config.paydunya_master_key}`,
+                "PAYDUNYA-MASTER-KEY": config.paydunya_master_key,
+                "PAYDUNYA-PRIVATE-KEY": config.paydunya_private_key,
+                "PAYDUNYA-TOKEN": config.paydunya_token,
             },
         });
 
-        const isPaid = response.data?.response?.status === "completed";
+        const payment = await PaymentModel.findOne({ paydunyaInvoiceToken: invoiceToken });
+        if (!payment) throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
 
-        if (isPaid) {
+        // Just update the status for the frontend success screen
+        if (response.data.status === "completed") {
             payment.status = "COMPLETED";
-            payment.paidAt = new Date();
-            payment.transactionId = response.data?.response?.transaction_id;
             await payment.save();
-
-            // 1. Increase the balance of the seller (buyerFee + shippingCost)
-            // Note: User mentioned "increase balance of buyer", but logically it's the seller who receives funds.
-            // Using sellerId from payment record.
-            if (payment.sellerId) {
-                const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
-                await UserModel.findByIdAndUpdate(payment.sellerId, {
-                    $inc: { balance: sellerBalanceIncrease },
-                });
-            }
-
-            // 2. If there is a messageId, mark it as COMPLETED
-            if (payment.messageId) {
-                await MessageModel.findByIdAndUpdate(payment.messageId, {
-                    type: "COMPLETED",
-                });
-            }
-
-            // 3. Create an Order (if not already created)
-            const existingOrder = await OrderModel.findOne({ payment: payment._id });
-            if (!existingOrder) {
-                const orderData: any = {
-                    buyer: payment.userId,
-                    seller: payment.sellerId,
-                    product: payment.productId,
-                    address: payment.addressId,
-                    status: "PAID",
-                    productPrice: payment.productPrice,
-                    buyerProtectionFee: payment.buyerProtectionFee,
-                    shippingCost: payment.shippingCost,
-                    siteFee: payment.siteFee,
-                    buyerFee: payment.buyerFee,
-                    totalAmount: payment.totalAmount,
-                    payment: payment._id,
-                    deliveryMethod: payment.metadata?.deliveryMethod || "HOME_DELIVERY",
-                };
-                await OrderModel.create(orderData);
-            }
-
-            // 4. Mark Product as SOLD
-            await ProductModel.findByIdAndUpdate(payment.productId, {
-                status: "SOLD",
-            });
-        } else {
+        } else if (response.data.status === "failed") {
             payment.status = "FAILED";
             await payment.save();
         }

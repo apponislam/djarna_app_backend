@@ -57,12 +57,17 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 
     // 4. If it's a completed product order payment, handle business logic
     if (!isBoostPayment && status === "completed") {
-        // 1. Increase the balance of the seller
+        // 1. Update seller balance and commission usage
         if (payment.sellerId) {
             const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
-            await UserModel.findByIdAndUpdate(payment.sellerId, {
-                $inc: { balance: sellerBalanceIncrease },
-            });
+            const updateData: any = { $inc: { balance: sellerBalanceIncrease } };
+
+            // If this was a zero-commission payment, decrement the seller's noCommission count
+            if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
+                updateData.$inc.noCommission = -1;
+            }
+
+            await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
         }
 
         // 2. If there is a messageId, mark it as COMPLETED
