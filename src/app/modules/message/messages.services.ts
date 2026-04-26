@@ -45,14 +45,24 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
                 { userId: new Types.ObjectId(receiverId), count: 0 },
             ],
         });
-    } else if (productId && !conversation.productId) {
-        // Update existing conversation with product info if it was missing
-        conversation.productId = productId as any;
-        conversation.productOwner = productOwner as any;
-        await conversation.save();
+    } else {
+        // If it exists, remove senderId from deletedBy to restore visibility for this user
+        // and optionally update product info
+        const updateData: any = {
+            $pull: { deletedBy: senderId },
+        };
+
+        if (productId && !conversation.productId) {
+            updateData.$set = {
+                productId: productId,
+                productOwner: productOwner,
+            };
+        }
+
+        conversation = (await ConversationModel.findByIdAndUpdate(conversation._id, updateData, { new: true })) as any;
     }
 
-    return await ConversationModel.findById(conversation._id).populate([
+    return await ConversationModel.findById(conversation?._id).populate([
         { path: "participantIds", select: "_id name photo phone verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);
@@ -64,20 +74,26 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
 const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId?: string }) => {
     let { receiverId, ...messageData } = payload;
 
-    // If productId is provided but no receiverId, fetch receiverId from product owner
-    if (messageData.productId && !receiverId) {
+    // 1. Fetch product info if productId is provided
+    if (messageData.productId) {
         const product = await ProductModel.findById(messageData.productId);
-        if (product) {
-            receiverId = product.user.toString();
-            messageData.productOwner = product.user as any;
+        if (!product) {
+            throw new ApiError(httpStatus.NOT_FOUND, "Product not found! Please provide a valid productId.");
         }
+        // Ensure we have the correct receiver (product owner) if not provided
+        if (!receiverId) {
+            receiverId = product.user.toString();
+        }
+        // Always set productOwner and ensure productId is a valid ObjectId
+        messageData.productOwner = product.user as any;
+        messageData.productId = product._id as any;
     }
 
     if (!receiverId) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
     }
 
-    // 1. Find or Create conversation
+    // 2. Find or Create conversation
     let conversation = await ConversationModel.findOne({
         participantIds: { $all: [senderId, receiverId], $size: 2 },
     });
@@ -92,16 +108,25 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
                 { userId: new Types.ObjectId(receiverId), count: 0 },
             ],
         });
+    } else if (messageData.productId && !conversation.productId) {
+        // Update conversation with product info if it was missing
+        await ConversationModel.findByIdAndUpdate(conversation._id, {
+            $set: {
+                productId: messageData.productId,
+                productOwner: messageData.productOwner,
+            },
+        });
     }
 
-    // 2. Create the message
+    // 3. Create the message
     const newMessage = await MessageModel.create({
         ...messageData,
+        type: messageData.type || "MESSAGE",
         conversationId: conversation._id,
         senderId,
     });
 
-    // 3. Update conversation state
+    // 4. Update conversation state (lastMessage, unread, etc.)
     const updatedConversation = await ConversationModel.findByIdAndUpdate(
         conversation._id,
         {
@@ -116,14 +141,19 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
     ).populate([{ path: "participantIds", select: "_id name photo phone verifiedBadge" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
 
     // 4. Emit events
-    const messageToEmit = await MessageModel.findById(newMessage._id).populate("senderId", "_id name photo verifiedBadge").lean();
+    const messageToEmit = await MessageModel.findById(newMessage._id)
+        .populate([
+            { path: "senderId", select: "_id name photo verifiedBadge" },
+            { path: "productId", select: "_id title images price" },
+        ])
+        .lean();
 
     [senderId, receiverId].forEach((id) => {
         emitToUser(id.toString(), "new_message", messageToEmit);
         emitToUser(id.toString(), "update_conversation", updatedConversation);
     });
 
-    return newMessage;
+    return messageToEmit;
 };
 
 /**
@@ -190,7 +220,10 @@ const getMessages = async (userId: string, conversationId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
         isDeleted: false,
     })
-        .populate("senderId", "_id name photo verifiedBadge")
+        .populate([
+            { path: "senderId", select: "_id name photo verifiedBadge" },
+            { path: "productId", select: "_id title images price" },
+        ])
         .sort({ createdAt: 1 })
         .lean();
 };
@@ -246,7 +279,10 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
  * Edit a specific message
  */
 const editMessage = async (userId: string, messageId: string, text: string) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { new: true }).populate("senderId", "_id name photo");
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { new: true }).populate([
+        { path: "senderId", select: "_id name photo verifiedBadge" },
+        { path: "productId", select: "_id title images price" },
+    ]);
 
     if (!message) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message not found or unauthorized");
@@ -275,7 +311,7 @@ const deleteConversation = async (userId: string, conversationId: string) => {
     }
 
     // 2. Mark all messages in this conversation as deleted for this user
-    await MessageModel.updateMany({ conversationId, $or: [{ senderId: userId }, { conversationId: { $exists: true } }] }, { $addToSet: { deletedBy: userId } });
+    await MessageModel.updateMany({ conversationId }, { $addToSet: { deletedBy: userId } });
 
     // 3. Emit sync event
     emitToUser(userId, "conversation_deleted", { conversationId });
