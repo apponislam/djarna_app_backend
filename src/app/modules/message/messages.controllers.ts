@@ -24,13 +24,17 @@ const createConversation = catchAsync(async (req: Request, res: Response) => {
  */
 const getUserConversations = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const result = await messageServices.getMyConversations(userId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result = await messageServices.getMyConversations(userId, page, limit);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Conversations retrieved successfully",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 
@@ -72,13 +76,17 @@ const markAsRead = catchAsync(async (req: Request, res: Response) => {
 const getMessages = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const { conversationId } = req.params;
-    const result = await messageServices.getMessages(userId, conversationId as string);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+
+    const result = await messageServices.getMessages(userId, conversationId as string, page, limit);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Messages retrieved successfully",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 

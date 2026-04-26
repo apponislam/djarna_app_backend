@@ -157,13 +157,20 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
 };
 
 /**
- * Get all conversations for a user
+ * Get all conversations for a user with pagination
  */
-const getMyConversations = async (userId: string) => {
-    return await ConversationModel.find({
+const getMyConversations = async (userId: string, page: number = 1, limit: number = 10) => {
+    const skip = (page - 1) * limit;
+
+    const query = {
         participantIds: userId,
         deletedBy: { $ne: new Types.ObjectId(userId) },
-    })
+    };
+
+    const total = await ConversationModel.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    const data = await ConversationModel.find(query)
         .populate([
             { path: "participantIds", select: "_id name photo phone verifiedBadge" },
             { path: "productId", select: "_id title images price" },
@@ -173,7 +180,21 @@ const getMyConversations = async (userId: string) => {
             },
         ])
         .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .lean();
+
+    return {
+        data,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+        },
+    };
 };
 
 /**
@@ -200,9 +221,9 @@ const getConversationById = async (userId: string, conversationId: string) => {
 };
 
 /**
- * Get messages for a specific conversation
+ * Get messages for a specific conversation with pagination
  */
-const getMessages = async (userId: string, conversationId: string) => {
+const getMessages = async (userId: string, conversationId: string, page: number = 1, limit: number = 20) => {
     const conversation = await ConversationModel.findOne({
         _id: conversationId,
         participantIds: userId,
@@ -215,17 +236,38 @@ const getMessages = async (userId: string, conversationId: string) => {
     // Mark as read
     await markAsRead(userId, conversationId);
 
-    return await MessageModel.find({
+    const skip = (page - 1) * limit;
+
+    const query = {
         conversationId,
         deletedBy: { $ne: new Types.ObjectId(userId) },
         isDeleted: false,
-    })
+    };
+
+    const total = await MessageModel.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    const data = await MessageModel.find(query)
         .populate([
             { path: "senderId", select: "_id name photo verifiedBadge" },
             { path: "productId", select: "_id title images price" },
         ])
-        .sort({ createdAt: 1 })
+        .sort({ createdAt: -1 }) // Get latest messages first for pagination
+        .skip(skip)
+        .limit(limit)
         .lean();
+
+    return {
+        data: data.reverse(), // Reverse to show chronological order for the current page
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+        },
+    };
 };
 
 /**
