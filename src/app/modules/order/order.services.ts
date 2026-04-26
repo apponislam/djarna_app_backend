@@ -2,10 +2,8 @@ import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { ProductModel } from "../product/product.model";
 import { OrderModel } from "./order.model";
-import { IOrder, DeliveryMethod } from "./order.interface";
+import { DeliveryMethod } from "./order.interface";
 import { PaymentService } from "../payment/payment.services";
-import { SettingsModel } from "../settings/settings.model";
-import { Types } from "mongoose";
 
 const createOrder = async (
     buyerId: string,

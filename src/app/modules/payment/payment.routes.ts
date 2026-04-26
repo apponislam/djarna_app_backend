@@ -2,7 +2,6 @@ import { Router } from "express";
 import { PaymentController } from "./payment.controllers";
 import auth from "../../middlewares/auth";
 import authorize from "../../middlewares/authorized";
-import { PaymentWebhookController } from "./payment.webhook";
 
 const router = Router();
 
