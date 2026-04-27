@@ -179,11 +179,33 @@ const setUserPassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const adminLogin = catchAsync(async (req: Request, res: Response) => {
+    const result = await authServices.adminLogin(req.body);
+
+    res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: config.node_env === "production",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Admin login successful",
+        data: {
+            user: result.user,
+            accessToken: result.accessToken,
+        },
+    });
+});
+
 export const authControllers = {
     sendOtp,
     verifyOtp,
     register,
     login,
+    adminLogin,
     getMe,
     logout,
     refreshAccessToken,

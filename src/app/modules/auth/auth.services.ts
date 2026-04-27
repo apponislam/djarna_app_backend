@@ -201,7 +201,7 @@ const requestPasswordReset = async (phone: string) => {
     await user.save();
 
     // Send SMS
-    await sendSms(normalizedPhone, `Your password reset code is: ${otp}. Valid for 5 minutes.`);
+    // await sendSms(normalizedPhone, `Your password reset code is: ${otp}. Valid for 5 minutes.`);
 
     // Log for development
     console.log(`Password Reset OTP for ${normalizedPhone}: ${otp}`);
@@ -315,11 +315,50 @@ const boostShop = async (userId: string, boostPackId: string) => {
     return { message: "Shop products boosted successfully" };
 };
 
+const adminLogin = async (data: { phone: string; password: string }) => {
+    const normalizedPhone = normalizePhoneNumber(data.phone);
+
+    // Find user
+    const user = await UserModel.findOne({ phone: normalizedPhone });
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+
+    // Check if role is ADMIN
+    if (user.role !== "ADMIN") {
+        throw new ApiError(httpStatus.FORBIDDEN, "Access denied. Only admins can login here.");
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
+    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+
+    // Check if active
+    if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Account is deactivated");
+
+    // Update last login
+    await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+
+    // Generate tokens
+    const jwtPayload = {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+    };
+
+    const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
+    const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
+
+    const { password, ...userWithoutPassword } = user.toObject();
+
+    return { user: userWithoutPassword, accessToken, refreshToken };
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
     registerUser,
     loginUser,
+    adminLogin,
     getUserById,
     refreshAccessToken,
     requestPasswordReset,
