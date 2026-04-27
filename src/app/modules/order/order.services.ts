@@ -69,6 +69,16 @@ const getOrderById = async (orderId: string, userId: string) => {
     return order;
 };
 
+const adminGetOrderById = async (orderId: string) => {
+    const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product").populate("buyer", "name photo email phone verifiedBadge").populate("seller", "name photo email phone verifiedBadge").populate("payment");
+
+    if (!order) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
+    }
+
+    return order;
+};
+
 const updateOrderStatus = async (orderId: string, userId: string, status: string) => {
     const order = await OrderModel.findOne({ _id: orderId, isDeleted: false });
     if (!order) {
@@ -99,9 +109,35 @@ const updateOrderStatus = async (orderId: string, userId: string, status: string
     return order;
 };
 
+const adminGetAllOrders = async (query: Record<string, any>) => {
+    const { page = 1, limit = 10, status } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter: any = { isDeleted: false };
+    if (status) {
+        filter.status = status;
+    }
+
+    const orders = await OrderModel.find(filter).populate("product", "title images price").populate("buyer", "name photo verifiedBadge").populate("seller", "name photo verifiedBadge").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+
+    const total = await OrderModel.countDocuments(filter);
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: orders,
+    };
+};
+
 export const OrderService = {
     createOrder,
     getMyOrders,
     getOrderById,
     updateOrderStatus,
+    adminGetAllOrders,
+    adminGetOrderById,
 };

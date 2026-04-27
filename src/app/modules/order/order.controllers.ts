@@ -18,7 +18,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const role = req.query.role as "buyer" | "seller" || "buyer";
+    const role = (req.query.role as "buyer" | "seller") || "buyer";
     const result = await OrderService.getMyOrders(userId, role);
 
     sendResponse(res, {
@@ -53,9 +53,33 @@ const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const adminGetOrderById = catchAsync(async (req: Request, res: Response) => {
+    const result = await OrderService.adminGetOrderById(req.params.id as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Order retrieved successfully by admin",
+        data: result,
+    });
+});
+
+const adminGetAllOrders = catchAsync(async (req: Request, res: Response) => {
+    const result = await OrderService.adminGetAllOrders(req.query);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "All orders retrieved successfully by admin",
+        data: result,
+    });
+});
+
 export const OrderController = {
     createOrder,
     getMyOrders,
     getOrderById,
     updateOrderStatus,
+    adminGetAllOrders,
+    adminGetOrderById,
 };
