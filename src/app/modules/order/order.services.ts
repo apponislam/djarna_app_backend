@@ -1,4 +1,5 @@
 import httpStatus from "http-status";
+import mongoose from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { ProductModel } from "../product/product.model";
 import { OrderModel } from "./order.model";
@@ -47,12 +48,80 @@ const createOrder = async (
     };
 };
 
-const getMyOrders = async (userId: string, role: "buyer" | "seller") => {
-    const filter: any = { isDeleted: false };
-    if (role === "buyer") filter.buyer = userId;
-    else filter.seller = userId;
+const getMyOrders = async (userId: string, role: "buyer" | "seller", query: Record<string, any>) => {
+    const { page = 1, limit = 10, searchTerm } = query;
+    const skip = (Number(page) - 1) * Number(limit);
 
-    return await OrderModel.find(filter).populate("product", "title images price").populate("buyer", "name photo verifiedBadge").populate("seller", "name photo verifiedBadge").sort({ createdAt: -1 });
+    const matchStage: any = { isDeleted: false };
+    if (role === "buyer") matchStage.buyer = new mongoose.Types.ObjectId(userId);
+    else matchStage.seller = new mongoose.Types.ObjectId(userId);
+
+    const pipeline: any[] = [
+        { $match: matchStage },
+        {
+            $lookup: {
+                from: "products",
+                localField: "product",
+                foreignField: "_id",
+                as: "product",
+            },
+        },
+        { $unwind: "$product" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "buyer",
+                foreignField: "_id",
+                as: "buyer",
+            },
+        },
+        { $unwind: "$buyer" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "seller",
+                foreignField: "_id",
+                as: "seller",
+            },
+        },
+        { $unwind: "$seller" },
+    ];
+
+    if (searchTerm) {
+        pipeline.push({
+            $match: {
+                $or: [{ "product.title": { $regex: searchTerm, $options: "i" } }, { "buyer.name": { $regex: searchTerm, $options: "i" } }, { "seller.name": { $regex: searchTerm, $options: "i" } }],
+            },
+        });
+    }
+
+    const totalPipeline = [...pipeline, { $count: "total" }];
+    const totalResult = await OrderModel.aggregate(totalPipeline);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    pipeline.push(
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: Number(limit) },
+        {
+            $project: {
+                "buyer.password": 0,
+                "seller.password": 0,
+            },
+        },
+    );
+
+    const orders = await OrderModel.aggregate(pipeline);
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: orders,
+    };
 };
 
 const getOrderById = async (orderId: string, userId: string) => {
@@ -110,17 +179,70 @@ const updateOrderStatus = async (orderId: string, userId: string, status: string
 };
 
 const adminGetAllOrders = async (query: Record<string, any>) => {
-    const { page = 1, limit = 10, status } = query;
+    const { page = 1, limit = 10, status, searchTerm } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    const filter: any = { isDeleted: false };
+    const matchStage: any = { isDeleted: false };
     if (status) {
-        filter.status = status;
+        matchStage.status = status;
     }
 
-    const orders = await OrderModel.find(filter).populate("product", "title images price").populate("buyer", "name photo verifiedBadge").populate("seller", "name photo verifiedBadge").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+    const pipeline: any[] = [
+        { $match: matchStage },
+        {
+            $lookup: {
+                from: "products",
+                localField: "product",
+                foreignField: "_id",
+                as: "product",
+            },
+        },
+        { $unwind: "$product" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "buyer",
+                foreignField: "_id",
+                as: "buyer",
+            },
+        },
+        { $unwind: "$buyer" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "seller",
+                foreignField: "_id",
+                as: "seller",
+            },
+        },
+        { $unwind: "$seller" },
+    ];
 
-    const total = await OrderModel.countDocuments(filter);
+    if (searchTerm) {
+        pipeline.push({
+            $match: {
+                $or: [{ "product.title": { $regex: searchTerm, $options: "i" } }, { "buyer.name": { $regex: searchTerm, $options: "i" } }, { "seller.name": { $regex: searchTerm, $options: "i" } }],
+            },
+        });
+    }
+
+    const totalPipeline = [...pipeline, { $count: "total" }];
+    const totalResult = await OrderModel.aggregate(totalPipeline);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    pipeline.push(
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: Number(limit) },
+        {
+            $project: {
+                "buyer.password": 0,
+                "seller.password": 0,
+            },
+        },
+    );
+
+    const orders = await OrderModel.aggregate(pipeline);
 
     return {
         meta: {
@@ -133,6 +255,20 @@ const adminGetAllOrders = async (query: Record<string, any>) => {
     };
 };
 
+const adminGetOrderStats = async () => {
+    const pending = await OrderModel.countDocuments({ status: "PENDING", isDeleted: false });
+    const shipped = await OrderModel.countDocuments({ status: "SHIPPED", isDeleted: false });
+    const delivered = await OrderModel.countDocuments({ status: "DELIVERED", isDeleted: false });
+    const completed = await OrderModel.countDocuments({ status: "COMPLETED", isDeleted: false });
+
+    return {
+        pending,
+        shipped,
+        delivered,
+        completed,
+    };
+};
+
 export const OrderService = {
     createOrder,
     getMyOrders,
@@ -140,4 +276,5 @@ export const OrderService = {
     updateOrderStatus,
     adminGetAllOrders,
     adminGetOrderById,
+    adminGetOrderStats,
 };

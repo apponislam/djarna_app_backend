@@ -19,13 +19,14 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const role = (req.query.role as "buyer" | "seller") || "buyer";
-    const result = await OrderService.getMyOrders(userId, role);
+    const { data, meta } = await OrderService.getMyOrders(userId, role, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Orders retrieved successfully",
-        data: result,
+        data: data,
+        meta: meta,
     });
 });
 
@@ -65,12 +66,24 @@ const adminGetOrderById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const adminGetAllOrders = catchAsync(async (req: Request, res: Response) => {
-    const result = await OrderService.adminGetAllOrders(req.query);
+    const { data, meta } = await OrderService.adminGetAllOrders(req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "All orders retrieved successfully by admin",
+        data: data,
+        meta: meta,
+    });
+});
+
+const adminGetOrderStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await OrderService.adminGetOrderStats();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Order statistics retrieved successfully",
         data: result,
     });
 });
@@ -82,4 +95,5 @@ export const OrderController = {
     updateOrderStatus,
     adminGetAllOrders,
     adminGetOrderById,
+    adminGetOrderStats,
 };
