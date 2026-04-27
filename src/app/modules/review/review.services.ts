@@ -129,7 +129,7 @@ const deleteReview = async (reviewId: string, userId: string, isAdmin: boolean) 
         filter.user = userId; // Only allow the reviewer to delete their own review
     }
 
-    const result = await ReviewModel.findOneAndUpdate(filter, { isDeleted: true }, { new: true });
+    const result = await ReviewModel.findOneAndUpdate(filter, { isDeleted: true }, { returnDocument: "after" });
 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Review not found or you are not authorized to delete it");
@@ -142,7 +142,7 @@ const deleteReview = async (reviewId: string, userId: string, isAdmin: boolean) 
  * Update review visibility (Admin only)
  */
 const updateReviewVisibility = async (reviewId: string, visibility: "show" | "hidden") => {
-    const result = await ReviewModel.findByIdAndUpdate(reviewId, { adminVisibility: visibility }, { new: true });
+    const result = await ReviewModel.findByIdAndUpdate(reviewId, { adminVisibility: visibility }, { returnDocument: "after" });
 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Review not found");

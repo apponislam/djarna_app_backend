@@ -38,7 +38,7 @@ const updateAddress = async (userId: string, addressId: string, payload: Partial
         await ShippingAddressModel.updateMany({ user: userId, isDeleted: { $ne: true } }, { isDefault: false });
     }
 
-    const result = await ShippingAddressModel.findByIdAndUpdate(addressId, payload, { new: true });
+    const result = await ShippingAddressModel.findByIdAndUpdate(addressId, payload, { returnDocument: "after" });
     return result;
 };
 
@@ -70,7 +70,7 @@ const setDefaultAddress = async (userId: string, addressId: string) => {
     }
 
     await ShippingAddressModel.updateMany({ user: userId, isDeleted: { $ne: true } }, { isDefault: false });
-    const result = await ShippingAddressModel.findByIdAndUpdate(addressId, { isDefault: true }, { new: true });
+    const result = await ShippingAddressModel.findByIdAndUpdate(addressId, { isDefault: true }, { returnDocument: "after" });
     return result;
 };
 

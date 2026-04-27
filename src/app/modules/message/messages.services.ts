@@ -67,7 +67,7 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
             };
         }
 
-        conversation = (await ConversationModel.findByIdAndUpdate(conversation._id, updateData, { new: true })) as any;
+        conversation = (await ConversationModel.findByIdAndUpdate(conversation._id, updateData, { returnDocument: "after" })) as any;
     }
 
     return await ConversationModel.findById(conversation?._id).populate([
@@ -310,7 +310,7 @@ const markAsRead = async (userId: string, conversationId: string) => {
  * Update offer status
  */
 const updateOfferStatus = async (userId: string, messageId: string, status: MessageType) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: "OFFER" }, { $set: { type: status } }, { new: true }).populate([
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: "OFFER" }, { $set: { type: status } }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);
@@ -331,7 +331,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
  * Edit a specific message
  */
 const editMessage = async (userId: string, messageId: string, text: string) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { new: true }).populate([
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);
@@ -390,7 +390,7 @@ const deleteMessage = async (userId: string, messageId: string) => {
  * Mark a message as COMPLETED and sync via socket
  */
 const markMessageAsCompleted = async (messageId: string) => {
-    const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { new: true }).populate([
+    const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);

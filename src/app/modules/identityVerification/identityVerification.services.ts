@@ -21,7 +21,7 @@ const submitVerification = async (userId: string, payload: Partial<IIdentityVeri
 
     if (existingRequest) {
         // Update existing rejected request
-        return await IdentityVerificationModel.findOneAndUpdate({ user: userId }, { ...payload, status: "PENDING", adminComment: "" }, { new: true });
+        return await IdentityVerificationModel.findOneAndUpdate({ user: userId }, { ...payload, status: "PENDING", adminComment: "" }, { returnDocument: "after" });
     }
 
     return await IdentityVerificationModel.create({ ...payload, user: userId });

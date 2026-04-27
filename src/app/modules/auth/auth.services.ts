@@ -26,7 +26,7 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Upsert verification record
-    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false, referralCode }, { upsert: true, new: true });
+    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { otp, expiry, isVerified: false, referralCode }, { upsert: true, returnDocument: "after" });
 
     // Send SMS
     // await sendSms(normalizedPhone, `Your verification code is: ${otp}. Valid for 10 minutes.`);
