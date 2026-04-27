@@ -104,7 +104,7 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
                 seller: payment.sellerId,
                 product: payment.productId,
                 address: payment.addressId,
-                status: "PAID",
+                status: "PENDING",
                 productPrice: payment.productPrice,
                 buyerProtectionFee: payment.buyerProtectionFee,
                 shippingCost: payment.shippingCost,

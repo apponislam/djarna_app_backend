@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export type DeliveryMethod = "HOME_DELIVERY" | "PICKUP_POINT" | "MEET_UP";
-export type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "COMPLETED";
+export type OrderStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "COMPLETED";
 
 export interface IOrder {
     buyer: Types.ObjectId;

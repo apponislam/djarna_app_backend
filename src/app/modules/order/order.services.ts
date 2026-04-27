@@ -171,7 +171,7 @@ const updateOrderStatus = async (orderId: string, userId: string, status: string
     await order.save();
 
     // If completed, maybe mark product as SOLD?
-    if (status === "PAID" || status === "COMPLETED") {
+    if (status === "COMPLETED") {
         await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
     }
 
