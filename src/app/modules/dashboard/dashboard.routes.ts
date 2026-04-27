@@ -5,11 +5,8 @@ import { DashboardControllers } from "./dashboard.controllers";
 
 const router = Router();
 
-router.get(
-    "/stats",
-    auth,
-    authorize(["ADMIN"]),
-    DashboardControllers.getDashboardStats,
-);
+router.get("/stats", auth, authorize(["ADMIN"]), DashboardControllers.getDashboardStats);
+
+router.get("/chart", auth, authorize(["ADMIN"]), DashboardControllers.getOrdersChartData);
 
 export const DashboardRoutes = router;

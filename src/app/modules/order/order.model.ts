@@ -67,6 +67,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     {
         timestamps: true,
+        versionKey: false,
         toJSON: {
             virtuals: true,
         },

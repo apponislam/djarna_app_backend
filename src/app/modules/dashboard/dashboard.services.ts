@@ -26,6 +26,40 @@ const getDashboardStats = async () => {
     };
 };
 
+const getOrdersChartData = async () => {
+    const data = [];
+    const now = new Date();
+
+    for (let i = 3; i >= 0; i--) {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - i * 7);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+        const totalOrders = await OrderModel.countDocuments({
+            createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+            isDeleted: false,
+        });
+
+        const completedOrders = await OrderModel.countDocuments({
+            createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+            status: "COMPLETED",
+            isDeleted: false,
+        });
+
+        data.push({
+            week: `Week ${4 - i}`,
+            orders: totalOrders,
+            completed: completedOrders,
+        });
+    }
+
+    return data;
+};
+
 export const DashboardServices = {
     getDashboardStats,
+    getOrdersChartData,
 };
