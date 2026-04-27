@@ -59,7 +59,49 @@ const getOrdersChartData = async () => {
     return data;
 };
 
+const getRevenueChartData = async () => {
+    const data = [];
+    const now = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(now.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+
+        const nextDay = new Date(date);
+        nextDay.setDate(date.getDate() + 1);
+
+        const dailyRevenue = await OrderModel.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: date, $lt: nextDay },
+                    isDeleted: false,
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$totalAmount" },
+                },
+            },
+        ]);
+
+        const formattedDate = date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+        });
+
+        data.push({
+            date: formattedDate,
+            revenue: dailyRevenue.length > 0 ? dailyRevenue[0].total : 0,
+        });
+    }
+
+    return data;
+};
+
 export const DashboardServices = {
     getDashboardStats,
     getOrdersChartData,
+    getRevenueChartData,
 };

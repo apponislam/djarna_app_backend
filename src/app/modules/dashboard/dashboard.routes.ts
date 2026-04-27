@@ -9,4 +9,6 @@ router.get("/stats", auth, authorize(["ADMIN"]), DashboardControllers.getDashboa
 
 router.get("/chart", auth, authorize(["ADMIN"]), DashboardControllers.getOrdersChartData);
 
+router.get("/revenue", auth, authorize(["ADMIN"]), DashboardControllers.getRevenueChartData);
+
 export const DashboardRoutes = router;

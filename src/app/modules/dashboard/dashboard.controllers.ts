@@ -26,7 +26,19 @@ const getOrdersChartData = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getRevenueChartData = catchAsync(async (req: Request, res: Response) => {
+    const result = await DashboardServices.getRevenueChartData();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Dashboard revenue chart data retrieved successfully",
+        data: result,
+    });
+});
+
 export const DashboardControllers = {
     getDashboardStats,
     getOrdersChartData,
+    getRevenueChartData,
 };
