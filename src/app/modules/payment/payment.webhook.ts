@@ -10,6 +10,27 @@ import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { messageServices } from "../message/messages.services";
+import { WithdrawModel } from "../withdraw/withdraw.model";
+
+const handleWithdrawWebhook = async (disbursementToken: string, status: string, failReason?: string) => {
+    const withdraw = await WithdrawModel.findOne({ paydunyaDisbursementToken: disbursementToken });
+    if (!withdraw) return null;
+
+    if (status === "success" || status === "completed") {
+        withdraw.status = "COMPLETED";
+    } else if (status === "failed") {
+        withdraw.status = "FAILED";
+        withdraw.failReason = failReason || "Withdrawal failed at provider";
+
+        // Refund the user balance if it was deducted
+        await UserModel.findByIdAndUpdate(withdraw.userId, {
+            $inc: { balance: withdraw.amount },
+        });
+    }
+
+    await withdraw.save();
+    return withdraw;
+};
 
 const handleWebhook = async (invoiceToken: string, status: string, transactionId?: string, receiptUrl?: string): Promise<any> => {
     // 1. Try to find in standard PaymentModel
@@ -107,18 +128,35 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 };
 
 const webhookController = catchAsync(async (req: Request, res: Response) => {
-    console.log("Webhook received:", req.body);
+    console.log("Webhook received:", JSON.stringify(req.body, null, 2));
 
-    // Paydunya sends fields nested inside a 'data' object in some configurations
     const data = req.body.data || req.body;
 
+    // Check if it's a disbursement/withdrawal notification
+    const disbursementToken = data.disburse_token || data.token;
+    const isDisbursement = data.disburse_token || (data.invoice === undefined && data.token && !data.invoiceToken);
+
+    if (isDisbursement && disbursementToken) {
+        const status = data.status;
+        const failReason = data.response_text || data.fail_reason;
+        const result = await handleWithdrawWebhook(disbursementToken, status, failReason);
+
+        return sendResponse(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: "Withdrawal webhook processed",
+            data: result,
+        });
+    }
+
+    // Otherwise treat as a standard payment notification
     const invoiceToken = data.invoice?.token || data.token || data.invoiceToken;
     const status = data.status;
     const transactionId = data.transaction_id || data.transactionId;
     const receiptUrl = data.receipt_url;
 
     if (!invoiceToken) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invoice token is required");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Invoice or Disbursement token is required");
     }
 
     const result = await handleWebhook(invoiceToken, status, transactionId, receiptUrl);
@@ -126,7 +164,7 @@ const webhookController = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Webhook processed successfully",
+        message: "Payment webhook processed successfully",
         data: result,
     });
 });
