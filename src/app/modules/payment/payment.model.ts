@@ -98,7 +98,11 @@ const PaymentSchema = new Schema<IPayment>(
     },
 );
 
-PaymentSchema.index({ userId: 1, createdAt: -1 });
+// Deep Indexing for Optimized Queries
+PaymentSchema.index({ userId: 1, status: 1, createdAt: -1 });
+PaymentSchema.index({ sellerId: 1, status: 1, createdAt: -1 });
+PaymentSchema.index({ productId: 1, status: 1 });
+PaymentSchema.index({ paydunyaInvoiceToken: 1 });
 PaymentSchema.index({ status: 1, createdAt: -1 });
 
 export const PaymentModel = mongoose.model<IPayment>("Payment", PaymentSchema);

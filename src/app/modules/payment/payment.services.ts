@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { PaymentModel } from "./payment.model";
@@ -46,11 +47,11 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
     // If commission was skipped, decrement seller's noCommission count after successful order
 
     const payment = await PaymentModel.create({
-        userId: payload.userId,
-        sellerId: payload.sellerId,
-        productId: payload.productId,
-        messageId: payload.messageId,
-        addressId: payload.addressId,
+        userId: new mongoose.Types.ObjectId(payload.userId),
+        sellerId: new mongoose.Types.ObjectId(payload.sellerId),
+        productId: new mongoose.Types.ObjectId(payload.productId),
+        messageId: payload.messageId ? new mongoose.Types.ObjectId(payload.messageId) : undefined,
+        addressId: payload.addressId ? new mongoose.Types.ObjectId(payload.addressId) : undefined,
         productPrice: payload.productPrice,
         buyerProtectionFee: payload.buyerProtectionFee,
         shippingCost: payload.shippingCost,
