@@ -344,6 +344,9 @@ const adminLogin = async (data: { phone: string; password: string }) => {
     // Update last login
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
 
+    // Log activity
+    ActivityService.logActivity(user._id.toString(), "LOGIN", "Admin logged in successfully");
+
     // Generate tokens
     const jwtPayload = {
         _id: user._id,
