@@ -7,6 +7,7 @@ import { emitToAdmin } from "../../socket/socket";
  */
 const logActivity = async (userId: string, type: ActivityType, message: string, details?: Record<string, any>) => {
     try {
+        console.log(userId, type, message, details);
         const activity = await ActivityModel.create({
             user: userId,
             type,
@@ -34,11 +35,7 @@ const getAllActivities = async (query: Record<string, any>) => {
     if (userId) filter.user = userId;
 
     const total = await ActivityModel.countDocuments(filter);
-    const data = await ActivityModel.find(filter)
-        .populate("user", "name email photo phone")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit));
+    const data = await ActivityModel.find(filter).populate("user", "name email photo phone").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
 
     return {
         meta: {
@@ -58,10 +55,7 @@ const getMyActivities = async (userId: string, page: number = 1, limit: number =
     const skip = (page - 1) * limit;
 
     const total = await ActivityModel.countDocuments({ user: userId, isDeleted: false });
-    const data = await ActivityModel.find({ user: userId, isDeleted: false })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const data = await ActivityModel.find({ user: userId, isDeleted: false }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     return {
         meta: {
