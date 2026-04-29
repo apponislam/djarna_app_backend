@@ -10,7 +10,7 @@ const ActivitySchema = new Schema<IActivity>(
         },
         type: {
             type: String,
-            enum: ["LOGIN", "REGISTER", "PRODUCT_CREATE", "PRODUCT_UPDATE", "ORDER_PLACED", "ORDER_STATUS_UPDATE", "PAYMENT_COMPLETED", "WITHDRAWAL_REQUEST"],
+            enum: ["LOGIN", "REGISTER", "PRODUCT_CREATE", "PRODUCT_UPDATE", "ORDER_PLACED", "ORDER_STATUS_UPDATE", "PAYMENT_COMPLETED", "WITHDRAWAL_REQUEST", "DISPUTE_CREATED", "DISPUTE_RESOLVED", "REFUND_PROCESSED"],
             required: true,
         },
         message: {

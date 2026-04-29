@@ -234,7 +234,7 @@ const getAllPayments = async (filters?: IPaymentFilter): Promise<IPayment[]> => 
     return payments;
 };
 
-const refundPayment = async (id: string): Promise<IPayment> => {
+const refundPayment = async (id: string, refundAmount?: number): Promise<IPayment> => {
     const payment = await PaymentModel.findById(id);
     if (!payment) {
         throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
@@ -244,12 +244,18 @@ const refundPayment = async (id: string): Promise<IPayment> => {
         throw new ApiError(httpStatus.BAD_REQUEST, "Only completed payments can be refunded");
     }
 
+    const amountToRefund = refundAmount || payment.totalAmount;
+
+    if (amountToRefund > payment.totalAmount) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Refund amount cannot exceed total payment amount");
+    }
+
     try {
         const response = await axios.post(
             `https://paydunya.com/api/v1/refund`,
             {
                 invoice_token: payment.paydunyaInvoiceToken,
-                amount: payment.totalAmount,
+                amount: amountToRefund,
             },
             {
                 headers: {
@@ -259,7 +265,14 @@ const refundPayment = async (id: string): Promise<IPayment> => {
             },
         );
 
-        payment.status = "REFUNDED";
+        if (amountToRefund === payment.totalAmount) {
+            payment.status = "REFUNDED";
+        } else {
+            // Optional: You might want a "PARTIALLY_REFUNDED" status if your interface supports it
+            // For now, let's stick to the existing status or just keep it COMPLETED with metadata
+            payment.metadata = { ...payment.metadata, lastRefundAmount: amountToRefund, refundedAt: new Date() };
+        }
+
         await payment.save();
         return payment;
     } catch (error: any) {
