@@ -100,8 +100,44 @@ const getRevenueChartData = async () => {
     return data;
 };
 
+const getCategoryPerformance = async () => {
+    const performance = await ProductModel.aggregate([
+        {
+            $match: { isDeleted: false },
+        },
+        {
+            $group: {
+                _id: "$category",
+                value: { $sum: 1 },
+            },
+        },
+        {
+            $project: {
+                name: "$_id",
+                value: 1,
+                _id: 0,
+            },
+        },
+        {
+            $sort: { value: -1 },
+        },
+        {
+            $limit: 5,
+        },
+    ]);
+
+    // Define colors for categories
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#ef4444", "#06b6d4"];
+
+    return performance.map((item, index) => ({
+        ...item,
+        color: colors[index % colors.length],
+    }));
+};
+
 export const DashboardServices = {
     getDashboardStats,
     getOrdersChartData,
     getRevenueChartData,
+    getCategoryPerformance,
 };

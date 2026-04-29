@@ -11,4 +11,6 @@ router.get("/chart", auth, authorize(["ADMIN"]), DashboardControllers.getOrdersC
 
 router.get("/revenue", auth, authorize(["ADMIN"]), DashboardControllers.getRevenueChartData);
 
+router.get("/category-performance", auth, authorize(["ADMIN"]), DashboardControllers.getCategoryPerformance);
+
 export const DashboardRoutes = router;
