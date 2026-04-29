@@ -5,6 +5,7 @@ import { IProduct } from "./product.interface";
 import { BoostPackModel } from "../boostPack/boostPack.model";
 import mongoose from "mongoose";
 import { FavoriteModel } from "../favorite/favorite.model";
+import { ActivityService } from "../activity/activity.services";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -25,6 +26,10 @@ const createProduct = async (payload: IProduct) => {
     }
 
     const result = await ProductModel.create(payload);
+
+    // Log activity
+    ActivityService.logActivity(payload.user.toString(), "PRODUCT_CREATE", `Listed new product: ${payload.title}`, { productId: result._id });
+
     return result;
 };
 
@@ -261,6 +266,10 @@ const updateProduct = async (id: string, userId: string, payload: Partial<IProdu
     }
 
     const result = await ProductModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });
+
+    // Log activity
+    ActivityService.logActivity(userId.toString(), "PRODUCT_UPDATE", `Updated product details: ${result?.title}`, { productId: id });
+
     return result;
 };
 
@@ -274,6 +283,10 @@ const updateProductStatus = async (id: string, userId: string, status: string) =
 
     product.status = status as any;
     await product.save();
+
+    // Log activity
+    ActivityService.logActivity(userId.toString(), "PRODUCT_UPDATE", `Changed product status to ${status}: ${product.title}`, { productId: id, status });
+
     return product;
 };
 

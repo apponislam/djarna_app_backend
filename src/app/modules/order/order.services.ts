@@ -5,6 +5,7 @@ import { ProductModel } from "../product/product.model";
 import { OrderModel } from "./order.model";
 import { DeliveryMethod } from "./order.interface";
 import { PaymentService } from "../payment/payment.services";
+import { ActivityService } from "../activity/activity.services";
 
 const createOrder = async (
     buyerId: string,
@@ -169,6 +170,9 @@ const updateOrderStatus = async (orderId: string, userId: string, status: string
 
     order.status = status as any;
     await order.save();
+
+    // Log activity
+    ActivityService.logActivity(userId.toString(), "ORDER_STATUS_UPDATE", `Order status updated to ${status}`, { orderId: order._id, status });
 
     // If completed, maybe mark product as SOLD?
     if (status === "COMPLETED") {

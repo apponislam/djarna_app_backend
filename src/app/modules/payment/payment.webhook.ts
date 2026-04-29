@@ -11,6 +11,7 @@ import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { messageServices } from "../message/messages.services";
 import { WithdrawModel } from "../withdraw/withdraw.model";
+import { ActivityService } from "../activity/activity.services";
 
 const handleWithdrawWebhook = async (disbursementToken: string, status: string, failReason?: string) => {
     const withdraw = await WithdrawModel.findOne({ paydunyaDisbursementToken: disbursementToken });
@@ -18,9 +19,14 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
 
     if (status === "success" || status === "completed") {
         withdraw.status = "COMPLETED";
+        // Log activity
+        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} successful`, { withdrawalId: withdraw._id });
     } else if (status === "failed") {
         withdraw.status = "FAILED";
         withdraw.failReason = failReason || "Withdrawal failed at provider";
+
+        // Log activity
+        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`, { withdrawalId: withdraw._id });
 
         // Refund the user balance if it was deducted
         await UserModel.findByIdAndUpdate(withdraw.userId, {
@@ -122,6 +128,10 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         await ProductModel.findByIdAndUpdate(payment.productId, {
             status: "SOLD",
         });
+
+        // 5. Log Activity
+        ActivityService.logActivity(payment.userId.toString(), "PAYMENT_COMPLETED", `Payment of ${payment.totalAmount} completed for product order`, { paymentId: payment._id });
+        ActivityService.logActivity(payment.userId.toString(), "ORDER_PLACED", "Order placed successfully", { paymentId: payment._id });
     }
 
     return payment;

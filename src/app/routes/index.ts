@@ -17,6 +17,7 @@ import { ShippingAddressRoutes } from "../modules/address/address.routes";
 import { OrderRoutes } from "../modules/order/order.routes";
 import { WithdrawRoutes } from "../modules/withdraw/withdraw.routes";
 import { DashboardRoutes } from "../modules/dashboard/dashboard.routes";
+import { ActivityRoutes } from "../modules/activity/activity.routes";
 
 const router = express.Router();
 
@@ -92,6 +93,10 @@ const moduleRoutes = [
     {
         path: "/dashboard",
         route: DashboardRoutes,
+    },
+    {
+        path: "/activity",
+        route: ActivityRoutes,
     },
 ];
 

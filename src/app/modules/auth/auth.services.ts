@@ -11,6 +11,7 @@ import { sendSms } from "../../../utils/twilioHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 import mongoose from "mongoose";
 import { FollowModel } from "../follow/follow.model";
+import { ActivityService } from "../activity/activity.services";
 
 const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -103,6 +104,9 @@ const registerUser = async (data: any) => {
 
     const createdUser = await UserModel.create(userData);
 
+    // Log activity
+    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Account registered successfully");
+
     // Delete verification record
     await VerificationModel.deleteOne({ phone: normalizedPhone });
 
@@ -139,6 +143,9 @@ const loginUser = async (data: { phone: string; password: string }) => {
 
     // Update last login
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+
+    // Log activity
+    ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in successfully");
 
     // Generate tokens
     const jwtPayload = {

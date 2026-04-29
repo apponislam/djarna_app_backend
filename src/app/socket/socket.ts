@@ -22,10 +22,16 @@ export const initSocket = (server: http.Server) => {
         console.log("🔌 Socket connected:", socket.id);
 
         const userId = socket.handshake.auth?._id;
+        const role = socket.handshake.auth?.role;
 
         if (userId) {
             socket.join(`user_${userId}`);
             console.log("User joined room:", userId);
+
+            if (role === "ADMIN") {
+                socket.join("admin_room");
+                console.log("Admin joined admin_room:", userId);
+            }
         }
 
         /*
@@ -72,4 +78,12 @@ export const getSocket = () => {
 export const emitToUser = (userId: string, event: string, data: any) => {
     if (!io) return;
     io.to(`user_${userId}`).emit(event, data);
+};
+
+/**
+ * Emit event to all admins
+ */
+export const emitToAdmin = (event: string, data: any) => {
+    if (!io) return;
+    io.to("admin_room").emit(event, data);
 };
