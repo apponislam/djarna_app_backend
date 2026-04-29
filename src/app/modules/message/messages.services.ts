@@ -310,7 +310,7 @@ const markAsRead = async (userId: string, conversationId: string) => {
  * Update offer status
  */
 const updateOfferStatus = async (userId: string, messageId: string, status: MessageType) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: "OFFER" }, { $set: { type: status } }, { returnDocument: "after" }).populate([
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: { $in: ["OFFER", "ACCEPTED", "REJECTED"] } }, { $set: { type: status } }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);
@@ -328,10 +328,14 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
 };
 
 /**
- * Edit a specific message
+ * Edit a specific message (Supports text and location updates)
  */
-const editMessage = async (userId: string, messageId: string, text: string) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: { text, isEdited: true, editedAt: new Date() } }, { returnDocument: "after" }).populate([
+const editMessage = async (userId: string, messageId: string, payload: { text?: string; location?: any }) => {
+    const updateData: any = { isEdited: true, editedAt: new Date() };
+    if (payload.text !== undefined) updateData.text = payload.text;
+    if (payload.location !== undefined) updateData.location = payload.location;
+
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: updateData }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
         { path: "productId", select: "_id title images price" },
     ]);

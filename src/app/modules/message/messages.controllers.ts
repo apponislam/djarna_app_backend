@@ -155,12 +155,12 @@ const rejectOffer = catchAsync(async (req: Request, res: Response) => {
 const editMessage = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const { messageId } = req.params;
-    const result = await messageServices.editMessage(userId, messageId as string, req.body.text);
+    const result = await messageServices.editMessage(userId, messageId as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Message edited successfully",
+        message: "Message updated successfully",
         data: result,
     });
 });
