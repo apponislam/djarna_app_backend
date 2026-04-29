@@ -5,6 +5,7 @@ import { PaymentService } from "./payment.services";
 import { Request, Response } from "express";
 
 const initializePayment = catchAsync(async (req: Request, res: Response) => {
+    // console.log("initializePayment", req.body);
     const result = await PaymentService.initializePayment({
         userId: req.user!._id,
         sellerId: req.body.sellerId,
