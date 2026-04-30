@@ -100,6 +100,10 @@ const UserSchema = new Schema<User>(
             type: Number,
             default: 0,
         },
+        fcmTokens: {
+            type: [String],
+            default: [],
+        },
     },
     {
         timestamps: true,

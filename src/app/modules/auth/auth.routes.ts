@@ -22,6 +22,7 @@ router.get("/me", auth, authControllers.getMe);
 router.post("/logout", auth, authControllers.logout);
 router.patch("/profile", auth, uploadProfileImage, parseBodyData, validateRequest(updateProfileSchema), authControllers.updateProfile);
 router.post("/change-password", auth, validateRequest(changePasswordSchema), authControllers.changePassword);
+router.post("/add-fcm-token", auth, authControllers.addFCMToken);
 
 // Admin only routes
 router.post("/set-password/:userId", auth, authControllers.setUserPassword);

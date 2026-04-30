@@ -200,6 +200,19 @@ const adminLogin = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const addFCMToken = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const { token } = req.body;
+    const result = await authServices.addFCMToken(userId, token);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+});
+
 export const authControllers = {
     sendOtp,
     verifyOtp,
@@ -214,4 +227,5 @@ export const authControllers = {
     updateProfile,
     changePassword,
     setUserPassword,
+    addFCMToken,
 };

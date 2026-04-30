@@ -43,6 +43,7 @@ export interface User {
 
     balance: number;
     noCommission: number;
+    fcmTokens: string[];
 
     createdAt: Date;
     updatedAt: Date;

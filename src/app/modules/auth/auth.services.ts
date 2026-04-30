@@ -363,6 +363,13 @@ const adminLogin = async (data: { phone: string; password: string }) => {
     return { user: userWithoutPassword, accessToken, refreshToken };
 };
 
+const addFCMToken = async (userId: string, token: string) => {
+    const user = await UserModel.findByIdAndUpdate(userId, { $addToSet: { fcmTokens: token } }, { new: true });
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    return { message: "FCM token added successfully" };
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
@@ -378,4 +385,5 @@ export const authServices = {
     setUserPassword,
     getMyProfile,
     boostShop,
+    addFCMToken,
 };
