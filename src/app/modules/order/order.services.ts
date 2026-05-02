@@ -6,6 +6,8 @@ import { OrderModel } from "./order.model";
 import { DeliveryMethod } from "./order.interface";
 import { PaymentService } from "../payment/payment.services";
 import { ActivityService } from "../activity/activity.services";
+import { NotificationUtils } from "../../../utils/notification";
+import { UserModel } from "../auth/auth.model";
 
 const createOrder = async (
     buyerId: string,
@@ -254,8 +256,27 @@ const updateOrderStatus = async (orderId: string, userId: string, status: string
     order.status = status as any;
     await order.save();
 
-    // Log activity
+    // Log activity (Admin)
     ActivityService.logActivity(userId.toString(), "ORDER_STATUS_UPDATE", `Order status updated to ${status}`, { orderId: order._id, status });
+
+    // Push Notifications for Users
+    try {
+        if (status === "SHIPPED") {
+            // Notify Buyer
+            const buyer = await UserModel.findById(order.buyer);
+            if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
+                await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Order Shipped", `Your order #${order._id} has been marked as shipped by the seller.`);
+            }
+        } else if (status === "COMPLETED") {
+            // Notify Seller
+            const seller = await UserModel.findById(order.seller);
+            if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+                await NotificationUtils.sendPushNotification(seller.fcmTokens, "Order Completed", `The buyer has confirmed receipt of order #${order._id}.`);
+            }
+        }
+    } catch (err) {
+        console.error("Failed to send order status push notification:", err);
+    }
 
     // If completed, maybe mark product as SOLD?
     if (status === "COMPLETED") {

@@ -12,6 +12,7 @@ import { UserModel } from "../auth/auth.model";
 import { messageServices } from "../message/messages.services";
 import { WithdrawModel } from "../withdraw/withdraw.model";
 import { ActivityService } from "../activity/activity.services";
+import { NotificationUtils } from "../../../utils/notification";
 
 const handleWithdrawWebhook = async (disbursementToken: string, status: string, failReason?: string, disburseId?: string, transactionId?: string) => {
     // 1. Try to find by token
@@ -29,14 +30,26 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         if (transactionId) {
             withdraw.paydunyaTransactionId = transactionId;
         }
-        // Log activity
+        // Log activity (Admin)
         ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} successful`, { withdrawalId: withdraw._id });
+
+        // Send Push Notification to User
+        const user = await UserModel.findById(withdraw.userId);
+        if (user?.fcmTokens && user.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Successful", `Your withdrawal of ${withdraw.amount} has been processed successfully.`);
+        }
     } else if (status === "failed") {
         withdraw.status = "FAILED";
         withdraw.failReason = failReason || "Withdrawal failed at provider";
 
-        // Log activity
+        // Log activity (Admin)
         ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`, { withdrawalId: withdraw._id });
+
+        // Send Push Notification to User
+        const user = await UserModel.findById(withdraw.userId);
+        if (user?.fcmTokens && user.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Failed", `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`);
+        }
 
         // Refund the user balance if it was deducted
         await UserModel.findByIdAndUpdate(withdraw.userId, {
@@ -90,6 +103,12 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
     // 3. If it's a completed boost payment, apply boost effects
     if (isBoostPayment && status === "completed") {
         await BoostPaymentService.applyBoostEffects(payment._id.toString());
+
+        // Push notification for Boost
+        const user = await UserModel.findById(payment.userId);
+        if (user?.fcmTokens && user.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Activated", "Your product boost has been successfully activated.");
+        }
     }
 
     // 4. If it's a completed product order payment, handle business logic
@@ -105,6 +124,18 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
             }
 
             await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
+
+            // Notify Seller about Payment
+            const seller = await UserModel.findById(payment.sellerId);
+            if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. You received ${sellerBalanceIncrease} FCFA.`);
+            }
+        }
+
+        // Notify Buyer about Payment Success
+        const buyer = await UserModel.findById(payment.userId);
+        if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Payment Successful", `Your payment of ${payment.totalAmount} FCFA has been confirmed.`);
         }
 
         // 2. If there is a messageId, mark it as COMPLETED and sync via socket
@@ -139,7 +170,7 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
             status: "SOLD",
         });
 
-        // 5. Log Activity
+        // 5. Log Activity (Admin)
         ActivityService.logActivity(payment.userId.toString(), "PAYMENT_COMPLETED", `Payment of ${payment.totalAmount} completed for product order`, { paymentId: payment._id });
         ActivityService.logActivity(payment.userId.toString(), "ORDER_PLACED", "Order placed successfully", { paymentId: payment._id });
     }

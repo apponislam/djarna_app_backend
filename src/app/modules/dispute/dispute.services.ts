@@ -7,6 +7,8 @@ import { DisputeModel } from "./dispute.model";
 import { IDispute } from "./dispute.interface";
 import { ActivityService } from "../activity/activity.services";
 import { PaymentService } from "../payment/payment.services";
+import { NotificationUtils } from "../../../utils/notification";
+import { UserModel } from "../auth/auth.model";
 
 /**
  * Create a new dispute
@@ -31,8 +33,14 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
 
     const result = await DisputeModel.create(disputeData);
 
-    // Log activity
+    // Log activity (Admin)
     ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Dispute opened for order #${order._id}`, { disputeId: result._id, orderId: order._id });
+
+    // Notify Seller about Dispute
+    const seller = await UserModel.findById(order.seller);
+    if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Dispute Opened", `A dispute has been opened for your order #${order._id}.`);
+    }
 
     return result;
 };
@@ -48,21 +56,11 @@ const getAllDisputes = async (query: Record<string, any>) => {
     if (status) filter.status = status;
 
     if (searchTerm) {
-        filter.$or = [
-            { description: { $regex: searchTerm, $options: "i" } },
-            { reason: { $regex: searchTerm, $options: "i" } },
-        ];
+        filter.$or = [{ description: { $regex: searchTerm, $options: "i" } }, { reason: { $regex: searchTerm, $options: "i" } }];
     }
 
     const total = await DisputeModel.countDocuments(filter);
-    const data = await DisputeModel.find(filter)
-        .populate("buyer", "name email phone photo")
-        .populate("seller", "name email phone photo")
-        .populate("order")
-        .populate("payment")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit));
+    const data = await DisputeModel.find(filter).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
 
     return {
         meta: {
@@ -79,12 +77,8 @@ const getAllDisputes = async (query: Record<string, any>) => {
  * Get dispute by ID
  */
 const getDisputeById = async (id: string) => {
-    const result = await DisputeModel.findById(id)
-        .populate("buyer", "name email phone photo")
-        .populate("seller", "name email phone photo")
-        .populate("order")
-        .populate("payment");
-    
+    const result = await DisputeModel.findById(id).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment");
+
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
     return result;
 };
@@ -108,14 +102,26 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         // Trigger refund via PayDunya
         await PaymentService.refundPayment(dispute.payment.toString(), refundAmount);
         dispute.refundAmount = refundAmount;
-        
-        // Log activity for refund
+
+        // Log activity for refund (Admin)
         ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Refund of ${refundAmount} processed for dispute #${dispute._id}`, { disputeId: dispute._id, amount: refundAmount });
+
+        // Notify Buyer about Refund
+        const buyer = await UserModel.findById(dispute.buyer);
+        if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Refund Processed", `A refund of ${refundAmount} FCFA has been processed for your dispute.`);
+        }
+    } else if (resolution === "REJECTED") {
+        // Notify Buyer about Rejection
+        const buyer = await UserModel.findById(dispute.buyer);
+        if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Dispute Rejected", `Your dispute for order #${dispute.order} has been rejected by the admin.`);
+        }
     }
 
     await dispute.save();
 
-    // Log activity for resolution
+    // Log activity for resolution (Admin)
     ActivityService.logActivity(adminId, "DISPUTE_RESOLVED", `Dispute #${dispute._id} marked as ${resolution}`, { disputeId: dispute._id, resolution });
 
     return dispute;
