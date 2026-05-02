@@ -33,6 +33,7 @@ export default {
     twilio_phone_number: process.env.TWILIO_PHONE_NUMBER,
 
     // Payment Config
+    paydunya_mode: process.env.PAYDUNYA_MODE || "sandbox",
     paydunya_master_key: process.env.PAYDUNYA_MASTER_KEY,
     paydunya_public_key: process.env.PAYDUNYA_PUBLIC_KEY,
     paydunya_private_key: process.env.PAYDUNYA_PRIVATE_KEY,

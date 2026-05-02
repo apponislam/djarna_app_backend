@@ -13,12 +13,22 @@ import { messageServices } from "../message/messages.services";
 import { WithdrawModel } from "../withdraw/withdraw.model";
 import { ActivityService } from "../activity/activity.services";
 
-const handleWithdrawWebhook = async (disbursementToken: string, status: string, failReason?: string) => {
-    const withdraw = await WithdrawModel.findOne({ paydunyaDisbursementToken: disbursementToken });
+const handleWithdrawWebhook = async (disbursementToken: string, status: string, failReason?: string, disburseId?: string, transactionId?: string) => {
+    // 1. Try to find by token
+    let withdraw = await WithdrawModel.findOne({ paydunyaDisbursementToken: disbursementToken });
+
+    // 2. If not found and disburseId exists (which is our internal transactionId), try finding by that
+    if (!withdraw && disburseId) {
+        withdraw = await WithdrawModel.findOne({ transactionId: disburseId });
+    }
+
     if (!withdraw) return null;
 
     if (status === "success" || status === "completed") {
         withdraw.status = "COMPLETED";
+        if (transactionId) {
+            withdraw.paydunyaTransactionId = transactionId;
+        }
         // Log activity
         ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} successful`, { withdrawalId: withdraw._id });
     } else if (status === "failed") {
@@ -148,8 +158,11 @@ const webhookController = catchAsync(async (req: Request, res: Response) => {
 
     if (isDisbursement && disbursementToken) {
         const status = data.status;
-        const failReason = data.response_text || data.fail_reason;
-        const result = await handleWithdrawWebhook(disbursementToken, status, failReason);
+        const failReason = data.response_text || data.fail_reason || data.description;
+        const disburseId = data.disburse_id;
+        const transactionId = data.transaction_id || data.disburse_tx_id;
+
+        const result = await handleWithdrawWebhook(disbursementToken, status, failReason, disburseId, transactionId);
 
         return sendResponse(res, {
             statusCode: httpStatus.OK,

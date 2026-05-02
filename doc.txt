@@ -1,73 +1,67 @@
-"use client";
+Withdrawal Error: <!DOCTYPE html>
+<html lang="fr">
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-const data = [
-  { name: "Vêtements", value: 1200, color: "#3b82f6" }, // Blue
-  { name: "Électronique", value: 850, color: "#10b981" }, // Green
-  { name: "Maison", value: 620, color: "#f59e0b" }, // Orange
-  { name: "Beauté", value: 540, color: "#ec4899" }, // Pink
-];
+  <title>Page non trouvée | PayDunya</title>
 
-export function CategoryPerformanceChart() {
-  return (
-    <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200 flex flex-col">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-base font-bold text-slate-800">
-          Category Performance
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col flex-1 p-6">
-        <div className="h-[250px] w-full flex items-center justify-center -mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={0}
-                outerRadius={90}
-                paddingAngle={2}
-                dataKey="value"
-                stroke="none"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+  <!-- Favicon -->
+  <link rel="apple-icon" sizes="57x57" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-57x57.png">
+<link rel="apple-icon" sizes="60x60" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-60x60.png">
+<link rel="apple-icon" sizes="72x72" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-72x72.png">
+<link rel="apple-icon" sizes="76x76" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-76x76.png">
+<link rel="apple-icon" sizes="114x114" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-114x114.png">
+<link rel="apple-icon" sizes="120x120" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-120x120.png">
+<link rel="apple-icon" sizes="144x144" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-144x144.png">
+<link rel="apple-icon" sizes="152x152" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-152x152.png">
+<link rel="apple-icon" sizes="180x180" href="https://app.paydunya.com/assets/img/brand/pD_favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" href="https://app.paydunya.com/assets/img/brand/pD_favicon/favicon-96x96.png" sizes="96x96">
+<link rel="manifest" href="https://app.paydunya.com/assets/img/brand/pD_favicon/manifest.json">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="csrf-token" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta name="keywords" content="Paiement, paiement en ligne, Sénégal, Plateforme de paiement en ligne Afrique, Paiement Sénégal, Passerelle de paiement en ligne, PayDunya, PAYDUNYA, paydunya, paydunya.com, Marchand en ligne, payment gateway, payment gateway Africa, online payment gateway, mobile payments, best payment gateway, orange money, paydunia, paydounia, paiement en ligne au Sénégal, paiement sur internet en Afrique, mobile money en Afrique, mobile payment en Afrique, online payment en Afrique, pay online, secure payment, PSP, Payment Service Provider en Afrique, ecommerce, ebusiness, startup,  paiement e-service, PDS, paiement sécurisé, gateway online, epayment gateway, epayment, mpayment, programme paydunya secure, entreprise en ligne, solution de paiement en ligne,  paiement marketplace, monnaie électronique en ligne, API, clic and pay, CnP, DmP, demande de paiement, TFA, transfert automatique, accepter paiement sur site web">
+  <meta name="description" content="Effectuez vos achats de biens et services sur Internet depuis votre t&eacute;l&eacute;phone mobile sur tous les sites acceptant PAYDUNYA.">
+  <meta property="og:image" content="https://app.paydunya.com/images/branding/logo_paydunya_128x128.png">
+  <meta property="og:url" content="https://app.paydunya.com/api/v1/disburse/get-invoice">
+  <meta property="fb:type" content="website">
+  <meta property="og:site_name" content="PAYDUNYA">
+  <meta property="og:title" content="Solution de paiement en ligne simple et s&eacute;curis&eacute;e">
+  <meta property="og:description" content="Effectuez vos achats de biens et services sur Internet depuis votre t&eacute;l&eacute;phone mobile sur tous les sites acceptant PAYDUNYA.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Solution de paiement en ligne simple et s&eacute;curis&eacute;e">
+  <meta name="twitter:description" content="Effectuez vos achats de biens et services sur Internet depuis votre t&eacute;l&eacute;phone mobile sur tous les sites acceptant PAYDUNYA.">
+  <meta name="twitter:image:src" content="https://app.paydunya.com/images/branding/logo_paydunya_128x128.png">
+  <meta name="twitter:site" content="@paydunya">
+  <meta name="twitter:creator" content="@paydunya">
+  <meta name="twitter:url" content="https://app.paydunya.com/api/v1/disburse/get-invoice">
 
-        <div className="mt-auto space-y-3">
-          {data.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center justify-between text-sm"
-            >
-              <div className="flex items-center gap-3 text-slate-600 font-medium">
-                <span
-                  className="h-3 w-3 rounded-full shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                {item.name}
-              </div>
-              <span className="font-bold text-slate-800">
-                {item.value} listings
-              </span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Vendor CSS Files -->
+  <link href="https://app.paydunya.com/css/404.css" rel="stylesheet">
+<body><a href="https://app.paydunya.com/cdn-cgi/content?id=EhtKP4dx9n4VhOgCXgvrMJEe0_iK1IPoWeLZpMIPoCE-1777749332.53325-1.0.1.1-nsog.v_GqKE20cKxWAj.whiEuDeDs179Q4FwJfBvr98" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+
+  <section id="hero" class="d-flex align-items-center">
+
+    <div class="container d-flex flex-column align-items-center justify-content-center" data-aos="fade-up">
+      <img src="https://app.paydunya.com/svg/404.svg" class="img-fluid hero-img" alt="" data-aos="zoom-in" data-aos-delay="150">
+      <h3>Ooups, La page n&#039;a pas &eacute;t&eacute; trouv&eacute;e</h3>
+      <p>
+        Nous sommes vraiment d&eacute;sol&eacute;s pour ce d&eacute;sagr&eacute;ment. Il semble que vous
+          essayez d&#039;acc&eacute;der &agrave; une page qui a &eacute;t&eacute; supprim&eacute;e ou qui n&#039;a jamais exist&eacute;.
+      </p>
+        <a href="https://app.paydunya.com" class="btn-get-started">Revenir à la page précédente</a>
+    </div>
+
+  </section>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f595af05a275ff9',t:'MTc3Nzc0OTMzMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</html>

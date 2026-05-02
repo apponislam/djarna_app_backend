@@ -16,13 +16,13 @@ const WithdrawSchema = new Schema<IWithdraw>(
         },
         status: {
             type: String,
-            enum: ["PENDING", "COMPLETED", "FAILED", "CANCELLED"],
+            enum: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"],
             default: "PENDING",
             index: true,
         },
         method: {
             type: String,
-            enum: ["WAVE", "ORANGE_MONEY", "FREE_MONEY", "E_MONEY", "PAYDUNYA"],
+            enum: ["WAVE", "ORANGE_MONEY", "FREE_MONEY", "EXPRESSO", "PAYDUNYA"],
             required: [true, "Withdrawal method is required"],
         },
         accountNumber: {

@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
-export type WithdrawStatus = "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED";
-export type WithdrawMethod = "WAVE" | "ORANGE_MONEY" | "FREE_MONEY" | "E_MONEY" | "PAYDUNYA";
+export type WithdrawStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
+export type WithdrawMethod = "WAVE" | "ORANGE_MONEY" | "FREE_MONEY" | "EXPRESSO" | "PAYDUNYA";
 
 export interface IWithdraw {
     userId: Types.ObjectId;
