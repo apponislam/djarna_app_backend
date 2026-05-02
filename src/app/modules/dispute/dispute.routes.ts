@@ -2,11 +2,12 @@ import { Router } from "express";
 import auth from "../../middlewares/auth";
 import authorize from "../../middlewares/authorized";
 import { DisputeController } from "./dispute.controllers";
+import { uploadDisputeImages, parseBodyData } from "../../middlewares/multer";
 
 const router = Router();
 
 // Buyer can create a dispute
-router.post("/", auth, authorize(["USER"]), DisputeController.createDispute);
+router.post("/", auth, authorize(["USER"]), uploadDisputeImages, parseBodyData, DisputeController.createDispute);
 
 // Admin can see all disputes
 router.get("/all", auth, authorize(["ADMIN"]), DisputeController.getAllDisputes);

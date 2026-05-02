@@ -20,6 +20,9 @@ if (!fs.existsSync(messageFileDir)) fs.mkdirSync(messageFileDir, { recursive: tr
 const verificationDir = path.join(process.cwd(), "uploads", "verifications");
 if (!fs.existsSync(verificationDir)) fs.mkdirSync(verificationDir, { recursive: true });
 
+const disputeImageDir = path.join(process.cwd(), "uploads", "disputes");
+if (!fs.existsSync(disputeImageDir)) fs.mkdirSync(disputeImageDir, { recursive: true });
+
 // Multer memory storage
 const storage = multer.memoryStorage();
 
@@ -64,6 +67,39 @@ export const uploadProfileImage = (req: Request, res: Response, next: NextFuncti
                 file.filename = newName;
                 file.path = `/uploads/profile-images/${newName}`;
                 file.mimetype = "image/webp";
+            } catch (error) {
+                return next(error);
+            }
+        }
+
+        next();
+    });
+};
+
+// Middleware for multiple dispute image uploads
+export const uploadDisputeImages = (req: Request, res: Response, next: NextFunction) => {
+    const uploadMultiple = upload.array("images", 5); // Allow up to 5 images
+
+    uploadMultiple(req, res, async (err) => {
+        if (err) return next(err);
+
+        if (req.files && Array.isArray(req.files)) {
+            try {
+                const processedFiles = await Promise.all(
+                    (req.files as Express.Multer.File[]).map(async (file, index) => {
+                        const newName = generateFileName(`dispute-${index}`);
+                        const outputPath = path.join(disputeImageDir, newName);
+
+                        // Compress and convert to webp
+                        await sharp(file.buffer).resize(1200, 1200, { fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toFile(outputPath);
+
+                        file.filename = newName;
+                        file.path = `/uploads/disputes/${newName}`;
+                        file.mimetype = "image/webp";
+                        return file;
+                    }),
+                );
+                req.files = processedFiles;
             } catch (error) {
                 return next(error);
             }

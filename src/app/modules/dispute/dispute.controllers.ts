@@ -6,7 +6,14 @@ import { DisputeService } from "./dispute.services";
 
 const createDispute = catchAsync(async (req: Request, res: Response) => {
     const buyerId = req.user._id;
-    const result = await DisputeService.createDispute(buyerId, req.body);
+    const body = req.body;
+
+    // Handle multiple image uploads
+    if (req.files && Array.isArray(req.files)) {
+        body.images = (req.files as Express.Multer.File[]).map((file) => file.path);
+    }
+
+    const result = await DisputeService.createDispute(buyerId, body);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
