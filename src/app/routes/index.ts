@@ -19,6 +19,7 @@ import { WithdrawRoutes } from "../modules/withdraw/withdraw.routes";
 import { DashboardRoutes } from "../modules/dashboard/dashboard.routes";
 import { ActivityRoutes } from "../modules/activity/activity.routes";
 import { DisputeRoutes } from "../modules/dispute/dispute.routes";
+import { NotificationRoutes } from "../modules/notification/notification.routes";
 
 const router = express.Router();
 
@@ -102,6 +103,10 @@ const moduleRoutes = [
     {
         path: "/dispute",
         route: DisputeRoutes,
+    },
+    {
+        path: "/notifications",
+        route: NotificationRoutes,
     },
 ];
 
