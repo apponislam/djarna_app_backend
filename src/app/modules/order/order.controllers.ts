@@ -43,7 +43,7 @@ const getOrderById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
     const result = await OrderService.updateOrderStatus(req.params.id as string, userId, req.body.status);
 
     sendResponse(res, {

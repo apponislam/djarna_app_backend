@@ -20,7 +20,7 @@ const OrderSchema = new Schema<IOrder>(
         },
         address: {
             type: Schema.Types.ObjectId,
-            ref: "Address",
+            ref: "ShippingAddress",
         },
         deliveryMethod: {
             type: String,

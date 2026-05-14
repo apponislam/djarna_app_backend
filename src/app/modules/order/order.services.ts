@@ -234,22 +234,30 @@ const adminGetOrderById = async (orderId: string) => {
     return order;
 };
 
-const updateOrderStatus = async (orderId: string, userId: string, status: string) => {
+const updateOrderStatus = async (orderId: string, userId: any, status: string) => {
     const order = await OrderModel.findOne({ _id: orderId, isDeleted: false });
     if (!order) {
         throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
     }
+
+    const userIdStr = typeof userId === "string" ? userId : userId.toString();
+    const sellerIdStr = order.seller.toString();
+    const buyerIdStr = order.buyer.toString();
 
     // Permission logic:
     // Seller can mark as SHIPPED
     // Buyer can mark as COMPLETED (after delivery)
     // Admin can do anything (role check omitted here for simplicity)
 
-    if (status === "SHIPPED" && order.seller.toString() !== userId) {
+    // "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "COMPLETED";
+
+    console.log(sellerIdStr, userIdStr);
+
+    if (status === "SHIPPED" && sellerIdStr !== userIdStr) {
         throw new ApiError(httpStatus.FORBIDDEN, "Only seller can mark order as shipped");
     }
 
-    if (status === "COMPLETED" && order.buyer.toString() !== userId) {
+    if (status === "COMPLETED" && buyerIdStr !== userIdStr) {
         throw new ApiError(httpStatus.FORBIDDEN, "Only buyer can mark order as completed");
     }
 
