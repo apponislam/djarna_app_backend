@@ -6,7 +6,7 @@ import config from "./app/config";
 import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
 import { initSocket } from "./app/socket/socket";
-import { startBoostCleanupTask } from "./utils/boostCleanup";
+import { startScheduledJobs } from "./utils/scheduledJobs";
 
 let server: Server;
 
@@ -18,7 +18,7 @@ async function main() {
 
         await seedAdmin();
         await seedSettings();
-        startBoostCleanupTask();
+        startScheduledJobs();
 
         server.listen(Number(config.port), config.ip, () => {
             console.log(`✅ App listening on port ${config.port} at ${config.ip}`);

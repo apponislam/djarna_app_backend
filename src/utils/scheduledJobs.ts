@@ -29,15 +29,15 @@ export const runBoostCleanup = async () => {
     }
 };
 
-export const startBoostCleanupTask = () => {
+export const startScheduledJobs = () => {
     // Run once immediately on server start
     runBoostCleanup();
 
-    // Schedule to run every minute
-    cron.schedule("* * * * *", () => {
+    // Schedule to run every 12 hours
+    cron.schedule("0 */12 * * *", () => {
         console.log("Boost cleanup Cron Job triggered.");
         runBoostCleanup();
     });
 
-    console.log("⏱️ Boost cleanup Cron Job started (Running every minute).");
+    console.log("⏱️ Scheduled jobs started (Boost cleanup runs every 12 hours).");
 };
