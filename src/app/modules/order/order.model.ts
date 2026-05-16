@@ -29,7 +29,7 @@ const OrderSchema = new Schema<IOrder>(
         },
         status: {
             type: String,
-            enum: ["PENDING", "SHIPPED", "DELIVERED", "CANCELLED", "COMPLETED"],
+            enum: ["PENDING", "SHIPPED", "DELIVERED", "CANCELLED", "COMPLETED", "DISPUTED"],
             default: "PENDING",
         },
         productPrice: {

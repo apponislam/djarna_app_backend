@@ -33,6 +33,10 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
 
     const result = await DisputeModel.create(disputeData);
 
+    // Update payment and order statuses to DISPUTED
+    await PaymentModel.findByIdAndUpdate(payment._id, { status: "DISPUTED" });
+    await OrderModel.findByIdAndUpdate(order._id, { status: "DISPUTED" });
+
     // Log activity (Admin)
     ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Dispute opened for order #${order._id}`, { disputeId: result._id, orderId: order._id });
 
@@ -103,6 +107,10 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         await PaymentService.refundPayment(dispute.payment.toString(), refundAmount);
         dispute.refundAmount = refundAmount;
 
+        // Update payment and order statuses
+        await PaymentModel.findByIdAndUpdate(dispute.payment, { status: "REFUNDED" });
+        await OrderModel.findByIdAndUpdate(dispute.order, { status: "CANCELLED" });
+
         // Log activity for refund (Admin)
         ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Refund of ${refundAmount} processed for dispute #${dispute._id}`, { disputeId: dispute._id, amount: refundAmount });
 
@@ -112,6 +120,11 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
             await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Refund Processed", `A refund of ${refundAmount} FCFA has been processed for your dispute.`);
         }
     } else if (resolution === "REJECTED") {
+        // Update payment and order statuses - set back to previous status or COMPLETED
+        // For simplicity, let's set to COMPLETED since the dispute is rejected
+        await PaymentModel.findByIdAndUpdate(dispute.payment, { status: "COMPLETED" });
+        await OrderModel.findByIdAndUpdate(dispute.order, { status: "COMPLETED" });
+
         // Notify Buyer about Rejection
         const buyer = await UserModel.findById(dispute.buyer);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {

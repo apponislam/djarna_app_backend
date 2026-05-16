@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED" | "DISPUTED";
 
 export type PaymentMethod = "PAYDUNYA" | "CARD" | "MOBILE_MONEY" | "WALLET" | "APPLE_PAY" | "GOOGLE_PAY";
 
