@@ -14,7 +14,7 @@ const CategorySchema = new Schema<ICategory>(
         },
         gender: {
             type: [String],
-            enum: ["MEN", "WOMEN", "KID", "UNISEX"],
+            enum: ["MEN", "WOMEN", "KID"],
             default: [],
         },
         isActive: {

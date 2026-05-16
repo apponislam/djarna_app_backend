@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 export interface ICategory {
     name: string;
     icon?: string;
-    gender?: ("MEN" | "WOMEN" | "KID" | "UNISEX")[];
+    gender?: ("MEN" | "WOMEN" | "KID")[];
     isActive: boolean;
     parentCategory?: Types.ObjectId | null;
     homePosition?: number | null;
