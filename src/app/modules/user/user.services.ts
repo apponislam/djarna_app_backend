@@ -216,9 +216,35 @@ const getUserStats = async () => {
     };
 };
 
+const toggleUserActive = async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    return user;
+};
+
+const removeVerifiedBadge = async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    user.verifiedBadge = false;
+    await user.save();
+
+    return user;
+};
+
 export const UserServices = {
     getPopularUsers,
     getAllUsers,
     getSingleUser,
     getUserStats,
+    toggleUserActive,
+    removeVerifiedBadge,
 };

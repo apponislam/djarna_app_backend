@@ -48,9 +48,33 @@ const getUserStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const toggleUserActive = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await UserServices.toggleUserActive(id as string);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: `User ${result.isActive ? "activated" : "deactivated"} successfully`,
+        data: result,
+    });
+});
+
+const removeVerifiedBadge = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await UserServices.removeVerifiedBadge(id as string);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Verified badge removed successfully",
+        data: result,
+    });
+});
+
 export const UserControllers = {
     getPopularUsers,
     getAllUsers,
     getSingleUser,
     getUserStats,
+    toggleUserActive,
+    removeVerifiedBadge,
 };

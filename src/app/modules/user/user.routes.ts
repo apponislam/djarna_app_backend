@@ -18,4 +18,8 @@ router.get("/", auth, authorize(["ADMIN"]), UserControllers.getAllUsers);
 // Get single user
 router.get("/:id", auth, UserControllers.getSingleUser);
 
+// Admin routes to manage users
+router.patch("/:id/toggle-active", auth, authorize(["ADMIN"]), UserControllers.toggleUserActive);
+router.patch("/:id/remove-verified-badge", auth, authorize(["ADMIN"]), UserControllers.removeVerifiedBadge);
+
 export const UserRoutes = router;
