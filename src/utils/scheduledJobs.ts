@@ -9,24 +9,38 @@ export const runBoostCleanup = async () => {
     try {
         const now = new Date();
 
-        // Cleanup expired product boosts
-        const expiredProducts = await ProductModel.updateMany(
-            {
-                isBoosted: true,
-                boostEndTime: { $lt: now },
-            },
-            {
-                $set: {
-                    isBoosted: false,
-                    boostPack: null,
-                    boostStartTime: null,
-                    boostEndTime: null,
-                },
-            },
-        );
+        // Find expired product boosts first to get user IDs
+        const expiredProducts = await ProductModel.find({
+            isBoosted: true,
+            boostEndTime: { $lt: now },
+        });
 
-        if (expiredProducts.modifiedCount > 0) {
-            console.log(`🧹 Cleaned up ${expiredProducts.modifiedCount} expired product boosts.`);
+        if (expiredProducts.length > 0) {
+            // Send notifications for each expired boost
+            for (const product of expiredProducts) {
+                const user = await UserModel.findById(product.user);
+                if (user?.fcmTokens && user.fcmTokens.length > 0) {
+                    await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Ended", `Your product "${product.title}" boost has expired.`, product.user.toString(), "PRODUCT_PROMOTED");
+                }
+            }
+
+            // Now update all expired products
+            await ProductModel.updateMany(
+                {
+                    isBoosted: true,
+                    boostEndTime: { $lt: now },
+                },
+                {
+                    $set: {
+                        isBoosted: false,
+                        boostPack: null,
+                        boostStartTime: null,
+                        boostEndTime: null,
+                    },
+                },
+            );
+
+            console.log(`🧹 Cleaned up ${expiredProducts.length} expired product boosts and sent notifications.`);
         }
     } catch (error) {
         console.error("❌ Error running boost cleanup:", error);
