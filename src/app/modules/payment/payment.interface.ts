@@ -21,6 +21,10 @@ export interface IPayment {
     siteFee: number;
     buyerFee: number; // This is the amount after siteFee from productPrice
 
+    escrow?: boolean;
+    escrowReleaseAt?: Date;
+    escrowReleasedAt?: Date;
+
     currency: Currency;
 
     status: PaymentStatus;

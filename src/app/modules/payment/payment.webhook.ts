@@ -9,6 +9,7 @@ import { BoostPaymentService } from "../boostPayment/boostPayment.services";
 import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
+import { SettingsModel } from "../settings/settings.model";
 import { messageServices } from "../message/messages.services";
 import { WithdrawModel } from "../withdraw/withdraw.model";
 import { ActivityService } from "../activity/activity.services";
@@ -113,22 +114,30 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 
     // 4. If it's a completed product order payment, handle business logic
     if (!isBoostPayment && status === "completed") {
-        // 1. Update seller balance and commission usage
+        // 1. OLD CODE: Update seller balance immediately (commented out - now using escrow on delivery)
+        // if (payment.sellerId) {
+        //     const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
+        //     const updateData: any = { $inc: { balance: sellerBalanceIncrease } };
+
+        //     // If this was a zero-commission payment, decrement the seller's noCommission count
+        //     if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
+        //         updateData.$inc.noCommission = -1;
+        //     }
+
+        //     await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
+
+        //     // Notify Seller about Payment
+        //     const seller = await UserModel.findById(payment.sellerId);
+        //     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+        //         await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. You received ${sellerBalanceIncrease} FCFA.`);
+        //     }
+        // }
+
+        // 1. NEW CODE: Notify seller about payment (escrow will start on delivery)
         if (payment.sellerId) {
-            const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
-            const updateData: any = { $inc: { balance: sellerBalanceIncrease } };
-
-            // If this was a zero-commission payment, decrement the seller's noCommission count
-            if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
-                updateData.$inc.noCommission = -1;
-            }
-
-            await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
-
-            // Notify Seller about Payment
             const seller = await UserModel.findById(payment.sellerId);
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. You received ${sellerBalanceIncrease} FCFA.`);
+                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. Escrow will start when order is marked as delivered.`);
             }
         }
 

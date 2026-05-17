@@ -56,6 +56,16 @@ const PaymentSchema = new Schema<IPayment>(
             type: Number,
             min: [0, "Site fee cannot be negative"],
         },
+        escrow: {
+            type: Boolean,
+            default: false,
+        },
+        escrowReleaseAt: {
+            type: Date,
+        },
+        escrowReleasedAt: {
+            type: Date,
+        },
         currency: {
             type: String,
             enum: ["FCFA", "USD", "EUR"],

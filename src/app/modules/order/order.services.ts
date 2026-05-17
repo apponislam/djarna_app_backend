@@ -8,6 +8,8 @@ import { PaymentService } from "../payment/payment.services";
 import { ActivityService } from "../activity/activity.services";
 import { NotificationUtils } from "../../../utils/notification";
 import { UserModel } from "../auth/auth.model";
+import { PaymentModel } from "../payment/payment.model";
+import { SettingsModel } from "../settings/settings.model";
 
 const createOrder = async (
     buyerId: string,
@@ -257,8 +259,8 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
         throw new ApiError(httpStatus.FORBIDDEN, "Only seller can mark order as shipped");
     }
 
-    if (status === "COMPLETED" && buyerIdStr !== userIdStr) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Only buyer can mark order as completed");
+    if (status === "COMPLETED") {
+        throw new ApiError(httpStatus.FORBIDDEN, "Order status will be set to completed automatically when escrow is released");
     }
 
     order.status = status as any;
@@ -266,6 +268,27 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
 
     // Log activity (Admin)
     ActivityService.logActivity(userId.toString(), "ORDER_STATUS_UPDATE", `Order status updated to ${status}`, { orderId: order._id, status });
+
+    // ESCROW SYSTEM: When order is delivered, set up escrow
+    if (status === "DELIVERED" && order.payment) {
+        const payment = await PaymentModel.findById(order.payment);
+        if (payment && !payment.escrow) {
+            const settings = await SettingsModel.findOne();
+            const escrowDurationHours = settings?.payment?.escrowDuration || 72;
+            const escrowReleaseAt = new Date();
+            escrowReleaseAt.setHours(escrowReleaseAt.getHours() + escrowDurationHours);
+
+            payment.escrow = true;
+            payment.escrowReleaseAt = escrowReleaseAt;
+            await payment.save();
+
+            // Notify Seller about escrow start
+            const seller = await UserModel.findById(order.seller);
+            if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+                await NotificationUtils.sendPushNotification(seller.fcmTokens, "Order Delivered - Escrow Started", `Order #${order._id} marked as delivered. Funds will be released after ${escrowDurationHours} hours.`);
+            }
+        }
+    }
 
     // Push Notifications for Users
     try {
@@ -286,12 +309,17 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
         console.error("Failed to send order status push notification:", err);
     }
 
-    // If completed, maybe mark product as SOLD?
-    if (status === "COMPLETED") {
-        await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
-    }
+    // If completed, maybe mark product as SOLD? (Commented out - now handled by escrow release)
+    // if (status === "COMPLETED") {
+    //     await ProductModel.findByIdAndUpdate(order.product, { status: "SOLD" });
+    // }
 
-    const result = await OrderModel.findById(order._id).populate("product", "title images price category subcategory").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
+    const result = await OrderModel.findById(order._id)
+        .populate("product", "title images price category subcategory")
+        .populate("buyer", "name photo email phone verifiedBadge role")
+        .populate("seller", "name photo email phone verifiedBadge role")
+        .populate("address")
+        .populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata escrow escrowReleaseAt escrowReleasedAt");
 
     return result;
 };
