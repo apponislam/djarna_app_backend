@@ -8,6 +8,14 @@ const createCategory = async (payload: ICategory) => {
     if (isExist) {
         throw new ApiError(httpStatus.CONFLICT, "Category already exists!");
     }
+
+    if (payload.homePosition !== null && payload.homePosition !== undefined) {
+        const positionExists = await CategoryModel.findOne({ homePosition: payload.homePosition });
+        if (positionExists) {
+            throw new ApiError(httpStatus.CONFLICT, `Home position ${payload.homePosition} is already in use!`);
+        }
+    }
+
     const result = await CategoryModel.create(payload);
     return result;
 };
@@ -30,6 +38,16 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
     const isExist = await CategoryModel.findById(id);
     if (!isExist) {
         throw new ApiError(httpStatus.NOT_FOUND, "Category not found!");
+    }
+
+    if (payload.homePosition !== null && payload.homePosition !== undefined) {
+        const positionExists = await CategoryModel.findOne({
+            homePosition: payload.homePosition,
+            _id: { $ne: id },
+        });
+        if (positionExists) {
+            throw new ApiError(httpStatus.CONFLICT, `Home position ${payload.homePosition} is already in use!`);
+        }
     }
 
     const result = await CategoryModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });

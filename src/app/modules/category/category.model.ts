@@ -45,6 +45,6 @@ const CategorySchema = new Schema<ICategory>(
 CategorySchema.index({ name: "text" });
 CategorySchema.index({ parentCategory: 1 });
 CategorySchema.index({ isActive: 1 });
-CategorySchema.index({ homePosition: 1 });
+CategorySchema.index({ homePosition: 1 }, { unique: true, partialFilterExpression: { homePosition: { $ne: null } } });
 
 export const CategoryModel = mongoose.model<ICategory>("Category", CategorySchema);
