@@ -67,7 +67,7 @@ export const runEscrowRelease = async () => {
                     // Notify Seller about escrow release
                     const seller = await UserModel.findById(payment.sellerId);
                     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Funds Released!", `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`);
+                        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Funds Released!", `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`, payment.sellerId.toString(), "PAYMENT_COMPLETED");
                     }
                 }
 

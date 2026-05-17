@@ -37,7 +37,7 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Successful", `Your withdrawal of ${withdraw.amount} has been processed successfully.`);
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Successful", `Your withdrawal of ${withdraw.amount} has been processed successfully.`, withdraw.userId.toString(), "WITHDRAWAL_COMPLETED");
         }
     } else if (status === "failed") {
         withdraw.status = "FAILED";
@@ -49,7 +49,7 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Failed", `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`);
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Failed", `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`, withdraw.userId.toString(), "WITHDRAWAL_FAILED");
         }
 
         // Refund the user balance if it was deducted
@@ -108,7 +108,7 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         // Push notification for Boost
         const user = await UserModel.findById(payment.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Activated", "Your product boost has been successfully activated.");
+            await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Activated", "Your product boost has been successfully activated.", payment.userId.toString(), "PRODUCT_PROMOTED");
         }
     }
 
@@ -137,14 +137,14 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         if (payment.sellerId) {
             const seller = await UserModel.findById(payment.sellerId);
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. Escrow will start when order is marked as delivered.`);
+                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. Escrow will start when order is marked as delivered.`, payment.sellerId.toString(), "PRODUCT_SOLD");
             }
         }
 
         // Notify Buyer about Payment Success
         const buyer = await UserModel.findById(payment.userId);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Payment Successful", `Your payment of ${payment.totalAmount} FCFA has been confirmed.`);
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Payment Successful", `Your payment of ${payment.totalAmount} FCFA has been confirmed.`, payment.userId.toString(), "PAYMENT_COMPLETED");
         }
 
         // 2. If there is a messageId, mark it as COMPLETED and sync via socket
