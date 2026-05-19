@@ -7,6 +7,7 @@ import { authServices } from "./auth.services";
 
 const sendOtp = catchAsync(async (req: Request, res: Response) => {
     const { phone, referralCode } = req.body;
+    console.log(req.body);
     const result = await authServices.sendRegistrationOtp(phone, referralCode);
 
     sendResponse(res, {
@@ -213,6 +214,24 @@ const addFCMToken = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const checkReferralCode = catchAsync(async (req: Request, res: Response) => {
+    const { code } = req.params;
+
+    // Check if referral code exists
+    const user = await authServices.getUserByReferralCode(code as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: user ? "Referral code valid" : "Referral code invalid",
+        data: {
+            valid: !!user,
+            referralCode: code,
+            referrerName: user?.name || null,
+        },
+    });
+});
+
 export const authControllers = {
     sendOtp,
     verifyOtp,
@@ -228,4 +247,5 @@ export const authControllers = {
     changePassword,
     setUserPassword,
     addFCMToken,
+    checkReferralCode,
 };

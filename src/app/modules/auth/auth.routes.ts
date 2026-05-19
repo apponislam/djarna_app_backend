@@ -8,6 +8,7 @@ import { parseBodyData, uploadProfileImage } from "../../middlewares/multer";
 const router = Router();
 
 // Public routes
+router.get("/referral/:code", authControllers.checkReferralCode);
 router.post("/send-otp", validateRequest(sendOtpSchema), authControllers.sendOtp);
 router.post("/verify-otp", validateRequest(verifyOtpSchema), authControllers.verifyOtp);
 router.post("/register", uploadProfileImage, parseBodyData, validateRequest(registerSchema), authControllers.register);

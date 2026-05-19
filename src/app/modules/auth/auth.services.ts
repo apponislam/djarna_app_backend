@@ -370,6 +370,11 @@ const addFCMToken = async (userId: string, token: string) => {
     return { message: "FCM token added successfully" };
 };
 
+const getUserByReferralCode = async (referralCode: string) => {
+    const user = await UserModel.findOne({ referralCode });
+    return user;
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
@@ -386,4 +391,5 @@ export const authServices = {
     getMyProfile,
     boostShop,
     addFCMToken,
+    getUserByReferralCode,
 };
