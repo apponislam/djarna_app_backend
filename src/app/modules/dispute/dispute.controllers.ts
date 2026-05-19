@@ -81,10 +81,36 @@ const cancelDispute = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getMyDisputes = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const result = await DisputeService.getMyDisputes(userId, req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "My disputes retrieved successfully",
+        meta: result.meta,
+        data: result.data,
+    });
+});
+
+const getDisputeByOrderId = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+    const orderId = req.params.orderId as string;
+    const result = await DisputeService.getDisputeByOrderId(orderId, userId);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Dispute retrieved successfully",
+        data: result,
+    });
+});
+
 export const DisputeController = {
     createDispute,
     getAllDisputes,
+    getMyDisputes,
     getDisputeById,
+    getDisputeByOrderId,
     resolveDispute,
     cancelDispute,
     getDisputeStats,

@@ -9,6 +9,9 @@ const router = Router();
 // Buyer can create a dispute
 router.post("/", auth, authorize(["USER"]), uploadDisputeImages, parseBodyData, DisputeController.createDispute);
 
+// User can get their own disputes
+router.get("/my", auth, DisputeController.getMyDisputes);
+
 // Admin can see all disputes
 router.get("/all", auth, authorize(["ADMIN"]), DisputeController.getAllDisputes);
 
@@ -16,6 +19,7 @@ router.get("/all", auth, authorize(["ADMIN"]), DisputeController.getAllDisputes)
 router.get("/stats", auth, authorize(["ADMIN"]), DisputeController.getDisputeStats);
 
 // Get specific dispute details
+router.get("/by-order/:orderId", auth, DisputeController.getDisputeByOrderId);
 router.get("/:id", auth, DisputeController.getDisputeById);
 
 // Buyer can cancel a dispute

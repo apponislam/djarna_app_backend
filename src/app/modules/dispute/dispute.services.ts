@@ -174,6 +174,50 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
     return dispute;
 };
 
+/**
+ * Get my disputes (Buyer/Seller)
+ */
+const getMyDisputes = async (userId: string, query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10, status } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter: any = {
+        $or: [{ buyer: userId }, { seller: userId }],
+    };
+
+    if (status) filter.status = status;
+
+    const total = await DisputeModel.countDocuments(filter);
+    const data = await DisputeModel.find(filter).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data,
+    };
+};
+
+/**
+ * Get dispute by order ID
+ */
+const getDisputeByOrderId = async (orderId: string, userId: string) => {
+    const dispute = await DisputeModel.findOne({ order: orderId }).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment");
+
+    if (!dispute) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found for this order");
+    }
+
+    if (!dispute.buyer.equals(userId) && !dispute.seller.equals(userId)) {
+        throw new ApiError(httpStatus.FORBIDDEN, "You don't have access to this dispute");
+    }
+
+    return dispute;
+};
+
 const getDisputeStats = async () => {
     const total = await DisputeModel.countDocuments();
     const pending = await DisputeModel.countDocuments({ status: "PENDING" });
@@ -191,7 +235,9 @@ const getDisputeStats = async () => {
 export const DisputeService = {
     createDispute,
     getAllDisputes,
+    getMyDisputes,
     getDisputeById,
+    getDisputeByOrderId,
     resolveDispute,
     cancelDispute,
     getDisputeStats,
