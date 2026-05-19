@@ -375,6 +375,48 @@ const getUserByReferralCode = async (referralCode: string) => {
     return user;
 };
 
+const getMyReferrals = async (userId: string, query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter = { referredBy: userId };
+
+    const referrals = await UserModel.find(filter).select("-password").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+
+    const total = await UserModel.countDocuments(filter);
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: referrals,
+    };
+};
+
+const getAllReferrals = async (query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter = { referredBy: { $ne: null } };
+
+    const referrals = await UserModel.find(filter).populate("referredBy", "name email phone referralCode").select("-password").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
+
+    const total = await UserModel.countDocuments(filter);
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: referrals,
+    };
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
@@ -392,4 +434,6 @@ export const authServices = {
     boostShop,
     addFCMToken,
     getUserByReferralCode,
+    getMyReferrals,
+    getAllReferrals,
 };
