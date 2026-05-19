@@ -28,6 +28,7 @@ const storage = multer.memoryStorage();
 
 // File filter (only allow images)
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+    // console.log("📸 Uploaded file mimetype:", file.mimetype);
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (allowedTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error("Image must be JPG, PNG, or WEBP"));

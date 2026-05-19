@@ -17,7 +17,7 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
     const order = await OrderModel.findById(payload.order);
     if (!order) throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
 
-    if (order.buyer.toString() !== buyerId) {
+    if (!order.buyer.equals(buyerId)) {
         throw new ApiError(httpStatus.FORBIDDEN, "Only the buyer can open a dispute");
     }
 
@@ -146,7 +146,7 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
     const dispute = await DisputeModel.findById(disputeId);
     if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
 
-    if (dispute.buyer.toString() !== buyerId) {
+    if (!dispute.buyer.equals(buyerId)) {
         throw new ApiError(httpStatus.FORBIDDEN, "Only the buyer can cancel this dispute");
     }
 
