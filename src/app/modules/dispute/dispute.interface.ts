@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export type DisputeStatus = "PENDING" | "IN_REVIEW" | "RESOLVED" | "REJECTED" | "CANCELLED";
+export type DisputeStatus = "PENDING" | "RESOLVED" | "CANCELLED";
 
 export type DisputeReason = "ITEM_NOT_RECEIVED" | "ITEM_NOT_AS_DESCRIBED" | "DAMAGED_ITEM" | "UNAUTHORIZED_TRANSACTION" | "OTHER";
 

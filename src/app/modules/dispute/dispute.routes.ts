@@ -12,6 +12,9 @@ router.post("/", auth, authorize(["USER"]), uploadDisputeImages, parseBodyData, 
 // Admin can see all disputes
 router.get("/all", auth, authorize(["ADMIN"]), DisputeController.getAllDisputes);
 
+// Admin can get dispute stats
+router.get("/stats", auth, authorize(["ADMIN"]), DisputeController.getDisputeStats);
+
 // Get specific dispute details
 router.get("/:id", auth, DisputeController.getDisputeById);
 

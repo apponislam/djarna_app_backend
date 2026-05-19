@@ -90,11 +90,11 @@ const getDisputeById = async (id: string) => {
 /**
  * Resolve a dispute (Admin)
  */
-const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED" | "REJECTED", adminNote: string, refundAmount?: number) => {
+const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED" | "CANCELLED", adminNote: string, refundAmount?: number) => {
     const dispute = await DisputeModel.findById(id);
     if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
 
-    if (dispute.status !== "PENDING" && dispute.status !== "IN_REVIEW") {
+    if (dispute.status !== "PENDING") {
         throw new ApiError(httpStatus.BAD_REQUEST, "Dispute is already closed");
     }
 
@@ -117,18 +117,17 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         // Notify Buyer about Refund
         const buyer = await UserModel.findById(dispute.buyer);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Refund Processed", `A refund of ${refundAmount} FCFA has been processed for your dispute.`);
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Refund Processed", `A refund of ${refundAmount} FCFA has been processed for your dispute.`, buyer._id.toString(), "DISPUTE_RESOLVED");
         }
-    } else if (resolution === "REJECTED") {
-        // Update payment and order statuses - set back to previous status or COMPLETED
-        // For simplicity, let's set to COMPLETED since the dispute is rejected
+    } else if (resolution === "CANCELLED") {
+        // Update payment and order statuses - set back to COMPLETED
         await PaymentModel.findByIdAndUpdate(dispute.payment, { status: "COMPLETED" });
         await OrderModel.findByIdAndUpdate(dispute.order, { status: "COMPLETED" });
 
-        // Notify Buyer about Rejection
+        // Notify Buyer about Cancellation
         const buyer = await UserModel.findById(dispute.buyer);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Dispute Rejected", `Your dispute for order #${dispute.order} has been rejected by the admin.`);
+            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Dispute Cancelled", `Your dispute for order #${dispute.order} has been cancelled.`, buyer._id.toString(), "DISPUTE_RESOLVED");
         }
     }
 
@@ -140,9 +139,24 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
     return dispute;
 };
 
+const getDisputeStats = async () => {
+    const total = await DisputeModel.countDocuments();
+    const pending = await DisputeModel.countDocuments({ status: "PENDING" });
+    const resolved = await DisputeModel.countDocuments({ status: "RESOLVED" });
+    const cancelled = await DisputeModel.countDocuments({ status: "CANCELLED" });
+
+    return {
+        total,
+        pending,
+        resolved,
+        cancelled,
+    };
+};
+
 export const DisputeService = {
     createDispute,
     getAllDisputes,
     getDisputeById,
     resolveDispute,
+    getDisputeStats,
 };

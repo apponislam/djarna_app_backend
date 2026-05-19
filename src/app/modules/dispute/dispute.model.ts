@@ -43,7 +43,7 @@ const DisputeSchema = new Schema<IDispute>(
         ],
         status: {
             type: String,
-            enum: ["PENDING", "IN_REVIEW", "RESOLVED", "REJECTED", "CANCELLED"],
+            enum: ["PENDING", "RESOLVED", "CANCELLED"],
             default: "PENDING",
             index: true,
         },

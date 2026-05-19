@@ -59,9 +59,20 @@ const resolveDispute = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getDisputeStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await DisputeService.getDisputeStats();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Dispute stats retrieved successfully",
+        data: result,
+    });
+});
+
 export const DisputeController = {
     createDispute,
     getAllDisputes,
     getDisputeById,
     resolveDispute,
+    getDisputeStats,
 };
