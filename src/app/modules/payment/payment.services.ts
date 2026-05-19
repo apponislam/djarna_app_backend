@@ -240,8 +240,8 @@ const refundPayment = async (id: string, refundAmount?: number): Promise<IPaymen
         throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
     }
 
-    if (payment.status !== "COMPLETED") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Only completed payments can be refunded");
+    if (payment.status !== "COMPLETED" && payment.status !== "DISPUTED") {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Only completed or disputed payments can be refunded");
     }
 
     const amountToRefund = refundAmount || payment.totalAmount;
