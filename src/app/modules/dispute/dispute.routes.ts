@@ -18,6 +18,9 @@ router.get("/stats", auth, authorize(["ADMIN"]), DisputeController.getDisputeSta
 // Get specific dispute details
 router.get("/:id", auth, DisputeController.getDisputeById);
 
+// Buyer can cancel a dispute
+router.patch("/:id/cancel", auth, authorize(["USER"]), DisputeController.cancelDispute);
+
 // Admin can resolve a dispute
 router.patch("/:id/resolve", auth, authorize(["ADMIN"]), DisputeController.resolveDispute);
 

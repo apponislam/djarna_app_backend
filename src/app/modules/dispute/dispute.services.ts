@@ -139,6 +139,41 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
     return dispute;
 };
 
+/**
+ * Cancel a dispute (Buyer only)
+ */
+const cancelDispute = async (disputeId: string, buyerId: string) => {
+    const dispute = await DisputeModel.findById(disputeId);
+    if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
+
+    if (dispute.buyer.toString() !== buyerId) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Only the buyer can cancel this dispute");
+    }
+
+    if (dispute.status !== "PENDING") {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Only pending disputes can be cancelled");
+    }
+
+    dispute.status = "CANCELLED";
+    dispute.resolvedAt = new Date();
+    await dispute.save();
+
+    // Update payment and order statuses back to COMPLETED
+    await PaymentModel.findByIdAndUpdate(dispute.payment, { status: "COMPLETED" });
+    await OrderModel.findByIdAndUpdate(dispute.order, { status: "COMPLETED" });
+
+    // Notify Seller about Cancellation
+    const seller = await UserModel.findById(dispute.seller);
+    if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Dispute Cancelled", `The dispute for order #${dispute.order} has been cancelled by the buyer.`, seller._id.toString(), "DISPUTE_RESOLVED");
+    }
+
+    // Log activity
+    ActivityService.logActivity(buyerId, "DISPUTE_CANCELLED", `Dispute #${dispute._id} cancelled by buyer`, { disputeId: dispute._id });
+
+    return dispute;
+};
+
 const getDisputeStats = async () => {
     const total = await DisputeModel.countDocuments();
     const pending = await DisputeModel.countDocuments({ status: "PENDING" });
@@ -158,5 +193,6 @@ export const DisputeService = {
     getAllDisputes,
     getDisputeById,
     resolveDispute,
+    cancelDispute,
     getDisputeStats,
 };

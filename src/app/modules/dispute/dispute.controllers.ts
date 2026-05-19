@@ -69,10 +69,23 @@ const getDisputeStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const cancelDispute = catchAsync(async (req: Request, res: Response) => {
+    const buyerId = req.user._id;
+    const disputeId = req.params.id as string;
+    const result = await DisputeService.cancelDispute(disputeId, buyerId);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Dispute cancelled successfully",
+        data: result,
+    });
+});
+
 export const DisputeController = {
     createDispute,
     getAllDisputes,
     getDisputeById,
     resolveDispute,
+    cancelDispute,
     getDisputeStats,
 };
