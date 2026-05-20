@@ -86,6 +86,69 @@ const getCommissionStats = async () => {
     };
 };
 
+const getThisMonthStats = async () => {
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const thisMonthOrders = await OrderModel.countDocuments({
+        createdAt: { $gte: startOfThisMonth, $lte: endOfThisMonth },
+        isDeleted: false,
+    });
+
+    const thisMonthCommission = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                siteFee: { $exists: true },
+                createdAt: { $gte: startOfThisMonth, $lte: endOfThisMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$siteFee" },
+            },
+        },
+    ]);
+
+    const lastMonthCommission = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                siteFee: { $exists: true },
+                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$siteFee" },
+            },
+        },
+    ]);
+
+    const currentCommission = thisMonthCommission.length > 0 ? thisMonthCommission[0].total : 0;
+    const lastCommission = lastMonthCommission.length > 0 ? lastMonthCommission[0].total : 0;
+    const averagePerOrder = thisMonthOrders > 0 ? Math.round(currentCommission / thisMonthOrders) : 0;
+    let growth = 0;
+    if (lastCommission > 0) {
+        growth = ((currentCommission - lastCommission) / lastCommission) * 100;
+    } else if (currentCommission > 0) {
+        growth = 100;
+    }
+
+    return {
+        totalOrders: thisMonthOrders,
+        commissionEarned: currentCommission,
+        averagePerOrder: averagePerOrder,
+        growthVsLastMonth: parseFloat(growth.toFixed(1)),
+    };
+};
+
 const getOrdersChartData = async () => {
     const data = [];
     const now = new Date();
@@ -201,4 +264,5 @@ export const DashboardServices = {
     getRevenueChartData,
     getCategoryPerformance,
     getCommissionStats,
+    getThisMonthStats,
 };

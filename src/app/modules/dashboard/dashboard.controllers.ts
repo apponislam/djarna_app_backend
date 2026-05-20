@@ -59,10 +59,22 @@ const getCommissionStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getThisMonthStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await DashboardServices.getThisMonthStats();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "This month stats retrieved successfully",
+        data: result,
+    });
+});
+
 export const DashboardControllers = {
     getDashboardStats,
     getOrdersChartData,
     getRevenueChartData,
     getCategoryPerformance,
     getCommissionStats,
+    getThisMonthStats,
 };

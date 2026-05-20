@@ -15,4 +15,6 @@ router.get("/category-performance", auth, authorize(["ADMIN"]), DashboardControl
 
 router.get("/commission", auth, authorize(["ADMIN"]), DashboardControllers.getCommissionStats);
 
+router.get("/this-month", auth, authorize(["ADMIN"]), DashboardControllers.getThisMonthStats);
+
 export const DashboardRoutes = router;
