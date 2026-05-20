@@ -48,9 +48,21 @@ const getCategoryPerformance = catchAsync(async (req: Request, res: Response) =>
     });
 });
 
+const getCommissionStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await DashboardServices.getCommissionStats();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Commission and escrow stats retrieved successfully",
+        data: result,
+    });
+});
+
 export const DashboardControllers = {
     getDashboardStats,
     getOrdersChartData,
     getRevenueChartData,
     getCategoryPerformance,
+    getCommissionStats,
 };

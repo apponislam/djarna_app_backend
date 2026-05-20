@@ -1,6 +1,7 @@
 import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
+import { PaymentModel } from "../payment/payment.model";
 
 const getDashboardStats = async () => {
     const totalUsers = await UserModel.countDocuments();
@@ -23,6 +24,65 @@ const getDashboardStats = async () => {
         activeListings,
         ordersInProgress,
         productBoosted,
+    };
+};
+
+const getCommissionStats = async () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const totalCommission = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                siteFee: { $exists: true },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$siteFee" },
+            },
+        },
+    ]);
+
+    const thisMonthCommission = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                siteFee: { $exists: true },
+                createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$siteFee" },
+            },
+        },
+    ]);
+
+    const pendingEscrow = await PaymentModel.aggregate([
+        {
+            $match: {
+                escrow: true,
+                status: "COMPLETED",
+                escrowReleasedAt: { $exists: false },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$productPrice" },
+            },
+        },
+    ]);
+
+    return {
+        totalRevenue: totalCommission.length > 0 ? totalCommission[0].total : 0,
+        thisMonthCommission: thisMonthCommission.length > 0 ? thisMonthCommission[0].total : 0,
+        pendingEscrow: pendingEscrow.length > 0 ? pendingEscrow[0].total : 0,
     };
 };
 
@@ -140,4 +200,5 @@ export const DashboardServices = {
     getOrdersChartData,
     getRevenueChartData,
     getCategoryPerformance,
+    getCommissionStats,
 };

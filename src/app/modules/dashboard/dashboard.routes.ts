@@ -13,4 +13,6 @@ router.get("/revenue", auth, authorize(["ADMIN"]), DashboardControllers.getReven
 
 router.get("/category-performance", auth, authorize(["ADMIN"]), DashboardControllers.getCategoryPerformance);
 
+router.get("/commission", auth, authorize(["ADMIN"]), DashboardControllers.getCommissionStats);
+
 export const DashboardRoutes = router;
