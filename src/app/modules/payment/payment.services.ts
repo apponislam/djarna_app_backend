@@ -178,7 +178,7 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
 };
 
 const getPaymentById = async (id: string): Promise<IPayment> => {
-    const payment = await PaymentModel.findById(id).lean();
+    const payment = await PaymentModel.findById(id).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
     if (!payment) {
         throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
     }
@@ -204,7 +204,7 @@ const getUserPayments = async (userId: string, filters?: IPaymentFilter): Promis
         }
     }
 
-    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).lean();
+    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
     return payments;
 };
 
@@ -230,7 +230,7 @@ const getAllPayments = async (filters?: IPaymentFilter): Promise<IPayment[]> => 
         }
     }
 
-    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).lean();
+    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
     return payments;
 };
 
