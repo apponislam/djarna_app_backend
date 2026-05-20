@@ -135,6 +135,13 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
 
         // 1. NEW CODE: Notify seller about payment (escrow will start on delivery)
         if (payment.sellerId) {
+            const updateData: any = {};
+            // If this was a zero-commission payment, decrement the seller's noCommission count
+            if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
+                updateData.$inc = { noCommission: -1 };
+                await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
+            }
+
             const seller = await UserModel.findById(payment.sellerId);
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
                 await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. Escrow will start when order is marked as delivered.`, payment.sellerId.toString(), "PRODUCT_SOLD");

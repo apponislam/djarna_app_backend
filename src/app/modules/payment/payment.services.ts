@@ -29,6 +29,8 @@ interface IPaymentFilter {
     method?: string;
     startDate?: Date;
     endDate?: Date;
+    page?: number;
+    limit?: number;
 }
 
 const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment: IPayment; invoiceUrl: string; invoiceToken: string }> => {
@@ -208,7 +210,7 @@ const getUserPayments = async (userId: string, filters?: IPaymentFilter): Promis
     return payments;
 };
 
-const getAllPayments = async (filters?: IPaymentFilter): Promise<IPayment[]> => {
+const getAllPayments = async (filters?: IPaymentFilter) => {
     const query: any = {};
 
     if (filters?.userId) {
@@ -230,8 +232,22 @@ const getAllPayments = async (filters?: IPaymentFilter): Promise<IPayment[]> => 
         }
     }
 
-    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
-    return payments;
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 10;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const total = await PaymentModel.countDocuments(query);
+    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+        data: payments,
+    };
 };
 
 const refundPayment = async (id: string, refundAmount?: number): Promise<IPayment> => {

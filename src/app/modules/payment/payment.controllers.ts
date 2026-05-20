@@ -53,12 +53,14 @@ const getPaymentById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyPayments = catchAsync(async (req: Request, res: Response) => {
-    const { status, method, startDate, endDate } = req.query;
+    const { status, method, startDate, endDate, page, limit } = req.query;
     const filters: any = {};
     if (status) filters.status = status;
     if (method) filters.method = method;
     if (startDate) filters.startDate = new Date(startDate as string);
     if (endDate) filters.endDate = new Date(endDate as string);
+    if (page) filters.page = Number(page);
+    if (limit) filters.limit = Number(limit);
 
     const result = await PaymentService.getUserPayments(req.user!._id, filters);
 
@@ -71,13 +73,15 @@ const getMyPayments = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllPayments = catchAsync(async (req: Request, res: Response) => {
-    const { userId, status, method, startDate, endDate } = req.query;
+    const { userId, status, method, startDate, endDate, page, limit } = req.query;
     const filters: any = {};
     if (userId) filters.userId = userId as string;
     if (status) filters.status = status;
     if (method) filters.method = method;
     if (startDate) filters.startDate = new Date(startDate as string);
     if (endDate) filters.endDate = new Date(endDate as string);
+    if (page) filters.page = Number(page);
+    if (limit) filters.limit = Number(limit);
 
     const result = await PaymentService.getAllPayments(filters);
 
@@ -85,7 +89,8 @@ const getAllPayments = catchAsync(async (req: Request, res: Response) => {
         statusCode: httpStatus.OK,
         success: true,
         message: "All payments retrieved successfully",
-        data: result,
+        data: result.data,
+        meta: result.meta,
     });
 });
 

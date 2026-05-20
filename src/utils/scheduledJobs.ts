@@ -71,11 +71,6 @@ export const runEscrowRelease = async () => {
                     const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
                     const updateData: any = { $inc: { balance: sellerBalanceIncrease } };
 
-                    // If this was a zero-commission payment, decrement the seller's noCommission count
-                    if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
-                        updateData.$inc.noCommission = -1;
-                    }
-
                     await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
 
                     // Notify Seller about escrow release
