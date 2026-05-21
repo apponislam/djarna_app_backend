@@ -39,9 +39,22 @@ export default {
     paydunya_private_key: process.env.PAYDUNYA_PRIVATE_KEY,
     paydunya_token: process.env.PAYDUNYA_TOKEN,
 
-    // stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
-    // stripe_secret_key: process.env.STRIPE_SECRET_KEY,
-    // stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
-    // stripe_platform_account_id: process.env.STRIPE_PLATFORM_ACCOUNT_ID,
-    // server_map_api_key: process.env.SERVER_MAP_API_KEY,
+    // OAuth Config
+    google: {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || "/api/v1/auth/google/callback",
+    },
+    facebook: {
+        appID: process.env.FACEBOOK_APP_ID,
+        appSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK_URL || "/api/v1/auth/facebook/callback",
+    },
+    apple: {
+        clientID: process.env.APPLE_CLIENT_ID,
+        teamID: process.env.APPLE_TEAM_ID,
+        keyID: process.env.APPLE_KEY_ID,
+        privateKey: process.env.APPLE_PRIVATE_KEY,
+        callbackURL: process.env.APPLE_CALLBACK_URL || "/api/v1/auth/apple/callback",
+    },
 };
