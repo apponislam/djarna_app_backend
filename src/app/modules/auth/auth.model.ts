@@ -81,6 +81,15 @@ const UserSchema = new Schema<User>(
         phoneVerificationOtp: String,
         phoneVerificationExpiry: Date,
 
+        // OAuth fields
+        oauthProvider: {
+            type: String,
+            enum: ["GOOGLE", "FACEBOOK", "APPLE"],
+        },
+        oauthId: {
+            type: String,
+        },
+
         // Referral fields
         referralCode: {
             type: String,

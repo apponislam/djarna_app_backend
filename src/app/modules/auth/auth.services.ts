@@ -417,6 +417,135 @@ const getAllReferrals = async (query: Record<string, any> = {}) => {
     };
 };
 
+const oauthLoginSignup = async (data: {
+    provider: "GOOGLE" | "FACEBOOK" | "APPLE";
+    providerId: string;
+    email?: string;
+    name: string;
+    photo?: string;
+    phone?: string;
+    password?: string;
+    referralCode?: string;
+}) => {
+    // Try to find user by provider ID
+    let user = await UserModel.findOne({ oauthProvider: data.provider, oauthId: data.providerId });
+
+    if (user) {
+        // User exists, log them in
+        await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+        ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in via OAuth");
+
+        const jwtPayload = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone,
+            role: user.role,
+        };
+
+        const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
+        const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
+
+        const { password, ...userWithoutPassword } = user.toObject();
+        return { user: userWithoutPassword, accessToken, refreshToken, isNewUser: false };
+    }
+
+    // If not found, check by email
+    if (data.email) {
+        user = await UserModel.findOne({ email: data.email });
+        if (user) {
+            // Link the OAuth provider to existing user
+            user.oauthProvider = data.provider;
+            user.oauthId = data.providerId;
+            await user.save();
+
+            await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+            ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in via OAuth");
+
+            const jwtPayload = {
+                _id: user._id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role,
+            };
+
+            const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
+            const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
+
+            const { password, ...userWithoutPassword } = user.toObject();
+            return { user: userWithoutPassword, accessToken, refreshToken, isNewUser: false };
+        }
+    }
+
+    // Check if phone and password are provided (required for new user)
+    if (!data.phone || !data.password) {
+        return {
+            isNewUser: true,
+            requiresPhonePassword: true,
+            tempUser: {
+                name: data.name,
+                email: data.email,
+                photo: data.photo,
+                provider: data.provider,
+                providerId: data.providerId,
+            },
+        };
+    }
+
+    // Create new user
+    const normalizedPhone = normalizePhoneNumber(data.phone);
+
+    // Check if phone already exists
+    const existingPhoneUser = await UserModel.findOne({ phone: normalizedPhone });
+    if (existingPhoneUser) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already registered");
+    }
+
+    // Handle referral logic
+    let referredBy;
+    if (data.referralCode) {
+        const referrer = await UserModel.findOne({ referralCode: data.referralCode });
+        if (referrer) {
+            referredBy = referrer._id;
+            await UserModel.updateOne({ _id: referrer._id }, { $inc: { noCommission: 1 } });
+        }
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, Number(config.bcrypt_salt_rounds));
+
+    // Create user
+    const userData = {
+        name: data.name,
+        email: data.email,
+        phone: normalizedPhone,
+        password: hashedPassword,
+        photo: data.photo,
+        oauthProvider: data.provider,
+        oauthId: data.providerId,
+        referredBy,
+        isActive: true,
+        isPhoneVerified: true,
+    };
+
+    const createdUser = await UserModel.create(userData);
+
+    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Account registered via OAuth");
+
+    const jwtPayload = {
+        _id: createdUser._id,
+        name: createdUser.name,
+        phone: createdUser.phone,
+        role: createdUser.role,
+    };
+
+    const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
+    const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
+
+    const { password: pwd, ...userWithoutSensitive } = createdUser.toObject();
+
+    return { user: userWithoutSensitive, accessToken, refreshToken, isNewUser: true };
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,

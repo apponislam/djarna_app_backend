@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 
 export type UserRole = "USER" | "ADMIN";
+export type OAuthProvider = "GOOGLE" | "FACEBOOK" | "APPLE";
 
 export interface User {
     name: string;
@@ -36,6 +37,10 @@ export interface User {
     // Phone verification fields
     phoneVerificationOtp?: string;
     phoneVerificationExpiry?: Date;
+
+    // OAuth fields
+    oauthProvider?: OAuthProvider;
+    oauthId?: string;
 
     // Referral fields
     referralCode: string;
