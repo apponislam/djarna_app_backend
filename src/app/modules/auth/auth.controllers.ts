@@ -258,43 +258,29 @@ const getAllReferrals = catchAsync(async (req: Request, res: Response) => {
 });
 
 const oauthCallback = catchAsync(async (req: Request, res: Response) => {
-    console.log("[OAuth Callback] Starting OAuth callback");
-    console.log("[OAuth Callback] req.user:", (req as any).user);
-    console.log("[OAuth Callback] req.authInfo:", (req as any).authInfo);
+    const userOrTemp = req.user as any;
 
-    if (!(req as any).user) {
-        const tempData = (req as any).authInfo?.tempData;
-        console.log("[OAuth Callback] No user found, tempData:", tempData);
-
-        if (tempData) {
-            console.log("[OAuth Callback] Returning temp data for phone/password completion");
-            return sendResponse(res, {
-                statusCode: httpStatus.OK,
-                success: true,
-                message: "Please complete your signup with phone and password",
-                data: {
-                    isNewUser: true,
-                    requiresPhonePassword: true,
-                    tempUser: tempData,
-                },
-            });
-        }
-
-        console.log("[OAuth Callback] OAuth authentication failed");
+    if (userOrTemp?.isTemp) {
         return sendResponse(res, {
-            statusCode: httpStatus.UNAUTHORIZED,
-            success: false,
-            message: "OAuth authentication failed",
-            data: (req as any).authInfo,
+            statusCode: httpStatus.OK,
+            success: true,
+            message: "Please complete your signup with phone and password",
+            data: {
+                isNewUser: true,
+                requiresPhonePassword: true,
+                tempUser: {
+                    provider: userOrTemp.provider,
+                    providerId: userOrTemp.providerId,
+                    email: userOrTemp.email,
+                    name: userOrTemp.name,
+                    photo: userOrTemp.photo,
+                },
+            },
         });
     }
 
-    console.log("[OAuth Callback] User found, processing login");
-    const userDoc = (req as any).user;
+    const userDoc = userOrTemp;
     const user = userDoc.toObject ? userDoc.toObject() : userDoc;
-    console.log("[OAuth Callback] User data (plain object):", user);
-
-    console.log("[OAuth Callback] Updating lastLogin");
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
 
     const jwtPayload = {
@@ -303,11 +289,9 @@ const oauthCallback = catchAsync(async (req: Request, res: Response) => {
         phone: user.phone,
         role: user.role,
     };
-    console.log("[OAuth Callback] JWT payload:", jwtPayload);
 
     const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
     const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
-    console.log("[OAuth Callback] Tokens generated");
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -315,11 +299,8 @@ const oauthCallback = catchAsync(async (req: Request, res: Response) => {
         sameSite: "strict",
         maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-    console.log("[OAuth Callback] Refresh token cookie set");
 
     const { password, __v, ...userWithoutPassword } = user;
-    console.log("[OAuth Callback] Sending response with user:", userWithoutPassword);
-
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

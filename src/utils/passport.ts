@@ -13,7 +13,7 @@ try {
 
 // Serialize user
 passport.serializeUser((user: any, done) => {
-    done(null, user.id);
+    done(null, user.id || user.providerId);
 });
 
 // Deserialize user
@@ -66,17 +66,16 @@ if (config.google?.clientID && config.google?.clientSecret) {
                         }
                     }
 
-                    // If we get here, user is new - return false (need phone/password)
-                    return done(null, false, {
-                        message: "User not found. Please register with phone and password first.",
-                        tempData: {
-                            provider: "GOOGLE",
-                            providerId: profile.id,
-                            email,
-                            name,
-                            photo,
-                        },
-                    });
+                    // If we get here, user is new - return temp data as "user"
+                    const tempUser = {
+                        provider: "GOOGLE",
+                        providerId: profile.id,
+                        email,
+                        name,
+                        photo,
+                        isTemp: true,
+                    };
+                    return done(null, tempUser);
                 } catch (error) {
                     return done(error as Error, false);
                 }
@@ -126,17 +125,16 @@ if (config.facebook?.appID && config.facebook?.appSecret) {
                         }
                     }
 
-                    // If we get here, user is new - return false (need phone/password)
-                    return done(null, false, {
-                        message: "User not found. Please register with phone and password first.",
-                        tempData: {
-                            provider: "FACEBOOK",
-                            providerId: profile.id,
-                            email,
-                            name,
-                            photo,
-                        },
-                    });
+                    // If we get here, user is new - return temp data as "user"
+                    const tempUser = {
+                        provider: "FACEBOOK",
+                        providerId: profile.id,
+                        email,
+                        name,
+                        photo,
+                        isTemp: true,
+                    };
+                    return done(null, tempUser);
                 } catch (error) {
                     return done(error as Error, false);
                 }
@@ -185,16 +183,15 @@ if (config.apple?.clientID && config.apple?.teamID && config.apple?.keyID && con
                         }
                     }
 
-                    // If we get here, user is new - return false (need phone/password)
-                    return done(null, false, {
-                        message: "User not found. Please register with phone and password first.",
-                        tempData: {
-                            provider: "APPLE",
-                            providerId: profile.id,
-                            email,
-                            name,
-                        },
-                    });
+                    // If we get here, user is new - return temp data as "user"
+                    const tempUser = {
+                        provider: "APPLE",
+                        providerId: profile.id,
+                        email,
+                        name,
+                        isTemp: true,
+                    };
+                    return done(null, tempUser);
                 } catch (error) {
                     return done(error as Error, false);
                 }
