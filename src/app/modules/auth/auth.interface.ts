@@ -44,7 +44,7 @@ export interface User {
 
     // Referral fields
     referralCode: string;
-    referredBy?: Types.ObjectId; // Relation to the user who referred
+    referredBy?: Types.ObjectId;
 
     balance: number;
     noCommission: number;
