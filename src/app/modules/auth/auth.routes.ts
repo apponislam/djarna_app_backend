@@ -5,8 +5,22 @@ import { changePasswordSchema, loginSchema, sendOtpSchema, verifyOtpSchema, requ
 import auth from "../../middlewares/auth";
 import authorize from "../../middlewares/authorized";
 import { parseBodyData, uploadProfileImage } from "../../middlewares/multer";
+import passport from "../../../utils/passport";
 
 const router = Router();
+
+// ==================== OAuth Routes ====================
+// Google
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/google/callback", passport.authenticate("google", { session: false }), authControllers.oauthCallback);
+
+// Facebook
+router.get("/facebook", passport.authenticate("facebook", { scope: ["email"] }));
+router.get("/facebook/callback", passport.authenticate("facebook", { session: false }), authControllers.oauthCallback);
+
+// Apple
+router.get("/apple", passport.authenticate("apple", { scope: ["email", "name"] }));
+router.post("/apple/callback", passport.authenticate("apple", { session: false }), authControllers.oauthCallback);
 
 // Public routes
 router.get("/referral/:code", authControllers.checkReferralCode);

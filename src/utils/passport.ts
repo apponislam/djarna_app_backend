@@ -27,174 +27,180 @@ passport.deserializeUser(async (id: string, done) => {
 });
 
 // ================= GOOGLE =================
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: config.google.clientID as string,
-            clientSecret: config.google.clientSecret as string,
-            callbackURL: config.google.callbackURL,
-        },
-        async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
-            try {
-                const email = profile.emails?.[0]?.value;
-                const name = profile.displayName || `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim();
-                const photo = profile.photos?.[0]?.value;
+if (config.google?.clientID && config.google?.clientSecret) {
+    passport.use(
+        new GoogleStrategy(
+            {
+                clientID: config.google.clientID as string,
+                clientSecret: config.google.clientSecret as string,
+                callbackURL: config.google.callbackURL,
+            },
+            async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
+                try {
+                    const email = profile.emails?.[0]?.value;
+                    const name = profile.displayName || `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim();
+                    const photo = profile.photos?.[0]?.value;
 
-                // First try to find by oauth provider and id
-                let user = await UserModel.findOne({
-                    oauthProvider: "GOOGLE",
-                    oauthId: profile.id,
-                });
+                    // First try to find by oauth provider and id
+                    let user = await UserModel.findOne({
+                        oauthProvider: "GOOGLE",
+                        oauthId: profile.id,
+                    });
 
-                if (user) {
-                    return done(null, user);
-                }
-
-                // If not found and we have email, try to find by email
-                if (email) {
-                    user = await UserModel.findOne({ email });
                     if (user) {
-                        // Link Google to existing user
-                        user.oauthProvider = "GOOGLE";
-                        user.oauthId = profile.id;
-                        if (!user.photo && photo) {
-                            user.photo = photo;
-                        }
-                        await user.save();
                         return done(null, user);
                     }
-                }
 
-                // If we get here, user is new - return false (need phone/password)
-                return done(null, false, {
-                    message: "User not found. Please register with phone and password first.",
-                    tempData: {
-                        provider: "GOOGLE",
-                        providerId: profile.id,
-                        email,
-                        name,
-                        photo,
-                    },
-                });
-            } catch (error) {
-                return done(error as Error, false);
-            }
-        },
-    ),
-);
+                    // If not found and we have email, try to find by email
+                    if (email) {
+                        user = await UserModel.findOne({ email });
+                        if (user) {
+                            // Link Google to existing user
+                            user.oauthProvider = "GOOGLE";
+                            user.oauthId = profile.id;
+                            if (!user.photo && photo) {
+                                user.photo = photo;
+                            }
+                            await user.save();
+                            return done(null, user);
+                        }
+                    }
+
+                    // If we get here, user is new - return false (need phone/password)
+                    return done(null, false, {
+                        message: "User not found. Please register with phone and password first.",
+                        tempData: {
+                            provider: "GOOGLE",
+                            providerId: profile.id,
+                            email,
+                            name,
+                            photo,
+                        },
+                    });
+                } catch (error) {
+                    return done(error as Error, false);
+                }
+            },
+        ),
+    );
+}
 
 // ================= FACEBOOK =================
-passport.use(
-    new FacebookStrategy(
-        {
-            clientID: config.facebook.appID as string,
-            clientSecret: config.facebook.appSecret as string,
-            callbackURL: config.facebook.callbackURL,
-            profileFields: ["id", "emails", "name", "displayName", "photos"],
-        },
-        async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
-            try {
-                const email = profile.emails?.[0]?.value;
-                const name = profile.displayName || `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim();
-                const photo = profile.photos?.[0]?.value;
+if (config.facebook?.appID && config.facebook?.appSecret) {
+    passport.use(
+        new FacebookStrategy(
+            {
+                clientID: config.facebook.appID as string,
+                clientSecret: config.facebook.appSecret as string,
+                callbackURL: config.facebook.callbackURL,
+                profileFields: ["id", "emails", "name", "displayName", "photos"],
+            },
+            async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
+                try {
+                    const email = profile.emails?.[0]?.value;
+                    const name = profile.displayName || `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim();
+                    const photo = profile.photos?.[0]?.value;
 
-                // First try to find by oauth provider and id
-                let user = await UserModel.findOne({
-                    oauthProvider: "FACEBOOK",
-                    oauthId: profile.id,
-                });
+                    // First try to find by oauth provider and id
+                    let user = await UserModel.findOne({
+                        oauthProvider: "FACEBOOK",
+                        oauthId: profile.id,
+                    });
 
-                if (user) {
-                    return done(null, user);
-                }
-
-                // If not found and we have email, try to find by email
-                if (email) {
-                    user = await UserModel.findOne({ email });
                     if (user) {
-                        // Link Facebook to existing user
-                        user.oauthProvider = "FACEBOOK";
-                        user.oauthId = profile.id;
-                        if (!user.photo && photo) {
-                            user.photo = photo;
-                        }
-                        await user.save();
                         return done(null, user);
                     }
-                }
 
-                // If we get here, user is new - return false (need phone/password)
-                return done(null, false, {
-                    message: "User not found. Please register with phone and password first.",
-                    tempData: {
-                        provider: "FACEBOOK",
-                        providerId: profile.id,
-                        email,
-                        name,
-                        photo,
-                    },
-                });
-            } catch (error) {
-                return done(error as Error, false);
-            }
-        },
-    ),
-);
+                    // If not found and we have email, try to find by email
+                    if (email) {
+                        user = await UserModel.findOne({ email });
+                        if (user) {
+                            // Link Facebook to existing user
+                            user.oauthProvider = "FACEBOOK";
+                            user.oauthId = profile.id;
+                            if (!user.photo && photo) {
+                                user.photo = photo;
+                            }
+                            await user.save();
+                            return done(null, user);
+                        }
+                    }
+
+                    // If we get here, user is new - return false (need phone/password)
+                    return done(null, false, {
+                        message: "User not found. Please register with phone and password first.",
+                        tempData: {
+                            provider: "FACEBOOK",
+                            providerId: profile.id,
+                            email,
+                            name,
+                            photo,
+                        },
+                    });
+                } catch (error) {
+                    return done(error as Error, false);
+                }
+            },
+        ),
+    );
+}
 
 // ================= APPLE =================
-passport.use(
-    "apple",
-    new AppleStrategy(
-        {
-            clientID: config.apple.clientID as string,
-            teamID: config.apple.teamID as string,
-            keyID: config.apple.keyID as string,
-            privateKey: config.apple.privateKey as string,
-            callbackURL: config.apple.callbackURL,
-            scope: ["email", "name"],
-        },
-        async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
-            try {
-                const email = profile.email;
-                const name = profile.name ? `${profile.name.firstName || ""} ${profile.name.lastName || ""}`.trim() : "Apple User";
+if (config.apple?.clientID && config.apple?.teamID && config.apple?.keyID && config.apple?.privateKey) {
+    passport.use(
+        "apple",
+        new AppleStrategy(
+            {
+                clientID: config.apple.clientID as string,
+                teamID: config.apple.teamID as string,
+                keyID: config.apple.keyID as string,
+                privateKey: config.apple.privateKey as string,
+                callbackURL: config.apple.callbackURL,
+                scope: ["email", "name"],
+            },
+            async (_accessToken: any, _refreshToken: any, profile: any, done: (error: any, user?: any, info?: any) => void) => {
+                try {
+                    const email = profile.email;
+                    const name = profile.name ? `${profile.name.firstName || ""} ${profile.name.lastName || ""}`.trim() : "Apple User";
 
-                // First try to find by oauth provider and id
-                let user = await UserModel.findOne({
-                    oauthProvider: "APPLE",
-                    oauthId: profile.id,
-                });
+                    // First try to find by oauth provider and id
+                    let user = await UserModel.findOne({
+                        oauthProvider: "APPLE",
+                        oauthId: profile.id,
+                    });
 
-                if (user) {
-                    return done(null, user);
-                }
-
-                // If not found and we have email, try to find by email
-                if (email) {
-                    user = await UserModel.findOne({ email });
                     if (user) {
-                        // Link Apple to existing user
-                        user.oauthProvider = "APPLE";
-                        user.oauthId = profile.id;
-                        await user.save();
                         return done(null, user);
                     }
-                }
 
-                // If we get here, user is new - return false (need phone/password)
-                return done(null, false, {
-                    message: "User not found. Please register with phone and password first.",
-                    tempData: {
-                        provider: "APPLE",
-                        providerId: profile.id,
-                        email,
-                        name,
-                    },
-                });
-            } catch (error) {
-                return done(error as Error, false);
-            }
-        },
-    ),
-);
+                    // If not found and we have email, try to find by email
+                    if (email) {
+                        user = await UserModel.findOne({ email });
+                        if (user) {
+                            // Link Apple to existing user
+                            user.oauthProvider = "APPLE";
+                            user.oauthId = profile.id;
+                            await user.save();
+                            return done(null, user);
+                        }
+                    }
+
+                    // If we get here, user is new - return false (need phone/password)
+                    return done(null, false, {
+                        message: "User not found. Please register with phone and password first.",
+                        tempData: {
+                            provider: "APPLE",
+                            providerId: profile.id,
+                            email,
+                            name,
+                        },
+                    });
+                } catch (error) {
+                    return done(error as Error, false);
+                }
+            },
+        ),
+    );
+}
 
 export default passport;
