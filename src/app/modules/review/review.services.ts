@@ -53,7 +53,7 @@ const getUserReviews = async (sellerId: string, query: { page?: number; limit?: 
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const filters = { seller: sellerId, isDeleted: false, adminVisibility: "show" };
+    const filters = { seller: sellerId, isDeleted: false, adminVisibility: "show" as const };
 
     const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
@@ -88,7 +88,10 @@ const getUserReviews = async (sellerId: string, query: { page?: number; limit?: 
  * Get reviews for a specific product
  */
 const getProductReviews = async (productId: string) => {
-    return await ReviewModel.find({ product: productId, isDeleted: false, adminVisibility: "show" }).populate("user", "_id name photo verifiedBadge").sort({ createdAt: -1 }).lean();
+    return await ReviewModel.find({ product: productId, isDeleted: false, adminVisibility: "show" as const })
+        .populate("user", "_id name photo verifiedBadge")
+        .sort({ createdAt: -1 })
+        .lean();
 };
 
 /**
