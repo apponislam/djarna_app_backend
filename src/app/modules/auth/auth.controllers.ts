@@ -82,7 +82,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
-    const user = await authServices.getUserById((req as any).user._id);
+    const user = await authServices.getUserById(req.user!._id);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -140,7 +140,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req as any).user._id;
+    const userId = req.user!._id;
     const body = req.body;
 
     // Handle photo upload if present (path is already set by uploadProfileImage middleware)
@@ -159,7 +159,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
-    await authServices.changePassword((req as any).user._id, req.body.currentPassword, req.body.newPassword);
+    await authServices.changePassword(req.user!._id, req.body.currentPassword, req.body.newPassword);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -204,7 +204,7 @@ const adminLogin = catchAsync(async (req: Request, res: Response) => {
 });
 
 const addFCMToken = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req as any).user._id;
+    const userId = req.user!._id;
     const { token } = req.body;
     const result = await authServices.addFCMToken(userId, token);
 
@@ -235,7 +235,7 @@ const checkReferralCode = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyReferrals = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req as any).user._id;
+    const userId = req.user!._id;
     const result = await authServices.getMyReferrals(userId, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -258,7 +258,7 @@ const getAllReferrals = catchAsync(async (req: Request, res: Response) => {
 });
 
 const oauthCallback = catchAsync(async (req: Request, res: Response) => {
-    const userOrTemp = req.user as any;
+    const userOrTemp = req.authUser as any;
 
     if (userOrTemp?.isTemp) {
         return sendResponse(res, {

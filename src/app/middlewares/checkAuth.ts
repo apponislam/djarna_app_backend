@@ -19,7 +19,7 @@ const checkAuth = catchAsync(async (req: Request, res: Response, next: NextFunct
 
     let decoded: jwt.JwtPayload;
     try {
-        decoded = jwt.verify(token, config.jwt_access_secret as string) as { _id: string; role: string };
+        decoded = jwt.verify(token, config.jwt_access_secret as string) as { _id: string; name: string; phone: string; role: string };
     } catch (err: any) {
         return next();
     }
@@ -27,7 +27,7 @@ const checkAuth = catchAsync(async (req: Request, res: Response, next: NextFunct
     const user = await UserModel.findOne({ _id: decoded._id });
 
     if (user && user.isActive && user.role === decoded.role) {
-        req.user = user;
+        req.user = decoded as any;
     }
 
     next();

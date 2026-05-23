@@ -5,7 +5,7 @@ import sendResponse from "../../../utils/sendResponse";
 import { DisputeService } from "./dispute.services";
 
 const createDispute = catchAsync(async (req: Request, res: Response) => {
-    const buyerId = req.user._id;
+    const buyerId = req.user!._id;
     const body = req.body;
 
     // Handle multiple image uploads
@@ -47,7 +47,7 @@ const getDisputeById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const resolveDispute = catchAsync(async (req: Request, res: Response) => {
-    const adminId = req.user._id;
+    const adminId = req.user!._id;
     const { resolution, adminNote, refundAmount } = req.body;
     const result = await DisputeService.resolveDispute(req.params.id as string, adminId, resolution, adminNote, refundAmount);
 
@@ -70,7 +70,7 @@ const getDisputeStats = catchAsync(async (req: Request, res: Response) => {
 });
 
 const cancelDispute = catchAsync(async (req: Request, res: Response) => {
-    const buyerId = req.user._id;
+    const buyerId = req.user!._id;
     const disputeId = req.params.id as string;
     const result = await DisputeService.cancelDispute(disputeId, buyerId);
     sendResponse(res, {
@@ -82,7 +82,7 @@ const cancelDispute = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyDisputes = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await DisputeService.getMyDisputes(userId, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -94,7 +94,7 @@ const getMyDisputes = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getDisputeByOrderId = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const orderId = req.params.orderId as string;
     const result = await DisputeService.getDisputeByOrderId(orderId, userId);
     sendResponse(res, {

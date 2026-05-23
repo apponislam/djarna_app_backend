@@ -4,7 +4,7 @@ import sendResponse from "../../../utils/sendResponse";
 import { notificationServices } from "./notification.services";
 
 const getNotifications = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
@@ -19,7 +19,7 @@ const getNotifications = catchAsync(async (req, res) => {
 });
 
 const getUnreadCount = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await notificationServices.getUnreadCount(userId);
 
     sendResponse(res, {
@@ -31,7 +31,7 @@ const getUnreadCount = catchAsync(async (req, res) => {
 });
 
 const markAsRead = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { notificationIds } = req.body;
 
     const result = await notificationServices.markAsRead(userId, notificationIds);
@@ -45,7 +45,7 @@ const markAsRead = catchAsync(async (req, res) => {
 });
 
 const markAllAsRead = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await notificationServices.markAllAsRead(userId);
 
     sendResponse(res, {
@@ -57,7 +57,7 @@ const markAllAsRead = catchAsync(async (req, res) => {
 });
 
 const deleteNotification = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const notificationId = req.params.id;
 
     const result = await notificationServices.deleteNotification(userId, notificationId as string);
@@ -71,7 +71,7 @@ const deleteNotification = catchAsync(async (req, res) => {
 });
 
 const deleteAllNotifications = catchAsync(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await notificationServices.deleteAllNotifications(userId);
 
     sendResponse(res, {

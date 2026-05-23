@@ -8,7 +8,7 @@ import { messageServices } from "./messages.services";
  * Create a new conversation
  */
 const createConversation = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await messageServices.createConversation(userId, req.body);
 
     sendResponse(res, {
@@ -23,7 +23,7 @@ const createConversation = catchAsync(async (req: Request, res: Response) => {
  * Get all conversations for the authenticated user
  */
 const getUserConversations = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
 
@@ -42,7 +42,7 @@ const getUserConversations = catchAsync(async (req: Request, res: Response) => {
  * Get a specific conversation by ID
  */
 const getConversationById = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { conversationId } = req.params;
     const result = await messageServices.getConversationById(userId, conversationId as string);
 
@@ -58,7 +58,7 @@ const getConversationById = catchAsync(async (req: Request, res: Response) => {
  * Mark messages in a conversation as read
  */
 const markAsRead = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { conversationId } = req.params;
     const result = await messageServices.markAsRead(userId, conversationId as string);
 
@@ -74,7 +74,7 @@ const markAsRead = catchAsync(async (req: Request, res: Response) => {
  * Get messages from a specific conversation
  */
 const getMessages = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { conversationId } = req.params;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
@@ -94,7 +94,7 @@ const getMessages = catchAsync(async (req: Request, res: Response) => {
  * Send a message
  */
 const sendMessage = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const body = req.body;
 
     // Handle multiple file uploads
@@ -121,7 +121,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
  * Accept an offer message
  */
 const acceptOffer = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { messageId } = req.params;
     const result = await messageServices.updateOfferStatus(userId, messageId as string, "ACCEPTED");
 
@@ -137,7 +137,7 @@ const acceptOffer = catchAsync(async (req: Request, res: Response) => {
  * Reject an offer message
  */
 const rejectOffer = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { messageId } = req.params;
     const result = await messageServices.updateOfferStatus(userId, messageId as string, "REJECTED");
 
@@ -153,7 +153,7 @@ const rejectOffer = catchAsync(async (req: Request, res: Response) => {
  * Edit a specific message
  */
 const editMessage = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { messageId } = req.params;
     const result = await messageServices.editMessage(userId, messageId as string, req.body);
 
@@ -169,7 +169,7 @@ const editMessage = catchAsync(async (req: Request, res: Response) => {
  * Delete a specific message (for the user)
  */
 const deleteMessage = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { messageId } = req.params;
     const result = await messageServices.deleteMessage(userId, messageId as string);
 
@@ -185,7 +185,7 @@ const deleteMessage = catchAsync(async (req: Request, res: Response) => {
  * Delete a conversation for the user
  */
 const deleteConversation = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { conversationId } = req.params;
     await messageServices.deleteConversation(userId, conversationId as string);
 
@@ -201,7 +201,7 @@ const deleteConversation = catchAsync(async (req: Request, res: Response) => {
  * Get a single message by ID
  */
 const getSingleMessage = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const { messageId } = req.params;
     const result = await messageServices.getSingleMessage(userId, messageId as string);
 

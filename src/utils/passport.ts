@@ -20,7 +20,7 @@ passport.serializeUser((user: any, done) => {
 passport.deserializeUser(async (id: string, done) => {
     try {
         const user = await UserModel.findById(id);
-        done(null, user);
+        done(null, user as any);
     } catch (error) {
         done(error, null);
     }

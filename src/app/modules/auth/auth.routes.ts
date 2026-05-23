@@ -12,15 +12,42 @@ const router = Router();
 // ==================== OAuth Routes ====================
 // Google
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/google/callback", passport.authenticate("google", { session: false }), authControllers.oauthCallback);
+router.get(
+    "/google/callback",
+    passport.authenticate("google", { session: false }),
+    (req, res, next) => {
+        req.authUser = req.user;
+        req.user = undefined;
+        next();
+    },
+    authControllers.oauthCallback,
+);
 
 // Facebook
 router.get("/facebook", passport.authenticate("facebook", { scope: ["email"] }));
-router.get("/facebook/callback", passport.authenticate("facebook", { session: false }), authControllers.oauthCallback);
+router.get(
+    "/facebook/callback",
+    passport.authenticate("facebook", { session: false }),
+    (req, res, next) => {
+        req.authUser = req.user;
+        req.user = undefined;
+        next();
+    },
+    authControllers.oauthCallback,
+);
 
 // Apple
 router.get("/apple", passport.authenticate("apple", { scope: ["email", "name"] }));
-router.post("/apple/callback", passport.authenticate("apple", { session: false }), authControllers.oauthCallback);
+router.post(
+    "/apple/callback",
+    passport.authenticate("apple", { session: false }),
+    (req, res, next) => {
+        req.authUser = req.user;
+        req.user = undefined;
+        next();
+    },
+    authControllers.oauthCallback,
+);
 
 // Public routes
 router.get("/referral/:code", authControllers.checkReferralCode);

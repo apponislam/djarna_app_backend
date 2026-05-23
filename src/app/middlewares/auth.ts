@@ -16,7 +16,7 @@ const auth = catchAsync(async (req: Request, res: Response, next: NextFunction) 
 
     let decoded: jwt.JwtPayload;
     try {
-        decoded = jwt.verify(token, config.jwt_access_secret as string) as { _id: string };
+        decoded = jwt.verify(token, config.jwt_access_secret as string) as { _id: string; name: string; phone: string; role: string };
     } catch (err: any) {
         if (err.name === "TokenExpiredError") {
             throw new ApiError(401, "Authentication failed: Token expired");
@@ -38,7 +38,7 @@ const auth = catchAsync(async (req: Request, res: Response, next: NextFunction) 
         throw new ApiError(403, "Authentication failed: Role mismatch. Please login again.");
     }
 
-    req.user = user;
+    req.user = decoded as any;
     next();
 });
 

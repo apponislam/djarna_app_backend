@@ -5,7 +5,7 @@ import { OrderService } from "./order.services";
 import { Request, Response } from "express";
 
 const createOrder = catchAsync(async (req: Request, res: Response) => {
-    const buyerId = req.user._id;
+    const buyerId = req.user!._id;
     const result = await OrderService.createOrder(buyerId, req.body);
 
     sendResponse(res, {
@@ -17,7 +17,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const role = (req.query.role as "buyer" | "seller") || "buyer";
     const { data, meta } = await OrderService.getMyOrders(userId, role, req.query);
 
@@ -31,7 +31,7 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getOrderById = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id;
+    const userId = req.user!._id;
     const result = await OrderService.getOrderById(req.params.id as string, userId);
 
     sendResponse(res, {
@@ -43,7 +43,7 @@ const getOrderById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user._id.toString();
+    const userId = req.user!._id.toString();
     const result = await OrderService.updateOrderStatus(req.params.id as string, userId, req.body.status);
 
     sendResponse(res, {
