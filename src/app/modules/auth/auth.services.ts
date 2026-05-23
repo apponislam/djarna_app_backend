@@ -417,16 +417,7 @@ const getAllReferrals = async (query: Record<string, any> = {}) => {
     };
 };
 
-const oauthLoginSignup = async (data: {
-    provider: "GOOGLE" | "FACEBOOK" | "APPLE";
-    providerId: string;
-    email?: string;
-    name: string;
-    photo?: string;
-    phone?: string;
-    password?: string;
-    referralCode?: string;
-}) => {
+const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE"; providerId: string; email?: string; name: string; photo?: string; phone?: string; password?: string; referralCode?: string }) => {
     // Try to find user by provider ID
     let user = await UserModel.findOne({ oauthProvider: data.provider, oauthId: data.providerId });
 
@@ -565,4 +556,5 @@ export const authServices = {
     getUserByReferralCode,
     getMyReferrals,
     getAllReferrals,
+    oauthLoginSignup,
 };

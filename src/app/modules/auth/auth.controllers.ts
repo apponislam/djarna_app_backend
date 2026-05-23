@@ -259,56 +259,67 @@ const getAllReferrals = catchAsync(async (req: Request, res: Response) => {
 
 const oauthCallback = catchAsync(async (req: Request, res: Response) => {
     const userOrTemp = req.authUser as any;
+    const redirectUri = req.query.redirect_uri as string;
+    const referralCode = req.query.referral_code as string;
 
     if (userOrTemp?.isTemp) {
+        const tempData = {
+            isNewUser: true,
+            requiresPhonePassword: true,
+            tempUser: {
+                provider: userOrTemp.provider,
+                providerId: userOrTemp.providerId,
+                email: userOrTemp.email,
+                name: userOrTemp.name,
+                photo: userOrTemp.photo,
+                referralCode,
+            },
+        };
+
+        if (redirectUri) {
+            const encodedData = encodeURIComponent(JSON.stringify(tempData));
+            return res.redirect(`${redirectUri}?data=${encodedData}`);
+        }
+
         return sendResponse(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: "Please complete your signup with phone and password",
-            data: {
-                isNewUser: true,
-                requiresPhonePassword: true,
-                tempUser: {
-                    provider: userOrTemp.provider,
-                    providerId: userOrTemp.providerId,
-                    email: userOrTemp.email,
-                    name: userOrTemp.name,
-                    photo: userOrTemp.photo,
-                },
-            },
+            data: tempData,
         });
     }
 
-    const userDoc = userOrTemp;
-    const user = userDoc.toObject ? userDoc.toObject() : userDoc;
-    await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+    const result = await authServices.oauthLoginSignup({
+        provider: userOrTemp.oauthProvider,
+        providerId: userOrTemp.oauthId,
+        email: userOrTemp.email,
+        name: userOrTemp.name,
+        photo: userOrTemp.photo,
+        referralCode,
+    });
 
-    const jwtPayload = {
-        _id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-    };
-
-    const accessToken = jwtHelper.generateToken(jwtPayload, config.jwt_access_secret as string, config.jwt_access_expire as string);
-    const refreshToken = jwtHelper.generateToken(jwtPayload, config.jwt_refresh_secret as string, config.jwt_refresh_expire as string);
-
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
         secure: config.node_env === "production",
         sameSite: "strict",
         maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    const { password, __v, ...userWithoutPassword } = user;
+    const responseData = {
+        user: result.user,
+        accessToken: result.accessToken,
+    };
+
+    if (redirectUri) {
+        const encodedData = encodeURIComponent(JSON.stringify(responseData));
+        return res.redirect(`${redirectUri}?data=${encodedData}`);
+    }
+
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Login successful",
-        data: {
-            user: userWithoutPassword,
-            accessToken,
-        },
+        message: result.isNewUser ? "Registration successful" : "Login successful",
+        data: responseData,
     });
 });
 

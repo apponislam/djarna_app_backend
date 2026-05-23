@@ -11,39 +11,102 @@ const router = Router();
 
 // ==================== OAuth Routes ====================
 // Google
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/google", (req, res, next) => {
+    const redirectUri = req.query.redirect_uri;
+    const referralCode = req.query.referral_code;
+    const stateData = {
+        redirectUri,
+        referralCode,
+    };
+    const state = encodeURIComponent(JSON.stringify(stateData));
+    passport.authenticate("google", {
+        scope: ["profile", "email"],
+        state,
+    })(req, res, next);
+});
 router.get(
     "/google/callback",
     passport.authenticate("google", { session: false }),
     (req, res, next) => {
         req.authUser = req.user;
         req.user = undefined;
+        if (req.query.state) {
+            try {
+                const stateData = JSON.parse(decodeURIComponent(req.query.state as string));
+                req.query.redirect_uri = stateData.redirectUri;
+                req.query.referral_code = stateData.referralCode;
+            } catch {
+                req.query.redirect_uri = decodeURIComponent(req.query.state as string);
+            }
+        }
         next();
     },
     authControllers.oauthCallback,
 );
 
 // Facebook
-router.get("/facebook", passport.authenticate("facebook", { scope: ["email"] }));
+router.get("/facebook", (req, res, next) => {
+    const redirectUri = req.query.redirect_uri;
+    const referralCode = req.query.referral_code;
+    const stateData = {
+        redirectUri,
+        referralCode,
+    };
+    const state = encodeURIComponent(JSON.stringify(stateData));
+    passport.authenticate("facebook", {
+        scope: ["email"],
+        state,
+    })(req, res, next);
+});
 router.get(
     "/facebook/callback",
     passport.authenticate("facebook", { session: false }),
     (req, res, next) => {
         req.authUser = req.user;
         req.user = undefined;
+        if (req.query.state) {
+            try {
+                const stateData = JSON.parse(decodeURIComponent(req.query.state as string));
+                req.query.redirect_uri = stateData.redirectUri;
+                req.query.referral_code = stateData.referralCode;
+            } catch {
+                req.query.redirect_uri = decodeURIComponent(req.query.state as string);
+            }
+        }
         next();
     },
     authControllers.oauthCallback,
 );
 
 // Apple
-router.get("/apple", passport.authenticate("apple", { scope: ["email", "name"] }));
+router.get("/apple", (req, res, next) => {
+    const redirectUri = req.query.redirect_uri;
+    const referralCode = req.query.referral_code;
+    const stateData = {
+        redirectUri,
+        referralCode,
+    };
+    const state = encodeURIComponent(JSON.stringify(stateData));
+    passport.authenticate("apple", {
+        scope: ["email", "name"],
+        state,
+    })(req, res, next);
+});
 router.post(
     "/apple/callback",
     passport.authenticate("apple", { session: false }),
     (req, res, next) => {
         req.authUser = req.user;
         req.user = undefined;
+        if (req.body.state) {
+            try {
+                const stateData = JSON.parse(decodeURIComponent(req.body.state as string));
+                req.query.redirect_uri = stateData.redirectUri;
+                req.query.referral_code = stateData.referralCode;
+            } catch {
+                req.query.redirect_uri = decodeURIComponent(req.body.state as string);
+            }
+        }
         next();
     },
     authControllers.oauthCallback,
