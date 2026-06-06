@@ -10,7 +10,7 @@ import { PaymentWebhookController } from "./app/modules/payment/payment.webhook"
 const app: Application = express();
 
 const corsOptions = {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://10.10.7.24:3000", "http://10.10.7.24:3020", "http://localhost:3020", "http://djarnadash.apponislam.top", "https://djarnadash.apponislam.top"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://10.10.7.24:3000", "http://10.10.7.24:3020", "http://localhost:3020", "http://djarnadash.apponislam.top", "https://djarnadash.apponislam.top", "http://localhost:3020"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
