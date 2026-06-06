@@ -478,6 +478,7 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
                 photo: data.photo,
                 provider: data.provider,
                 providerId: data.providerId,
+                referralCode: data.referralCode,
             },
         };
     }
