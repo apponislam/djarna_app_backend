@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authControllers } from "./auth.controllers";
 import validateRequest from "../../middlewares/validateRequest";
-import { changePasswordSchema, loginSchema, sendOtpSchema, verifyOtpSchema, requestPasswordResetSchema, resetPasswordSchema, registerSchema, updateProfileSchema } from "./auth.validations";
+import { changePasswordSchema, loginSchema, sendOtpSchema, verifyOtpSchema, requestPasswordResetSchema, resetPasswordSchema, registerSchema, updateProfileSchema, completeOAuthRegistrationSchema } from "./auth.validations";
 import auth from "../../middlewares/auth";
 import authorize from "../../middlewares/authorized";
 import { parseBodyData, uploadProfileImage } from "../../middlewares/multer";
@@ -10,6 +10,9 @@ import passport from "../../../utils/passport";
 const router = Router();
 
 // ==================== OAuth Routes ====================
+// Complete OAuth Registration
+router.post("/oauth/complete", validateRequest(completeOAuthRegistrationSchema), authControllers.completeOAuthRegistration);
+
 // Google
 router.get("/google", (req, res, next) => {
     const redirectUri = req.query.redirect_uri;

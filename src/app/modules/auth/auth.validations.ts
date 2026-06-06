@@ -77,3 +77,14 @@ export const resetPasswordSchema = z.object({
     otp: z.string().length(6, "OTP must be 6 digits"),
     newPassword: z.string().min(6),
 });
+
+export const completeOAuthRegistrationSchema = z.object({
+    name: z.string().trim().min(2),
+    email: z.string().trim().email().optional(),
+    photo: z.string().optional(),
+    provider: z.enum(["GOOGLE", "FACEBOOK", "APPLE"]),
+    providerId: z.string(),
+    referralCode: z.string().optional(),
+    phone: z.string().trim().min(1, "Phone is required"),
+    password: z.string().trim().min(6),
+});

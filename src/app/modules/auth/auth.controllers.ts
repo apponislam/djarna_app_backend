@@ -257,6 +257,27 @@ const getAllReferrals = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const completeOAuthRegistration = catchAsync(async (req: Request, res: Response) => {
+    const result = await authServices.oauthLoginSignup(req.body);
+
+    res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: config.node_env === "production",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Registration successful",
+        data: {
+            user: result.user,
+            accessToken: result.accessToken,
+        },
+    });
+});
+
 const oauthCallback = catchAsync(async (req: Request, res: Response) => {
     const userOrTemp = req.authUser as any;
     const redirectUri = req.query.redirect_uri as string;
@@ -342,4 +363,5 @@ export const authControllers = {
     getMyReferrals,
     getAllReferrals,
     oauthCallback,
+    completeOAuthRegistration,
 };
