@@ -216,6 +216,19 @@ const addFCMToken = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const removeFCMToken = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user!._id;
+    const { token } = req.body;
+    const result = await authServices.removeFCMToken(userId, token);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+});
+
 const checkReferralCode = catchAsync(async (req: Request, res: Response) => {
     const { code } = req.params;
 
@@ -359,6 +372,7 @@ export const authControllers = {
     changePassword,
     setUserPassword,
     addFCMToken,
+    removeFCMToken,
     checkReferralCode,
     getMyReferrals,
     getAllReferrals,

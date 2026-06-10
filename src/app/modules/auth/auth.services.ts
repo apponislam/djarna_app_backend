@@ -370,6 +370,13 @@ const addFCMToken = async (userId: string, token: string) => {
     return { message: "FCM token added successfully" };
 };
 
+const removeFCMToken = async (userId: string, token: string) => {
+    const user = await UserModel.findByIdAndUpdate(userId, { $pull: { fcmTokens: token } }, { new: true });
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    return { message: "FCM token removed successfully" };
+};
+
 const getUserByReferralCode = async (referralCode: string) => {
     const user = await UserModel.findOne({ referralCode });
     return user;
@@ -554,6 +561,7 @@ export const authServices = {
     getMyProfile,
     boostShop,
     addFCMToken,
+    removeFCMToken,
     getUserByReferralCode,
     getMyReferrals,
     getAllReferrals,

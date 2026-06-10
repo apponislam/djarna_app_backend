@@ -1,17 +1,11 @@
 import admin from "./firebase";
 import { notificationServices } from "../app/modules/notification/notification.services";
+import { UserModel } from "../app/modules/auth/auth.model";
 
 /**
  * Send push notification to multiple tokens AND save to database
  */
-const sendPushNotification = async (
-    tokens: string[], 
-    title: string, 
-    body: string, 
-    userId?: string,
-    type?: string,
-    data?: Record<string, string>
-) => {
+const sendPushNotification = async (tokens: string[], title: string, body: string, userId?: string, type?: string, data?: Record<string, string>) => {
     // Send push notification via Firebase
     if (tokens && tokens.length > 0) {
         const message = {
@@ -26,14 +20,22 @@ const sendPushNotification = async (
         try {
             const response = await admin.messaging().sendEachForMulticast(message);
             console.log(`[NOTIFICATION] Success: ${response.successCount} sent, ${response.failureCount} failed.`);
-            
-            // Clean up failed tokens if needed (optional)
-            if (response.failureCount > 0) {
+
+            // Clean up failed tokens if userId is provided
+            if (response.failureCount > 0 && userId) {
+                const failedTokens: string[] = [];
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
                         console.error(`[NOTIFICATION] Error for token ${tokens[idx]}:`, resp.error);
+                        failedTokens.push(tokens[idx]);
                     }
                 });
+
+                // Remove failed tokens from user
+                if (failedTokens.length > 0) {
+                    await UserModel.findByIdAndUpdate(userId, { $pull: { fcmTokens: { $in: failedTokens } } });
+                    console.log(`[NOTIFICATION] Removed ${failedTokens.length} failed tokens for user ${userId}`);
+                }
             }
         } catch (error) {
             console.error("[NOTIFICATION] Error sending push notifications:", error);
