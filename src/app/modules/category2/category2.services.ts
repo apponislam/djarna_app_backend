@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { Category2Model } from "./category2.model";
+import { ProductModel } from "../product/product.model";
 import { ICategory2 } from "./category2.interface";
 import { Types } from "mongoose";
 
@@ -263,10 +264,15 @@ const getSubcategoriesByParent = async (parentId: string, query: any = {}) => {
     const result = await Promise.all(
         subcategories.map(async (sub) => {
             const subcategoryCount = await Category2Model.countDocuments({ parentCategory: sub._id });
+            const listingCount = await ProductModel.countDocuments({
+                $or: [{ category: sub.name }, { subcategory: sub.name }],
+                status: "ACTIVE",
+                isDeleted: false,
+            });
             return {
                 ...sub,
                 subcategoryCount,
-                listingCount: Math.floor(Math.random() * 200) + 50,
+                listingCount,
             };
         })
     );
@@ -286,10 +292,15 @@ const getAllSubcategories = async (searchTerm?: string) => {
     const result = await Promise.all(
         subcategories.map(async (sub) => {
             const subcategoryCount = await Category2Model.countDocuments({ parentCategory: sub._id });
+            const listingCount = await ProductModel.countDocuments({
+                $or: [{ category: sub.name }, { subcategory: sub.name }],
+                status: "ACTIVE",
+                isDeleted: false,
+            });
             return {
                 ...sub,
                 subcategoryCount,
-                listingCount: Math.floor(Math.random() * 200) + 50,
+                listingCount,
             };
         })
     );
