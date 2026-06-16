@@ -7,6 +7,8 @@ export const createProductSchema = z.object({
     originalPrice: z.coerce.number().min(0, "Original price cannot be negative").optional(),
     category: z.string().min(1, "Category is required"),
     subcategory: z.string().min(1, "Subcategory is required"),
+    subSubcategory: z.string().min(1, "Sub-Subcategory is required"),
+    subSubSubcategory: z.string().min(1, "Sub-Sub-Subcategory is required"),
     location: z
         .object({
             lat: z.number().optional(),
@@ -34,6 +36,8 @@ export const updateProductSchema = z.object({
     originalPrice: z.coerce.number().min(0, "Original price cannot be negative").optional(),
     category: z.string().min(1, "Category is required").optional(),
     subcategory: z.string().min(1, "Subcategory is required").optional(),
+    subSubcategory: z.string().optional(),
+    subSubSubcategory: z.string().optional(),
     location: z
         .object({
             lat: z.number().optional(),

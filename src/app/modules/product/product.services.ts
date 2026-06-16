@@ -34,7 +34,7 @@ const createProduct = async (payload: IProduct) => {
 };
 
 const getAllProducts = async (query: any, userId?: string) => {
-    const { searchTerm, category, subcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
+    const { searchTerm, category, subcategory, subSubcategory, subSubSubcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
 
     const filters: any = { status: "ACTIVE", isDeleted: false };
 
@@ -44,6 +44,8 @@ const getAllProducts = async (query: any, userId?: string) => {
 
     if (category) filters.category = category;
     if (subcategory) filters.subcategory = subcategory;
+    if (subSubcategory) filters.subSubcategory = subSubcategory;
+    if (subSubSubcategory) filters.subSubSubcategory = subSubSubcategory;
 
     if (minPrice || maxPrice) {
         filters.price = {};

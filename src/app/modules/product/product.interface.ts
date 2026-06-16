@@ -11,6 +11,8 @@ export interface IProduct {
     originalPrice?: number;
     category: string;
     subcategory: string;
+    subSubcategory: string;
+    subSubSubcategory: string;
     location?: {
         lat?: number;
         lng?: number;

@@ -265,7 +265,12 @@ const getSubcategoriesByParent = async (parentId: string, query: any = {}) => {
         subcategories.map(async (sub) => {
             const subcategoryCount = await Category2Model.countDocuments({ parentCategory: sub._id });
             const listingCount = await ProductModel.countDocuments({
-                $or: [{ category: sub.name }, { subcategory: sub.name }],
+                $or: [
+                    { category: sub.name },
+                    { subcategory: sub.name },
+                    { subSubcategory: sub.name },
+                    { subSubSubcategory: sub.name },
+                ],
                 status: "ACTIVE",
                 isDeleted: false,
             });
@@ -293,7 +298,12 @@ const getAllSubcategories = async (searchTerm?: string) => {
         subcategories.map(async (sub) => {
             const subcategoryCount = await Category2Model.countDocuments({ parentCategory: sub._id });
             const listingCount = await ProductModel.countDocuments({
-                $or: [{ category: sub.name }, { subcategory: sub.name }],
+                $or: [
+                    { category: sub.name },
+                    { subcategory: sub.name },
+                    { subSubcategory: sub.name },
+                    { subSubSubcategory: sub.name },
+                ],
                 status: "ACTIVE",
                 isDeleted: false,
             });

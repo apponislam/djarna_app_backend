@@ -29,6 +29,14 @@ const ProductSchema = new Schema<IProduct>(
             type: String,
             required: [true, "Subcategory is required"],
         },
+        subSubcategory: {
+            type: String,
+            required: [true, "Sub-Subcategory is required"],
+        },
+        subSubSubcategory: {
+            type: String,
+            required: [true, "Sub-Sub-Subcategory is required"],
+        },
         location: {
             lat: { type: Number },
             lng: { type: Number },
@@ -105,6 +113,8 @@ const ProductSchema = new Schema<IProduct>(
 ProductSchema.index({ title: "text", description: "text", address: "text", brand: "text", material: "text" });
 ProductSchema.index({ category: 1, isDeleted: 1 });
 ProductSchema.index({ subcategory: 1, isDeleted: 1 });
+ProductSchema.index({ subSubcategory: 1, isDeleted: 1 });
+ProductSchema.index({ subSubSubcategory: 1, isDeleted: 1 });
 ProductSchema.index({ user: 1, isDeleted: 1 });
 ProductSchema.index({ status: 1, isDeleted: 1 });
 ProductSchema.index({ brand: 1, isDeleted: 1 });
