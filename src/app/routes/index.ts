@@ -2,6 +2,7 @@ import express from "express";
 import { authRoutes } from "../modules/auth/auth.routes";
 import { UserRoutes } from "../modules/user/user.routes";
 import { CategoryRoutes } from "../modules/category/category.routes";
+import { Category2Routes } from "../modules/category2/category2.routes";
 import { ProductRoutes } from "../modules/product/product.routes";
 import { ReportRoutes } from "../modules/report/report.routes";
 import { BoostPackRoutes } from "../modules/boostPack/boostPack.routes";
@@ -35,6 +36,10 @@ const moduleRoutes = [
     {
         path: "/category",
         route: CategoryRoutes,
+    },
+    {
+        path: "/category2",
+        route: Category2Routes,
     },
     {
         path: "/product",
