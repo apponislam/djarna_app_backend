@@ -21,25 +21,9 @@ router.get("/admin/subcategories", auth, authorize(["ADMIN"]), Category2Controll
 router.get("/admin/tree", auth, authorize(["ADMIN"]), Category2Controller.getCategoryTree);
 
 // Protected Admin only management routes
-router.post(
-    "/",
-    auth,
-    authorize(["ADMIN"]),
-    uploadCategoryIcon,
-    parseBodyData,
-    validateRequest(createCategory2Schema),
-    Category2Controller.createCategory,
-);
+router.post("/", auth, authorize(["ADMIN"]), uploadCategoryIcon, parseBodyData, validateRequest(createCategory2Schema), Category2Controller.createCategory);
 
-router.patch(
-    "/:id",
-    auth,
-    authorize(["ADMIN"]),
-    uploadCategoryIcon,
-    parseBodyData,
-    validateRequest(updateCategory2Schema),
-    Category2Controller.updateCategory,
-);
+router.patch("/:id", auth, authorize(["ADMIN"]), uploadCategoryIcon, parseBodyData, validateRequest(updateCategory2Schema), Category2Controller.updateCategory);
 
 router.delete("/:id", auth, authorize(["ADMIN"]), Category2Controller.deleteCategory);
 

@@ -53,6 +53,19 @@ const getBreadcrumbs = async (categoryId: string): Promise<any[]> => {
     return path;
 };
 
+const recursiveParentPopulate = {
+    path: "parentCategory",
+    select: "name parentCategory level",
+    populate: {
+        path: "parentCategory",
+        select: "name parentCategory level",
+        populate: {
+            path: "parentCategory",
+            select: "name level"
+        }
+    }
+};
+
 const createCategory = async (payload: ICategory2) => {
     // Determine level based on parentCategory
     let calculatedLevel = 1;
@@ -245,7 +258,7 @@ const getSubcategoriesByParent = async (parentId: string, query: any = {}) => {
         filters.name = { $regex: query.searchTerm, $options: "i" };
     }
 
-    const subcategories = await Category2Model.find(filters).sort({ homePosition: 1, name: 1 }).populate("parentCategory", "name").lean();
+    const subcategories = await Category2Model.find(filters).sort({ homePosition: 1, name: 1 }).populate(recursiveParentPopulate).lean();
 
     const result = await Promise.all(
         subcategories.map(async (sub) => {
@@ -268,7 +281,7 @@ const getAllSubcategories = async (searchTerm?: string) => {
         query.name = { $regex: searchTerm, $options: "i" };
     }
 
-    const subcategories = await Category2Model.find(query).populate("parentCategory", "name").lean();
+    const subcategories = await Category2Model.find(query).populate(recursiveParentPopulate).lean();
 
     const result = await Promise.all(
         subcategories.map(async (sub) => {
@@ -294,7 +307,7 @@ const getCategoriesByLevel = async (level: number, searchTerm?: string) => {
         query.name = { $regex: searchTerm, $options: "i" };
     }
 
-    const categories = await Category2Model.find(query).sort({ homePosition: 1, name: 1 }).populate("parentCategory", "name").lean();
+    const categories = await Category2Model.find(query).sort({ homePosition: 1, name: 1 }).populate(recursiveParentPopulate).lean();
     return categories;
 };
 
