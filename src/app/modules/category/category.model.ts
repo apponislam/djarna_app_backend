@@ -7,15 +7,9 @@ const CategorySchema = new Schema<ICategory>(
             type: String,
             required: [true, "Category name is required"],
             trim: true,
-            unique: true,
         },
         icon: {
             type: String,
-        },
-        gender: {
-            type: [String],
-            enum: ["MEN", "WOMEN", "KID"],
-            default: [],
         },
         isActive: {
             type: Boolean,
@@ -25,6 +19,12 @@ const CategorySchema = new Schema<ICategory>(
             type: Schema.Types.ObjectId,
             ref: "Category",
             default: null,
+        },
+        level: {
+            type: Number,
+            required: true,
+            enum: [1, 2, 3, 4],
+            default: 1,
         },
         homePosition: {
             type: Number,
@@ -41,10 +41,15 @@ const CategorySchema = new Schema<ICategory>(
     },
 );
 
-// Index for better search performance
+// Indexes
 CategorySchema.index({ name: "text" });
+CategorySchema.index({ parentCategory: 1, name: 1 }, { unique: true });
 CategorySchema.index({ parentCategory: 1 });
 CategorySchema.index({ isActive: 1 });
-CategorySchema.index({ homePosition: 1 }, { unique: true, partialFilterExpression: { homePosition: { $ne: null } } });
+CategorySchema.index({ level: 1 });
+CategorySchema.index(
+    { homePosition: 1 },
+    { unique: true, partialFilterExpression: { homePosition: { $ne: null } } }
+);
 
 export const CategoryModel = mongoose.model<ICategory>("Category", CategorySchema);

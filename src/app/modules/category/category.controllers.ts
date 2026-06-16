@@ -61,7 +61,7 @@ const getParentCategories = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Parent categories retrieved successfully",
+        message: "Parent categories (Level 1) retrieved successfully",
         data: result,
     });
 });
@@ -84,7 +84,31 @@ const getAllSubcategories = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All subcategories retrieved successfully",
+        message: "All subcategories (Level > 1) retrieved successfully",
+        data: result,
+    });
+});
+
+const getCategoriesByLevel = catchAsync(async (req: Request, res: Response) => {
+    const level = parseInt(req.params.level as string, 10);
+    const { searchTerm } = req.query;
+    const result = await CategoryService.getCategoriesByLevel(level, searchTerm as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: `Categories at level ${level} retrieved successfully`,
+        data: result,
+    });
+});
+
+const getCategoryTree = catchAsync(async (req: Request, res: Response) => {
+    const result = await CategoryService.getCategoryTree(req.query);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Full hierarchical category tree retrieved successfully",
         data: result,
     });
 });
@@ -97,4 +121,6 @@ export const CategoryController = {
     getParentCategories,
     getSubcategoriesByParent,
     getAllSubcategories,
+    getCategoriesByLevel,
+    getCategoryTree,
 };

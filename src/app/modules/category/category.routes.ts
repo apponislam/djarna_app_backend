@@ -9,6 +9,8 @@ import { parseBodyData, uploadCategoryIcon } from "../../middlewares/multer";
 const router = Router();
 
 // Public routes
+router.get("/tree", CategoryController.getCategoryTree);
+router.get("/level/:level", CategoryController.getCategoriesByLevel);
 router.get("/parents", CategoryController.getParentCategories);
 router.get("/subcategories/:parentId", CategoryController.getSubcategoriesByParent);
 router.get("/:id", CategoryController.getCategoryById);
@@ -16,6 +18,7 @@ router.get("/:id", CategoryController.getCategoryById);
 // Admin Dashboard Routes
 router.get("/admin/parents", auth, authorize(["ADMIN"]), CategoryController.getParentCategories);
 router.get("/admin/subcategories", auth, authorize(["ADMIN"]), CategoryController.getAllSubcategories);
+router.get("/admin/tree", auth, authorize(["ADMIN"]), CategoryController.getCategoryTree);
 
 // Protected Admin only management routes
 router.post("/", auth, authorize(["ADMIN"]), uploadCategoryIcon, parseBodyData, validateRequest(createCategorySchema), CategoryController.createCategory);
