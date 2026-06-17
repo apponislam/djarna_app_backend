@@ -187,6 +187,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             }
 
             const notificationData = {
+                screen: "chat",
                 conversationId: conversation._id.toString(),
                 senderId: senderId.toString(),
                 messageType: payload.type || "MESSAGE",
@@ -381,6 +382,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
                 
                 if (title && body) {
                     const notificationData = {
+                        screen: "chat",
                         conversationId: message.conversationId.toString(),
                         messageId: message._id.toString(),
                         status: status,
@@ -490,6 +492,7 @@ const markMessageAsCompleted = async (messageId: string) => {
                 const title = "Offer Completed";
                 const body = `Your offer of ${message.offerPrice || 0} FCFA has been completed.`;
                 const notificationData = {
+                    screen: "chat",
                     conversationId: message.conversationId.toString(),
                     messageId: message._id.toString(),
                     status: "COMPLETED",
