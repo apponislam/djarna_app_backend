@@ -364,8 +364,32 @@ const adminLogin = async (data: { phone: string; password: string }) => {
 };
 
 const addFCMToken = async (userId: string, token: string) => {
-    const user = await UserModel.findByIdAndUpdate(userId, { $addToSet: { fcmTokens: token } }, { new: true });
+    // 1. Remove this token from any other users first (prevents cross-user notifications on the same device)
+    await UserModel.updateMany({ fcmTokens: token }, { $pull: { fcmTokens: token } });
+
+    // 2. Find the user
+    const user = await UserModel.findById(userId);
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    // 3. Update and clean up token array
+    let updatedTokens = [...(user.fcmTokens || [])];
+    
+    // If the token already exists, remove it first so we can push it to the end (making it the most recent)
+    const tokenIndex = updatedTokens.indexOf(token);
+    if (tokenIndex > -1) {
+        updatedTokens.splice(tokenIndex, 1);
+    }
+    
+    // Push the current token to the end of the array
+    updatedTokens.push(token);
+
+    // Keep only the 10 most recent tokens (purges stale/old tokens automatically)
+    if (updatedTokens.length > 10) {
+        updatedTokens = updatedTokens.slice(-10);
+    }
+
+    user.fcmTokens = updatedTokens;
+    await user.save();
 
     return { message: "FCM token added successfully" };
 };
