@@ -8,6 +8,7 @@ import { emitToUser } from "../../socket/socket";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { codec } from "zod";
+import { NotificationUtils } from "../../../utils/notification";
 
 /**
  * Create a new conversation
@@ -169,6 +170,41 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
         emitToUser(id.toString(), "update_conversation", updatedConversation);
     });
 
+    // Send push notification to receiver
+    if (receiverId.toString() !== senderId.toString() && receiver.fcmTokens && receiver.fcmTokens.length > 0) {
+        try {
+            const senderName = (messageToEmit?.senderId as any)?.name || "Someone";
+            let title = `New Message from ${senderName}`;
+            let body = payload.text || "Sent an attachment";
+            const type = "NEW_MESSAGE";
+
+            if (payload.type === "OFFER") {
+                title = "New Offer Received";
+                body = `${senderName} sent you an offer of ${payload.offerPrice || 0} FCFA`;
+            } else if (payload.type === "LOCATION") {
+                title = "Location Shared";
+                body = `${senderName} shared their location.`;
+            }
+
+            const notificationData = {
+                conversationId: conversation._id.toString(),
+                senderId: senderId.toString(),
+                messageType: payload.type || "MESSAGE",
+            };
+
+            await NotificationUtils.sendPushNotification(
+                receiver.fcmTokens,
+                title,
+                body,
+                receiverId.toString(),
+                type,
+                notificationData
+            );
+        } catch (err) {
+            console.error("Error sending push notification for message:", err);
+        }
+    }
+
     return messageToEmit;
 };
 
@@ -324,6 +360,47 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
         });
     }
 
+    // Send push notification to offer sender
+    if (message) {
+        try {
+            const offerSender = await UserModel.findById(message.senderId);
+            if (offerSender && offerSender._id.toString() !== userId.toString() && offerSender.fcmTokens && offerSender.fcmTokens.length > 0) {
+                const updator = await UserModel.findById(userId);
+                const updatorName = updator?.name || "Someone";
+                
+                let title = "";
+                let body = "";
+                
+                if (status === "ACCEPTED") {
+                    title = "Offer Accepted";
+                    body = `${updatorName} accepted your offer of ${message.offerPrice || 0} FCFA.`;
+                } else if (status === "REJECTED") {
+                    title = "Offer Rejected";
+                    body = `${updatorName} rejected your offer of ${message.offerPrice || 0} FCFA.`;
+                }
+                
+                if (title && body) {
+                    const notificationData = {
+                        conversationId: message.conversationId.toString(),
+                        messageId: message._id.toString(),
+                        status: status,
+                    };
+                    
+                    await NotificationUtils.sendPushNotification(
+                        offerSender.fcmTokens,
+                        title,
+                        body,
+                        offerSender._id.toString(),
+                        "NEW_MESSAGE",
+                        notificationData
+                    );
+                }
+            }
+        } catch (err) {
+            console.error("Error sending push notification for offer status update:", err);
+        }
+    }
+
     return message;
 };
 
@@ -405,6 +482,30 @@ const markMessageAsCompleted = async (messageId: string) => {
             conversation.participantIds.forEach((id) => {
                 emitToUser(id.toString(), "message_updated", message);
             });
+        }
+
+        try {
+            const offerSender = await UserModel.findById(message.senderId);
+            if (offerSender && offerSender.fcmTokens && offerSender.fcmTokens.length > 0) {
+                const title = "Offer Completed";
+                const body = `Your offer of ${message.offerPrice || 0} FCFA has been completed.`;
+                const notificationData = {
+                    conversationId: message.conversationId.toString(),
+                    messageId: message._id.toString(),
+                    status: "COMPLETED",
+                };
+
+                await NotificationUtils.sendPushNotification(
+                    offerSender.fcmTokens,
+                    title,
+                    body,
+                    offerSender._id.toString(),
+                    "NEW_MESSAGE",
+                    notificationData
+                );
+            }
+        } catch (err) {
+            console.error("Error sending push notification for offer completion:", err);
         }
     }
     return message;
