@@ -37,7 +37,17 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Successful", `Your withdrawal of ${withdraw.amount} has been processed successfully.`, withdraw.userId.toString(), "WITHDRAWAL_COMPLETED");
+            await NotificationUtils.sendPushNotification(
+                user.fcmTokens,
+                "Withdrawal Successful",
+                `Your withdrawal of ${withdraw.amount} has been processed successfully.`,
+                withdraw.userId.toString(),
+                "WITHDRAWAL_COMPLETED",
+                {
+                    screen: "wallet",
+                    withdrawId: withdraw._id.toString(),
+                }
+            );
         }
     } else if (status === "failed") {
         withdraw.status = "FAILED";
@@ -49,7 +59,17 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Withdrawal Failed", `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`, withdraw.userId.toString(), "WITHDRAWAL_FAILED");
+            await NotificationUtils.sendPushNotification(
+                user.fcmTokens,
+                "Withdrawal Failed",
+                `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`,
+                withdraw.userId.toString(),
+                "WITHDRAWAL_FAILED",
+                {
+                    screen: "wallet",
+                    withdrawId: withdraw._id.toString(),
+                }
+            );
         }
 
         // Refund the user balance if it was deducted
@@ -108,60 +128,25 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         // Push notification for Boost
         const user = await UserModel.findById(payment.userId);
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Activated", "Your product boost has been successfully activated.", payment.userId.toString(), "PRODUCT_PROMOTED");
+            await NotificationUtils.sendPushNotification(
+                user.fcmTokens,
+                "Boost Activated",
+                "Your product boost has been successfully activated.",
+                payment.userId.toString(),
+                "PRODUCT_PROMOTED",
+                {
+                    screen: "product_detail",
+                    productId: payment.productId.toString(),
+                }
+            );
         }
     }
 
     // 4. If it's a completed product order payment, handle business logic
     if (!isBoostPayment && status === "completed") {
-        // 1. OLD CODE: Update seller balance immediately (commented out - now using escrow on delivery)
-        // if (payment.sellerId) {
-        //     const sellerBalanceIncrease = (payment.buyerFee || 0) + (payment.shippingCost || 0);
-        //     const updateData: any = { $inc: { balance: sellerBalanceIncrease } };
-
-        //     // If this was a zero-commission payment, decrement the seller's noCommission count
-        //     if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
-        //         updateData.$inc.noCommission = -1;
-        //     }
-
-        //     await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
-
-        //     // Notify Seller about Payment
-        //     const seller = await UserModel.findById(payment.sellerId);
-        //     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-        //         await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. You received ${sellerBalanceIncrease} FCFA.`);
-        //     }
-        // }
-
-        // 1. NEW CODE: Notify seller about payment (escrow will start on delivery)
-        if (payment.sellerId) {
-            const updateData: any = {};
-            // If this was a zero-commission payment, decrement the seller's noCommission count
-            if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
-                updateData.$inc = { noCommission: -1 };
-                await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
-            }
-
-            const seller = await UserModel.findById(payment.sellerId);
-            if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(seller.fcmTokens, "New Sale!", `A buyer has paid for your product. Escrow will start when order is marked as delivered.`, payment.sellerId.toString(), "PRODUCT_SOLD");
-            }
-        }
-
-        // Notify Buyer about Payment Success
-        const buyer = await UserModel.findById(payment.userId);
-        if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Payment Successful", `Your payment of ${payment.totalAmount} FCFA has been confirmed.`, payment.userId.toString(), "PAYMENT_COMPLETED");
-        }
-
-        // 2. If there is a messageId, mark it as COMPLETED and sync via socket
-        if (payment.messageId) {
-            await messageServices.markMessageAsCompleted(payment.messageId.toString());
-        }
-
-        // 3. Create an Order (if not already created)
-        const existingOrder = await OrderModel.findOne({ payment: payment._id });
-        if (!existingOrder) {
+        // Find or Create the Order first so we have the order ID for notifications!
+        let order = await OrderModel.findOne({ payment: payment._id });
+        if (!order) {
             const orderData: any = {
                 buyer: payment.userId,
                 seller: payment.sellerId,
@@ -178,7 +163,53 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
                 deliveryMethod: payment.metadata?.deliveryMethod || "HOME_DELIVERY",
             };
 
-            await OrderModel.create(orderData);
+            order = await OrderModel.create(orderData);
+        }
+
+        // 1. Notify seller about payment (escrow will start on delivery)
+        if (payment.sellerId) {
+            const updateData: any = {};
+            // If this was a zero-commission payment, decrement the seller's noCommission count
+            if (payment.siteFee === 0 && (payment.productPrice || 0) > 0) {
+                updateData.$inc = { noCommission: -1 };
+                await UserModel.findByIdAndUpdate(payment.sellerId, updateData);
+            }
+
+            const seller = await UserModel.findById(payment.sellerId);
+            if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
+                await NotificationUtils.sendPushNotification(
+                    seller.fcmTokens,
+                    "New Sale!",
+                    `A buyer has paid for your product. Escrow will start when order is marked as delivered.`,
+                    payment.sellerId.toString(),
+                    "PRODUCT_SOLD",
+                    {
+                        screen: "order_detail",
+                        orderId: order._id.toString(),
+                    }
+                );
+            }
+        }
+
+        // Notify Buyer about Payment Success
+        const buyer = await UserModel.findById(payment.userId);
+        if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
+            await NotificationUtils.sendPushNotification(
+                buyer.fcmTokens,
+                "Payment Successful",
+                `Your payment of ${payment.totalAmount} FCFA has been confirmed.`,
+                payment.userId.toString(),
+                "PAYMENT_COMPLETED",
+                {
+                    screen: "order_detail",
+                    orderId: order._id.toString(),
+                }
+            );
+        }
+
+        // 2. If there is a messageId, mark it as COMPLETED and sync via socket
+        if (payment.messageId) {
+            await messageServices.markMessageAsCompleted(payment.messageId.toString());
         }
 
         // 4. Mark Product as SOLD

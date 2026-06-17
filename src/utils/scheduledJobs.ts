@@ -20,7 +20,17 @@ export const runBoostCleanup = async () => {
             for (const product of expiredProducts) {
                 const user = await UserModel.findById(product.user);
                 if (user?.fcmTokens && user.fcmTokens.length > 0) {
-                    await NotificationUtils.sendPushNotification(user.fcmTokens, "Boost Ended", `Your product "${product.title}" boost has expired.`, product.user.toString(), "PRODUCT_PROMOTED");
+                    await NotificationUtils.sendPushNotification(
+                        user.fcmTokens,
+                        "Boost Ended",
+                        `Your product "${product.title}" boost has expired.`,
+                        product.user.toString(),
+                        "PRODUCT_PROMOTED",
+                        {
+                            screen: "product_detail",
+                            productId: product._id.toString(),
+                        }
+                    );
                 }
             }
 
@@ -76,7 +86,18 @@ export const runEscrowRelease = async () => {
                     // Notify Seller about escrow release
                     const seller = await UserModel.findById(payment.sellerId);
                     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Funds Released!", `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`, payment.sellerId.toString(), "PAYMENT_COMPLETED");
+                        const order = await OrderModel.findOne({ payment: payment._id });
+                        await NotificationUtils.sendPushNotification(
+                            seller.fcmTokens,
+                            "Funds Released!",
+                            `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`,
+                            payment.sellerId.toString(),
+                            "PAYMENT_COMPLETED",
+                            {
+                                screen: "order_detail",
+                                orderId: order ? order._id.toString() : "",
+                            }
+                        );
                     }
                 }
 

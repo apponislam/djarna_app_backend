@@ -285,7 +285,17 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
             // Notify Seller about escrow start
             const seller = await UserModel.findById(order.seller);
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(seller.fcmTokens, "Order Delivered - Escrow Started", `Order #${order._id} marked as delivered. Funds will be released after ${escrowDurationHours} hours.`, order.seller.toString(), "ORDER_DELIVERED");
+                await NotificationUtils.sendPushNotification(
+                    seller.fcmTokens,
+                    "Order Delivered - Escrow Started",
+                    `Order #${order._id} marked as delivered. Funds will be released after ${escrowDurationHours} hours.`,
+                    order.seller.toString(),
+                    "ORDER_DELIVERED",
+                    {
+                        screen: "order_detail",
+                        orderId: order._id.toString(),
+                    }
+                );
             }
         }
     }
@@ -296,13 +306,33 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
             // Notify Buyer
             const buyer = await UserModel.findById(order.buyer);
             if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Order Shipped", `Your order #${order._id} has been marked as shipped by the seller.`, order.buyer.toString(), "ORDER_STATUS_UPDATE");
+                await NotificationUtils.sendPushNotification(
+                    buyer.fcmTokens,
+                    "Order Shipped",
+                    `Your order #${order._id} has been marked as shipped by the seller.`,
+                    order.buyer.toString(),
+                    "ORDER_STATUS_UPDATE",
+                    {
+                        screen: "order_detail",
+                        orderId: order._id.toString(),
+                    }
+                );
             }
         } else if (status === "COMPLETED") {
             // Notify Seller
             const seller = await UserModel.findById(order.seller);
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-                await NotificationUtils.sendPushNotification(seller.fcmTokens, "Order Completed", `The buyer has confirmed receipt of order #${order._id}.`, order.seller.toString(), "ORDER_STATUS_UPDATE");
+                await NotificationUtils.sendPushNotification(
+                    seller.fcmTokens,
+                    "Order Completed",
+                    `The buyer has confirmed receipt of order #${order._id}.`,
+                    order.seller.toString(),
+                    "ORDER_STATUS_UPDATE",
+                    {
+                        screen: "order_detail",
+                        orderId: order._id.toString(),
+                    }
+                );
             }
         }
     } catch (err) {

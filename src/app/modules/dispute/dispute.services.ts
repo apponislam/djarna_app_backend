@@ -28,7 +28,7 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
         ...payload,
         buyer: buyerId,
         seller: order.seller,
-        status: "PENDING",
+        status: "PENDING" as const,
     };
 
     const result = await DisputeModel.create(disputeData);
@@ -38,12 +38,23 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
     await OrderModel.findByIdAndUpdate(order._id, { status: "DISPUTED" });
 
     // Log activity (Admin)
-    ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Dispute opened for order #${order._id}`, { disputeId: result._id, orderId: order._id });
+    ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Dispute opened for order #${order._id}`, { disputeId: (result as any)._id, orderId: order._id });
 
     // Notify Seller about Dispute
     const seller = await UserModel.findById(order.seller);
     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Dispute Opened", `A dispute has been opened for your order #${order._id}.`);
+        await NotificationUtils.sendPushNotification(
+            seller.fcmTokens,
+            "Dispute Opened",
+            `A dispute has been opened for your order #${order._id}.`,
+            seller._id.toString(),
+            "DISPUTE_OPENED",
+            {
+                screen: "dispute_detail",
+                orderId: order._id.toString(),
+                disputeId: (result as any)._id.toString(),
+            }
+        );
     }
 
     return result;
@@ -117,7 +128,18 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         // Notify Buyer about Refund
         const buyer = await UserModel.findById(dispute.buyer);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Refund Processed", `A refund of ${refundAmount} FCFA has been processed for your dispute.`, buyer._id.toString(), "DISPUTE_RESOLVED");
+            await NotificationUtils.sendPushNotification(
+                buyer.fcmTokens,
+                "Refund Processed",
+                `A refund of ${refundAmount} FCFA has been processed for your dispute.`,
+                buyer._id.toString(),
+                "DISPUTE_RESOLVED",
+                {
+                    screen: "dispute_detail",
+                    orderId: dispute.order.toString(),
+                    disputeId: dispute._id.toString(),
+                }
+            );
         }
     } else if (resolution === "CANCELLED") {
         // Update payment and order statuses - set back to COMPLETED
@@ -127,7 +149,18 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         // Notify Buyer about Cancellation
         const buyer = await UserModel.findById(dispute.buyer);
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
-            await NotificationUtils.sendPushNotification(buyer.fcmTokens, "Dispute Cancelled", `Your dispute for order #${dispute.order} has been cancelled.`, buyer._id.toString(), "DISPUTE_RESOLVED");
+            await NotificationUtils.sendPushNotification(
+                buyer.fcmTokens,
+                "Dispute Cancelled",
+                `Your dispute for order #${dispute.order} has been cancelled.`,
+                buyer._id.toString(),
+                "DISPUTE_RESOLVED",
+                {
+                    screen: "dispute_detail",
+                    orderId: dispute.order.toString(),
+                    disputeId: dispute._id.toString(),
+                }
+            );
         }
     }
 
@@ -165,7 +198,18 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
     // Notify Seller about Cancellation
     const seller = await UserModel.findById(dispute.seller);
     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
-        await NotificationUtils.sendPushNotification(seller.fcmTokens, "Dispute Cancelled", `The dispute for order #${dispute.order} has been cancelled by the buyer.`, seller._id.toString(), "DISPUTE_RESOLVED");
+        await NotificationUtils.sendPushNotification(
+            seller.fcmTokens,
+            "Dispute Cancelled",
+            `The dispute for order #${dispute.order} has been cancelled by the buyer.`,
+            seller._id.toString(),
+            "DISPUTE_RESOLVED",
+            {
+                screen: "dispute_detail",
+                orderId: dispute.order.toString(),
+                disputeId: dispute._id.toString(),
+            }
+        );
     }
 
     // Log activity
