@@ -12,8 +12,8 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "author": "Appon Islam",
+    "license": "MIT",
     "type": "commonjs",
     "dependencies": {
         "bcrypt": "^6.0.0",
