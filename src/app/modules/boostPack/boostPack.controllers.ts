@@ -10,7 +10,7 @@ const createBoostPack = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Boost pack created successfully",
+        message: "Pack de boost créé avec succès",
         data: result,
     });
 });
@@ -23,7 +23,7 @@ const getAllBoostPacks = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost packs retrieved successfully",
+        message: "Packs de boost récupérés avec succès",
         data: result,
     });
 });
@@ -34,7 +34,7 @@ const getBoostPackById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost pack details retrieved successfully",
+        message: "Détails du pack de boost récupérés avec succès",
         data: result,
     });
 });
@@ -45,7 +45,7 @@ const updateBoostPack = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost pack updated successfully",
+        message: "Pack de boost mis à jour avec succès",
         data: result,
     });
 });
@@ -56,7 +56,7 @@ const deleteBoostPack = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost pack deleted successfully",
+        message: "Pack de boost supprimé avec succès",
         data: result,
     });
 });
@@ -67,7 +67,7 @@ const toggleBoostPackStatus = catchAsync(async (req: Request, res: Response) => 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Boost pack marked as ${result.isActive ? "Active" : "Disabled"}`,
+        message: `Pack de boost marqué comme ${result.isActive ? "Actif" : "Désactivé"}`,
         data: result,
     });
 });
@@ -78,7 +78,7 @@ const setRecommended = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Boost pack ${result.isRecommended ? "set as recommended" : "removed from recommended"} successfully`,
+        message: `Pack de boost ${result.isRecommended ? "défini comme recommandé" : "retiré des recommandations"} avec succès`,
         data: result,
     });
 });

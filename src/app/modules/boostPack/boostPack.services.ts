@@ -31,7 +31,7 @@ const getAllBoostPacks = async (isAdmin: boolean, type?: string) => {
 const getBoostPackById = async (id: string) => {
     const result = await BoostPackModel.findOne({ _id: id, isDeleted: false }).lean();
     if (!result) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable !");
     }
     return result;
 };
@@ -39,7 +39,7 @@ const getBoostPackById = async (id: string) => {
 const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
     const isExist = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!isExist) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable !");
     }
 
     // If setting to recommended, unset others of same type
@@ -55,7 +55,7 @@ const updateBoostPack = async (id: string, payload: Partial<IBoostPack>) => {
 const deleteBoostPack = async (id: string) => {
     const isExist = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!isExist) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable !");
     }
     const result = await BoostPackModel.findByIdAndUpdate(id, { isDeleted: true }, { returnDocument: "after" });
     return result;
@@ -64,7 +64,7 @@ const deleteBoostPack = async (id: string) => {
 const toggleBoostPackStatus = async (id: string) => {
     const pack = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!pack) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable !");
     }
     pack.isActive = !pack.isActive;
     await pack.save();
@@ -74,7 +74,7 @@ const toggleBoostPackStatus = async (id: string) => {
 const setRecommended = async (id: string) => {
     const pack = await BoostPackModel.findOne({ _id: id, isDeleted: false });
     if (!pack) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable !");
     }
 
     if (pack.isRecommended) {
