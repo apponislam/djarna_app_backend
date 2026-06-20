@@ -11,7 +11,7 @@ const requestWithdrawal = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Withdrawal request submitted successfully",
+        message: "Demande de retrait soumise avec succès",
         data: result,
     });
 });
@@ -23,7 +23,7 @@ const getMyWithdrawals = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Withdrawals retrieved successfully",
+        message: "Retraits récupérés avec succès",
         data: result,
     });
 });
@@ -34,7 +34,7 @@ const getAllWithdrawals = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All withdrawals retrieved successfully",
+        message: "Tous les retraits récupérés avec succès",
         data: result,
     });
 });

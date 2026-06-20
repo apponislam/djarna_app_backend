@@ -15,12 +15,12 @@ const createReview = async (userId: string, data: Partial<IReview>) => {
     // 1. Check if product exists
     const product = await ProductModel.findById(productId);
     if (!product) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
     }
 
     // 2. Prevent self-review
     if (product.user.toString() === userId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "You cannot review your own product");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Vous ne pouvez pas donner un avis sur votre propre produit");
     }
 
     // 3. Check if user already reviewed this product
@@ -31,7 +31,7 @@ const createReview = async (userId: string, data: Partial<IReview>) => {
     });
 
     if (existingReview) {
-        throw new ApiError(httpStatus.CONFLICT, "You have already reviewed this product");
+        throw new ApiError(httpStatus.CONFLICT, "Vous avez déjà donné un avis sur ce produit");
     }
 
     // 4. Create review
@@ -135,7 +135,7 @@ const deleteReview = async (reviewId: string, userId: string, isAdmin: boolean) 
     const result = await ReviewModel.findOneAndUpdate(filter, { isDeleted: true }, { returnDocument: "after" });
 
     if (!result) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Review not found or you are not authorized to delete it");
+        throw new ApiError(httpStatus.NOT_FOUND, "Avis introuvable ou vous n'êtes pas autorisé à le supprimer");
     }
 
     return result;
@@ -148,7 +148,7 @@ const updateReviewVisibility = async (reviewId: string, visibility: "show" | "hi
     const result = await ReviewModel.findByIdAndUpdate(reviewId, { adminVisibility: visibility }, { returnDocument: "after" });
 
     if (!result) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Review not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Avis introuvable");
     }
 
     return result;

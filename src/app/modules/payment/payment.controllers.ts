@@ -24,7 +24,7 @@ const initializePayment = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Payment initialized successfully",
+        message: "Paiement initialisé avec succès",
         data: result,
     });
 });
@@ -36,7 +36,7 @@ const verifyPayment = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Payment verified successfully",
+        message: "Paiement vérifié avec succès",
         data: result,
     });
 });
@@ -47,7 +47,7 @@ const getPaymentById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Payment retrieved successfully",
+        message: "Paiement récupéré avec succès",
         data: result,
     });
 });
@@ -67,7 +67,7 @@ const getMyPayments = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "My payments retrieved successfully",
+        message: "Mes paiements récupérés avec succès",
         data: result,
     });
 });
@@ -88,7 +88,7 @@ const getAllPayments = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All payments retrieved successfully",
+        message: "Tous les paiements récupérés avec succès",
         data: result.data,
         meta: result.meta,
     });
@@ -100,7 +100,7 @@ const refundPayment = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Payment refunded successfully",
+        message: "Paiement remboursé avec succès",
         data: result,
     });
 });

@@ -128,7 +128,7 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
         if (!invoiceToken) {
             payment.status = "FAILED";
             await payment.save();
-            throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create Paydunya invoice");
+            throw new ApiError(httpStatus.BAD_REQUEST, "Échec de la création de la facture Paydunya");
         }
 
         payment.paydunyaInvoiceToken = invoiceToken;
@@ -144,7 +144,7 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
         console.error("Paydunya API Error:", error.response?.data);
         payment.status = "FAILED";
         await payment.save();
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || error.message || "Payment initialization failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || error.message || "Échec de l'initialisation du paiement");
     }
 };
 
@@ -162,7 +162,7 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
         });
 
         const payment = await PaymentModel.findOne({ paydunyaInvoiceToken: invoiceToken });
-        if (!payment) throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
+        if (!payment) throw new ApiError(httpStatus.NOT_FOUND, "Paiement introuvable");
 
         // Just update the status for the frontend success screen
         if (response.data.status === "completed") {
@@ -175,14 +175,14 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
 
         return payment;
     } catch (error: any) {
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Payment verification failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Échec de la vérification du paiement");
     }
 };
 
 const getPaymentById = async (id: string): Promise<IPayment> => {
     const payment = await PaymentModel.findById(id).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
     if (!payment) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Paiement introuvable");
     }
     return payment;
 };
@@ -253,17 +253,17 @@ const getAllPayments = async (filters?: IPaymentFilter) => {
 const refundPayment = async (id: string, refundAmount?: number): Promise<IPayment> => {
     const payment = await PaymentModel.findById(id);
     if (!payment) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Paiement introuvable");
     }
 
     if (payment.status !== "COMPLETED" && payment.status !== "DISPUTED") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Only completed or disputed payments can be refunded");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Seuls les paiements complétés ou contestés peuvent être remboursés");
     }
 
     const amountToRefund = refundAmount || payment.totalAmount;
 
     if (amountToRefund > payment.totalAmount) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Refund amount cannot exceed total payment amount");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Le montant du remboursement ne peut pas dépasser le montant total du paiement");
     }
 
     try {
@@ -301,7 +301,7 @@ const refundPayment = async (id: string, refundAmount?: number): Promise<IPaymen
         return payment;
     } catch (error: any) {
         console.log(error);
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Refund failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Échec du remboursement");
     }
 };
 

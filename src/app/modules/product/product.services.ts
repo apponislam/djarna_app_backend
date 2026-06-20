@@ -12,7 +12,7 @@ const createProduct = async (payload: IProduct) => {
     if (payload.isBoosted && payload.boostPack) {
         const pack = await BoostPackModel.findById(payload.boostPack);
         if (!pack || !pack.isActive) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive boost pack");
+            throw new ApiError(httpStatus.BAD_REQUEST, "Pack de boost invalide ou inactif");
         }
 
         const now = new Date();
@@ -180,7 +180,7 @@ const getProductById = async (id: string, userId?: string) => {
     const result = await ProductModel.findOne({ _id: id, isDeleted: false }).populate("boostPack", "name duration visibility").populate("user", "name email phone photo verifiedBadge").lean();
 
     if (!result) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
     }
 
     if (userId) {
@@ -261,10 +261,10 @@ const getProductsByUserId = async (targetUserId: string, currentUserId?: string)
 
 const updateProduct = async (id: string, userId: string, payload: Partial<IProduct>) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
-    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
 
     if (product.user.toString() !== userId.toString()) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update product");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès non autorisé pour mettre à jour le produit");
     }
 
     const result = await ProductModel.findByIdAndUpdate(id, payload, { returnDocument: "after" });
@@ -277,10 +277,10 @@ const updateProduct = async (id: string, userId: string, payload: Partial<IProdu
 
 const updateProductStatus = async (id: string, userId: string, status: string) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
-    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
 
     if (product.user.toString() !== userId.toString()) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to update status");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès non autorisé pour mettre à jour le statut");
     }
 
     product.status = status as any;
@@ -294,19 +294,19 @@ const updateProductStatus = async (id: string, userId: string, status: string) =
 
 const boostProduct = async (id: string, userId: string, boostPackId: string) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
-    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
 
     if (product.user.toString() !== userId.toString()) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to boost product");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès non autorisé pour booster le produit");
     }
 
     const pack = await (BoostPackModel as any).findById(boostPackId);
     if (!pack || !pack.isActive) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive boost pack");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Pack de boost invalide ou inactif");
     }
 
     if (pack.type !== "PRODUCT") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "This pack is not for individual product boosting");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Ce pack n'est pas destiné au boost de produit individuel");
     }
 
     const now = new Date();
@@ -321,14 +321,14 @@ const boostProduct = async (id: string, userId: string, boostPackId: string) => 
 
 const deleteProduct = async (id: string, userId: string) => {
     const product = await ProductModel.findOne({ _id: id, isDeleted: false });
-    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Product not found");
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
 
     if (product.user.toString() !== userId.toString()) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized access to delete product");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès non autorisé pour supprimer le produit");
     }
 
     await ProductModel.findByIdAndUpdate(id, { isDeleted: true });
-    return { message: "Product deleted successfully" };
+    return { message: "Produit supprimé avec succès" };
 };
 
 export const ProductService = {

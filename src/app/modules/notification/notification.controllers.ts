@@ -13,7 +13,7 @@ const getNotifications = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Notifications retrieved successfully",
+        message: "Notifications récupérées avec succès",
         data: result,
     });
 });
@@ -25,7 +25,7 @@ const getUnreadCount = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Unread count retrieved successfully",
+        message: "Nombre de notifications non lues récupéré avec succès",
         data: result,
     });
 });

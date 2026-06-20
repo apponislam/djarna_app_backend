@@ -10,11 +10,11 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
     // 1. Validate user and balance
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     if (user.balance < payload.amount) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Insufficient balance");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Solde insuffisant");
     }
 
     // 2. Map internal method to PayDunya withdraw_mode
@@ -106,10 +106,10 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
                 withdraw.paydunyaTransactionId = submitResponse.data.transaction_id;
                 await withdraw.save();
             } else {
-                throw new Error(submitResponse.data.response_text || "Paydunya submission failed");
+                throw new Error(submitResponse.data.response_text || "Échec de la soumission Paydunya");
             }
         } else {
-            throw new Error(paydunyaResponse.data.response_text || "Paydunya invoice creation failed");
+            throw new Error(paydunyaResponse.data.response_text || "Échec de la création de la facture Paydunya");
         }
 
         return withdraw;
@@ -127,7 +127,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
             $inc: { balance: payload.amount },
         });
 
-        throw new ApiError(httpStatus.BAD_REQUEST, withdraw.failReason || "Withdrawal failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, withdraw.failReason || "Échec du retrait");
     }
 };
 

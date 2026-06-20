@@ -4,10 +4,8 @@ import ApiError from "../../../errors/ApiError";
 import { ConversationModel, MessageModel } from "./messages.model";
 import { Message, MessageType } from "./messages.interface";
 import { emitToUser } from "../../socket/socket";
-
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
-import { codec } from "zod";
 import { NotificationUtils } from "../../../utils/notification";
 
 /**
@@ -21,7 +19,7 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
     if (productId) {
         const product = await ProductModel.findById(productId);
         if (!product) {
-            throw new ApiError(httpStatus.NOT_FOUND, "Product not found!");
+            throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable !");
         }
         productOwner = product.user.toString();
         // If receiverId is not provided, use the product owner as receiver
@@ -31,13 +29,13 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
     }
 
     if (!receiverId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+        throw new ApiError(httpStatus.BAD_REQUEST, "L'identifiant du destinataire est requis !");
     }
 
     // Check if receiver exists
     const receiver = await UserModel.findById(receiverId);
     if (!receiver) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Receiver user not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Destinataire introuvable !");
     }
 
     let conversation = await ConversationModel.findOne({
@@ -81,7 +79,7 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
  * Send a new message
  */
 const sendMessage = async (senderId: string, payload: Partial<Message> & { receiverId?: string }) => {
-    if (["ACCEPTED", "REJECTED", "COMPLETED"].includes(payload.type as any)) throw new ApiError(httpStatus.BAD_REQUEST, "Direct send not allowed for this type");
+    if (["ACCEPTED", "REJECTED", "COMPLETED"].includes(payload.type as any)) throw new ApiError(httpStatus.BAD_REQUEST, "Envoi direct non autorisé pour ce type");
 
     let { receiverId, ...messageData } = payload;
 
@@ -89,7 +87,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
     if (messageData.productId) {
         const product = await ProductModel.findById(messageData.productId);
         if (!product) {
-            throw new ApiError(httpStatus.NOT_FOUND, "Product not found! Please provide a valid productId.");
+            throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable ! Veuillez fournir un identifiant de produit valide.");
         }
         // Ensure we have the correct receiver (product owner) if not provided
         if (!receiverId) {
@@ -101,13 +99,13 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
     }
 
     if (!receiverId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Receiver ID is required!");
+        throw new ApiError(httpStatus.BAD_REQUEST, "L'identifiant du destinataire est requis !");
     }
 
     // Check if receiver exists
     const receiver = await UserModel.findById(receiverId);
     if (!receiver) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Receiver user not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Destinataire introuvable !");
     }
 
     // 2. Find or Create conversation
@@ -193,14 +191,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
                 messageType: payload.type || "MESSAGE",
             };
 
-            await NotificationUtils.sendPushNotification(
-                receiver.fcmTokens,
-                title,
-                body,
-                receiverId.toString(),
-                type,
-                notificationData
-            );
+            await NotificationUtils.sendPushNotification(receiver.fcmTokens, title, body, receiverId.toString(), type, notificationData);
         } catch (err) {
             console.error("Error sending push notification for message:", err);
         }
@@ -267,7 +258,7 @@ const getConversationById = async (userId: string, conversationId: string) => {
     ]);
 
     if (!conversation) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Conversation introuvable");
     }
 
     return conversation;
@@ -283,7 +274,7 @@ const getMessages = async (userId: string, conversationId: string, page: number 
     });
 
     if (!conversation) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found or access denied");
+        throw new ApiError(httpStatus.NOT_FOUND, "Conversation introuvable ou accès refusé");
     }
 
     // Mark as read
@@ -352,7 +343,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
         { path: "productId", select: "_id title images price" },
     ]);
 
-    if (!message) throw new ApiError(httpStatus.NOT_FOUND, "Offer message not found");
+    if (!message) throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
 
     const conversation = await ConversationModel.findById(message.conversationId);
     if (conversation) {
@@ -368,10 +359,10 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
             if (offerSender && offerSender._id.toString() !== userId.toString() && offerSender.fcmTokens && offerSender.fcmTokens.length > 0) {
                 const updator = await UserModel.findById(userId);
                 const updatorName = updator?.name || "Someone";
-                
+
                 let title = "";
                 let body = "";
-                
+
                 if (status === "ACCEPTED") {
                     title = "Offre acceptée";
                     body = `${updatorName} a accepté votre offre de ${message.offerPrice || 0} FCFA.`;
@@ -379,7 +370,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
                     title = "Offre rejetée";
                     body = `${updatorName} a rejeté votre offre de ${message.offerPrice || 0} FCFA.`;
                 }
-                
+
                 if (title && body) {
                     const notificationData = {
                         screen: "chat",
@@ -387,15 +378,8 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
                         messageId: message._id.toString(),
                         status: status,
                     };
-                    
-                    await NotificationUtils.sendPushNotification(
-                        offerSender.fcmTokens,
-                        title,
-                        body,
-                        offerSender._id.toString(),
-                        "NOUVEAU_MESSAGE",
-                        notificationData
-                    );
+
+                    await NotificationUtils.sendPushNotification(offerSender.fcmTokens, title, body, offerSender._id.toString(), "NOUVEAU_MESSAGE", notificationData);
                 }
             }
         } catch (err) {
@@ -420,7 +404,7 @@ const editMessage = async (userId: string, messageId: string, payload: { text?: 
     ]);
 
     if (!message) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Message not found or unauthorized");
+        throw new ApiError(httpStatus.NOT_FOUND, "Message introuvable ou non autorisé");
     }
 
     // Sync via socket
@@ -442,7 +426,7 @@ const deleteConversation = async (userId: string, conversationId: string) => {
     const conversationResult = await ConversationModel.updateOne({ _id: conversationId, participantIds: userId }, { $addToSet: { deletedBy: userId } });
 
     if (conversationResult.matchedCount === 0) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Conversation not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Conversation introuvable");
     }
 
     // 2. Mark all messages in this conversation as deleted for this user
@@ -461,7 +445,7 @@ const deleteMessage = async (userId: string, messageId: string) => {
     const result = await MessageModel.updateOne({ _id: messageId, $or: [{ senderId: userId }, { conversationId: { $exists: true } }] }, { $addToSet: { deletedBy: userId } });
 
     if (result.matchedCount === 0) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Message not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Message introuvable");
     }
 
     emitToUser(userId, "message_deleted", { messageId });
@@ -498,14 +482,7 @@ const markMessageAsCompleted = async (messageId: string) => {
                     status: "COMPLETED",
                 };
 
-                await NotificationUtils.sendPushNotification(
-                    offerSender.fcmTokens,
-                    title,
-                    body,
-                    offerSender._id.toString(),
-                    "NOUVEAU_MESSAGE",
-                    notificationData
-                );
+                await NotificationUtils.sendPushNotification(offerSender.fcmTokens, title, body, offerSender._id.toString(), "NOUVEAU_MESSAGE", notificationData);
             }
         } catch (err) {
             console.error("Error sending push notification for offer completion:", err);
@@ -527,7 +504,7 @@ const getSingleMessage = async (userId: string, messageId: string) => {
     ]);
 
     if (!message) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Message not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Message introuvable");
     }
 
     // Verify user is part of the conversation
@@ -537,7 +514,7 @@ const getSingleMessage = async (userId: string, messageId: string) => {
     });
 
     if (!conversation) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Access denied");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé");
     }
 
     return message;

@@ -59,10 +59,10 @@ const markAsRead = async (userId: string, notificationIds: string[]) => {
     );
 
     if (result.matchedCount === 0) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Notifications not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Notifications introuvables");
     }
 
-    return { message: "Notifications marked as read" };
+    return { message: "Notifications marquées comme lues" };
 };
 
 const markAllAsRead = async (userId: string) => {
@@ -74,7 +74,7 @@ const markAllAsRead = async (userId: string) => {
         { $set: { isRead: true } },
     );
 
-    return { message: "All notifications marked as read" };
+    return { message: "Toutes les notifications marquées comme lues" };
 };
 
 const deleteNotification = async (userId: string, notificationId: string) => {
@@ -88,10 +88,10 @@ const deleteNotification = async (userId: string, notificationId: string) => {
     );
 
     if (!notification) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Notification not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Notification introuvable");
     }
 
-    return { message: "Notification deleted successfully" };
+    return { message: "Notification supprimée avec succès" };
 };
 
 const deleteAllNotifications = async (userId: string) => {
@@ -103,13 +103,13 @@ const deleteAllNotifications = async (userId: string) => {
         { $set: { isDeleted: true } },
     );
 
-    return { message: "All notifications deleted successfully" };
+    return { message: "Toutes les notifications supprimées avec succès" };
 };
 
 const sendNotification = async (userId: string, type: any, title: string, message: string, data?: Record<string, any>) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     const notification = await createNotification({

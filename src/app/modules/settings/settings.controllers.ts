@@ -10,7 +10,7 @@ const getSettings = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Settings retrieved successfully",
+        message: "Paramètres récupérés avec succès",
         data: result,
     });
 });
@@ -21,7 +21,7 @@ const updateSettings = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Settings updated successfully",
+        message: "Paramètres mis à jour avec succès",
         data: result,
     });
 });

@@ -10,7 +10,7 @@ const getPopularUsers = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Popular users retrieved successfully",
+        message: "Utilisateurs populaires récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -21,7 +21,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Users retrieved successfully",
+        message: "Utilisateurs récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -33,7 +33,7 @@ const getSingleUser = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User retrieved successfully",
+        message: "Utilisateur récupéré avec succès",
         data: result,
     });
 });
@@ -43,7 +43,7 @@ const getUserStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User statistics retrieved successfully",
+        message: "Statistiques des utilisateurs récupérées avec succès",
         data: result,
     });
 });
@@ -54,7 +54,7 @@ const toggleUserActive = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `User ${result.isActive ? "activated" : "deactivated"} successfully`,
+        message: `Utilisateur ${result.isActive ? "activé" : "désactivé"} avec succès`,
         data: result,
     });
 });
@@ -65,7 +65,7 @@ const removeVerifiedBadge = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Verified badge removed successfully",
+        message: "Badge vérifié supprimé avec succès",
         data: result,
     });
 });

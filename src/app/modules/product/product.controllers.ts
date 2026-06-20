@@ -13,7 +13,7 @@ const createProduct = catchAsync(async (req: Request, res: Response) => {
     const imagePaths = files?.map((file) => file.path) || [];
 
     if (imagePaths.length === 0) {
-        throw new Error("At least one product image is required");
+        throw new Error("Au moins une image du produit est requise");
     }
 
     const payload = {
@@ -27,7 +27,7 @@ const createProduct = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Product created successfully",
+        message: "Produit créé avec succès",
         data: result,
     });
 });
@@ -39,19 +39,19 @@ const getAllProducts = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Products retrieved successfully",
+        message: "Produits récupérés avec succès",
         data: result,
     });
 });
 
 const getMyProducts = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ProductService.getMyProducts(userId);
+    const result = await ProductService.getMyProducts(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Your products retrieved successfully",
+        message: "Vos produits récupérés avec succès",
         data: result,
     });
 });
@@ -64,7 +64,7 @@ const getProductsByUserId = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User products retrieved successfully",
+        message: "Produits de l'utilisateur récupérés avec succès",
         data: result,
     });
 });
@@ -76,7 +76,7 @@ const getProductById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Product details retrieved successfully",
+        message: "Détails du produit récupérés avec succès",
         data: result,
     });
 });
@@ -97,12 +97,12 @@ const updateProduct = catchAsync(async (req: Request, res: Response) => {
         payload.images = imagePaths;
     }
 
-    const result = await ProductService.updateProduct(req.params.id as string, userId, payload);
+    const result = await ProductService.updateProduct(req.params.id as string, userId as string, payload);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Product updated successfully",
+        message: "Produit mis à jour avec succès",
         data: result,
     });
 });
@@ -110,12 +110,12 @@ const updateProduct = catchAsync(async (req: Request, res: Response) => {
 const updateProductStatus = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { status } = req.body;
-    const result = await ProductService.updateProductStatus(req.params.id as string, userId, status);
+    const result = await ProductService.updateProductStatus(req.params.id as string, userId as string, status);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Product marked as ${status}`,
+        message: `Produit marqué comme ${status === "SOLD" ? "vendu" : status === "ACTIVE" ? "actif" : "inactif"}`,
         data: result,
     });
 });
@@ -123,24 +123,24 @@ const updateProductStatus = catchAsync(async (req: Request, res: Response) => {
 const boostProduct = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { boostPlan } = req.body;
-    const result = await ProductService.boostProduct(req.params.id as string, userId, boostPlan);
+    const result = await ProductService.boostProduct(req.params.id as string, userId as string, boostPlan);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Product boosted successfully",
+        message: "Produit boosté avec succès",
         data: result,
     });
 });
 
 const deleteProduct = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ProductService.deleteProduct(req.params.id as string, userId);
+    const result = await ProductService.deleteProduct(req.params.id as string, userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Product deleted successfully",
+        message: "Produit supprimé avec succès",
         data: result,
     });
 });

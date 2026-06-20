@@ -36,13 +36,13 @@ const getAllReports = async (query: any) => {
 const getReportById = async (id: string) => {
     const result = await ReportModel.findById(id).populate("reporter", "name email phone verifiedBadge").populate("reportedUser", "name email phone verifiedBadge");
 
-    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Report not found");
+    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Signalement introuvable");
     return result;
 };
 
 const updateReportStatus = async (id: string, status: string) => {
     const result = await ReportModel.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
-    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Report not found");
+    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Signalement introuvable");
     return result;
 };
 

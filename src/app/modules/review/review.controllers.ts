@@ -11,7 +11,7 @@ const createReview = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Review created successfully",
+        message: "Avis créé avec succès",
         data: result,
     });
 });
@@ -26,7 +26,7 @@ const getMyReviews = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "My reviews retrieved successfully",
+        message: "Mes avis récupérés avec succès",
         meta: result.meta,
         data: {
             stats: result.stats,
@@ -45,7 +45,7 @@ const getUserReviews = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User reviews retrieved successfully",
+        message: "Avis de l'utilisateur récupérés avec succès",
         meta: result.meta,
         data: {
             stats: result.stats,
@@ -61,7 +61,7 @@ const getProductReviews = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Product reviews retrieved successfully",
+        message: "Avis du produit récupérés avec succès",
         data: result,
     });
 });
@@ -76,7 +76,7 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All reviews retrieved successfully",
+        message: "Tous les avis récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -92,7 +92,7 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Review deleted successfully",
+        message: "Avis supprimé avec succès",
         data: result,
     });
 });
@@ -106,7 +106,7 @@ const updateReviewVisibility = catchAsync(async (req: Request, res: Response) =>
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Review visibility updated successfully",
+        message: "Visibilité de l'avis mise à jour avec succès",
         data: result,
     });
 });

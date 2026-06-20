@@ -196,7 +196,7 @@ const getSingleUser = async (id: string) => {
     ]);
 
     if (!user || user.length === 0) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     return user[0];
@@ -219,7 +219,7 @@ const getUserStats = async () => {
 const toggleUserActive = async (userId: string) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     user.isActive = !user.isActive;
@@ -231,7 +231,7 @@ const toggleUserActive = async (userId: string) => {
 const removeVerifiedBadge = async (userId: string) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     user.verifiedBadge = false;

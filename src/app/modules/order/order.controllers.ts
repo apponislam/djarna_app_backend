@@ -11,7 +11,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Order created successfully",
+        message: "Commande créée avec succès",
         data: result,
     });
 });
@@ -24,7 +24,7 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Orders retrieved successfully",
+        message: "Commandes récupérées avec succès",
         data: data,
         meta: meta,
     });
@@ -37,7 +37,7 @@ const getOrderById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Order retrieved successfully",
+        message: "Commande récupérée avec succès",
         data: result,
     });
 });
@@ -49,7 +49,7 @@ const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Order status updated successfully",
+        message: "Statut de la commande mis à jour avec succès",
         data: result,
     });
 });
@@ -60,7 +60,7 @@ const adminGetOrderById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Order retrieved successfully by admin",
+        message: "Commande récupérée par l'administrateur avec succès",
         data: result,
     });
 });
@@ -71,7 +71,7 @@ const adminGetAllOrders = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All orders retrieved successfully by admin",
+        message: "Toutes les commandes récupérées par l'administrateur avec succès",
         data: data,
         meta: meta,
     });
@@ -83,7 +83,7 @@ const adminGetOrderStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Order statistics retrieved successfully",
+        message: "Statistiques des commandes récupérées avec succès",
         data: result,
     });
 });

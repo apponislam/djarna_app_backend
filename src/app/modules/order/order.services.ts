@@ -24,11 +24,11 @@ const createOrder = async (
 ) => {
     const product = await ProductModel.findOne({ _id: payload.productId, isDeleted: false, status: "ACTIVE" });
     if (!product) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Product not found or not available");
+        throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable ou non disponible");
     }
 
     if (product.user.toString() === buyerId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "You cannot buy your own product");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Vous ne pouvez pas acheter votre propre produit");
     }
 
     // Initialize Payment ONLY - DO NOT create order yet
@@ -216,11 +216,11 @@ const getOrderById = async (orderId: string, userId: string) => {
     const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product", "title images price category subcategory").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
 
     if (!order) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
     }
 
     if (order.buyer.toString() !== userId && order.seller.toString() !== userId) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Access denied");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé");
     }
 
     return order;
@@ -230,7 +230,7 @@ const adminGetOrderById = async (orderId: string) => {
     const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product", "title images price category subcategory").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
 
     if (!order) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
     }
 
     return order;
@@ -239,7 +239,7 @@ const adminGetOrderById = async (orderId: string) => {
 const updateOrderStatus = async (orderId: string, userId: any, status: string) => {
     const order = await OrderModel.findOne({ _id: orderId, isDeleted: false });
     if (!order) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
     }
 
     const userIdStr = typeof userId === "string" ? userId : userId.toString();
@@ -256,11 +256,11 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
     console.log(sellerIdStr, userIdStr);
 
     if (status === "SHIPPED" && sellerIdStr !== userIdStr) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Only seller can mark order as shipped");
+        throw new ApiError(httpStatus.FORBIDDEN, "Seul le vendeur peut marquer la commande comme expédiée");
     }
 
     if (status === "COMPLETED") {
-        throw new ApiError(httpStatus.FORBIDDEN, "Order status will be set to completed automatically when escrow is released");
+        throw new ApiError(httpStatus.FORBIDDEN, "Le statut de la commande sera automatiquement défini comme terminé lorsque le séquestre sera libéré");
     }
 
     order.status = status as any;

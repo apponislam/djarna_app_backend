@@ -18,7 +18,7 @@ const createReport = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Report submitted successfully",
+        message: "Signalement soumis avec succès",
         data: result,
     });
 });
@@ -29,7 +29,7 @@ const getAllReports = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Reports retrieved successfully",
+        message: "Signalements récupérés avec succès",
         data: result,
     });
 });
@@ -40,7 +40,7 @@ const getReportById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Report details retrieved successfully",
+        message: "Détails du signalement récupérés avec succès",
         data: result,
     });
 });
@@ -52,7 +52,7 @@ const updateReportStatus = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Report status updated to ${status}`,
+        message: `Statut du signalement mis à jour à ${status === "RESOLVED" ? "résolu" : status === "PENDING" ? "en attente" : "rejeté"}`,
         data: result,
     });
 });

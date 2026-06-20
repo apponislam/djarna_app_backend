@@ -14,7 +14,7 @@ const createConversation = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Conversation created successfully",
+        message: "Conversation créée avec succès",
         data: result,
     });
 });
@@ -32,7 +32,7 @@ const getUserConversations = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Conversations retrieved successfully",
+        message: "Conversations récupérées avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -49,7 +49,7 @@ const getConversationById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Conversation retrieved successfully",
+        message: "Conversation récupérée avec succès",
         data: result,
     });
 });
@@ -65,7 +65,7 @@ const markAsRead = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Conversation marked as read",
+        message: "Conversation marquée comme lue",
         data: result,
     });
 });
@@ -84,7 +84,7 @@ const getMessages = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Messages retrieved successfully",
+        message: "Messages récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -112,7 +112,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Message sent successfully",
+        message: "Message envoyé avec succès",
         data: result,
     });
 });
@@ -128,7 +128,7 @@ const acceptOffer = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Offer accepted successfully",
+        message: "Offre acceptée avec succès",
         data: result,
     });
 });
@@ -144,7 +144,7 @@ const rejectOffer = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Offer rejected successfully",
+        message: "Offre rejetée avec succès",
         data: result,
     });
 });
@@ -160,7 +160,7 @@ const editMessage = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Message updated successfully",
+        message: "Message mis à jour avec succès",
         data: result,
     });
 });
@@ -176,7 +176,7 @@ const deleteMessage = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Message deleted successfully",
+        message: "Message supprimé avec succès",
         data: null,
     });
 });
@@ -192,7 +192,7 @@ const deleteConversation = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Conversation deleted successfully",
+        message: "Conversation supprimée avec succès",
         data: null,
     });
 });
@@ -208,7 +208,7 @@ const getSingleMessage = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Message retrieved successfully",
+        message: "Message récupéré avec succès",
         data: result,
     });
 });
