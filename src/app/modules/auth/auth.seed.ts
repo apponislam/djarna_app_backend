@@ -17,7 +17,7 @@ export const seedAdmin = async () => {
                 name: "Admin",
                 email: config.superAdminEmail,
                 password: hashedPassword,
-                role: "ADMIN",
+                role: "ADMIN" as const,
                 phone: "0000000000",
                 isActive: true,
                 isPhoneVerified: true,
