@@ -35,7 +35,7 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     // Log for development
     console.log(`Registration OTP for ${normalizedPhone}: ${otp}`);
 
-    return { message: "OTP sent successfully" };
+    return { message: "OTP envoyé avec succès" };
 };
 
 const verifyRegistrationOtp = async (phone: string, otp: string) => {
@@ -57,7 +57,7 @@ const verifyRegistrationOtp = async (phone: string, otp: string) => {
     verification.isVerified = true;
     await verification.save();
 
-    return { message: "OTP verified successfully" };
+    return { message: "OTP vérifié avec succès" };
 };
 
 const registerUser = async (data: any) => {
@@ -213,7 +213,7 @@ const requestPasswordReset = async (phone: string) => {
     // Log for development
     console.log(`Password Reset OTP for ${normalizedPhone}: ${otp}`);
 
-    return { message: "OTP sent successfully" };
+    return { message: "OTP envoyé avec succès" };
 };
 
 const resetPassword = async (phone: string, otp: string, newPassword: string) => {
@@ -242,7 +242,7 @@ const resetPassword = async (phone: string, otp: string, newPassword: string) =>
 
     await user.save();
 
-    return { message: "Password reset successful" };
+    return { message: "Réinitialisation du mot de passe réussie" };
 };
 
 const updateProfile = async (userId: string, data: any) => {
@@ -319,7 +319,7 @@ const boostShop = async (userId: string, boostPackId: string) => {
         },
     );
 
-    return { message: "Shop products boosted successfully" };
+    return { message: "Produits de la boutique boostés avec succès" };
 };
 
 const adminLogin = async (data: { phone: string; password: string }) => {
@@ -391,14 +391,14 @@ const addFCMToken = async (userId: string, token: string) => {
     user.fcmTokens = updatedTokens;
     await user.save();
 
-    return { message: "FCM token added successfully" };
+    return { message: "Jeton FCM ajouté avec succès" };
 };
 
 const removeFCMToken = async (userId: string, token: string) => {
     const user = await UserModel.findByIdAndUpdate(userId, { $pull: { fcmTokens: token } }, { new: true });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
-    return { message: "FCM token removed successfully" };
+    return { message: "Jeton FCM supprimé avec succès" };
 };
 
 const getUserByReferralCode = async (referralCode: string) => {

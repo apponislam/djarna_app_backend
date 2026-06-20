@@ -52,7 +52,7 @@ const register = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "User registered successfully",
+        message: "Utilisateur enregistré avec succès",
         data: {
             user: result.user,
             accessToken: result.accessToken,
@@ -73,7 +73,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Login successful",
+        message: "Connexion réussie",
         data: {
             user: result.user,
             accessToken: result.accessToken,
@@ -87,7 +87,7 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "User retrieved successfully",
+        message: "Utilisateur récupéré avec succès",
         data: user,
     });
 });
@@ -98,7 +98,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Logout successful",
+        message: "Déconnexion réussie",
         data: null,
     });
 });
@@ -110,7 +110,7 @@ const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Token refreshed successfully",
+        message: "Jeton actualisé avec succès",
         data: result,
     });
 });
@@ -122,7 +122,7 @@ const requestPasswordReset = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Password reset OTP sent to phone",
+        message: "OTP de réinitialisation du mot de passe envoyé au téléphone",
         data: null,
     });
 });
@@ -134,7 +134,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Password reset successful",
+        message: "Réinitialisation du mot de passe réussie",
         data: null,
     });
 });
@@ -153,7 +153,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: "Profil mis à jour avec succès",
         data: updatedUser,
     });
 });
@@ -164,7 +164,7 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Password changed successfully",
+        message: "Mot de passe changé avec succès",
         data: null,
     });
 });
@@ -177,7 +177,7 @@ const setUserPassword = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Password set successfully",
+        message: "Mot de passe défini avec succès",
         data: null,
     });
 });
@@ -195,7 +195,7 @@ const adminLogin = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Admin login successful",
+        message: "Connexion administrateur réussie",
         data: {
             user: result.user,
             accessToken: result.accessToken,
@@ -238,7 +238,7 @@ const checkReferralCode = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: user ? "Referral code valid" : "Referral code invalid",
+        message: user ? "Code de parrainage valide" : "Code de parrainage invalide",
         data: {
             valid: !!user,
             referralCode: code,
@@ -253,7 +253,7 @@ const getMyReferrals = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Referrals retrieved successfully",
+        message: "Parrainages récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -264,7 +264,7 @@ const getAllReferrals = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All referrals retrieved successfully",
+        message: "Tous les parrainages récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -283,7 +283,7 @@ const completeOAuthRegistration = catchAsync(async (req: Request, res: Response)
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Registration successful",
+        message: "Inscription réussie",
         data: {
             user: result.user,
             accessToken: result.accessToken,
@@ -318,7 +318,7 @@ const oauthCallback = catchAsync(async (req: Request, res: Response) => {
         return sendResponse(res, {
             statusCode: httpStatus.OK,
             success: true,
-            message: "Please complete your signup with phone and password",
+            message: "Veuillez compléter votre inscription avec votre téléphone et votre mot de passe",
             data: tempData,
         });
     }
@@ -352,7 +352,7 @@ const oauthCallback = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: result.isNewUser ? "Registration successful" : "Login successful",
+        message: result.isNewUser ? "Inscription réussie" : "Connexion réussie",
         data: responseData,
     });
 });
