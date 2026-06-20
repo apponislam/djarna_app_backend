@@ -7,16 +7,16 @@ import { IIdentityVerification } from "./identityVerification.interface";
 const submitVerification = async (userId: string, payload: Partial<IIdentityVerification>) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
     if (user.verifiedBadge) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "User is already verified");
+        throw new ApiError(httpStatus.BAD_REQUEST, "L'utilisateur est déjà vérifié");
     }
 
     const existingRequest = await IdentityVerificationModel.findOne({ user: userId });
     if (existingRequest && existingRequest.status === "PENDING") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "You already have a pending verification request");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Vous avez déjà une demande de vérification en attente");
     }
 
     if (existingRequest) {
@@ -55,7 +55,7 @@ const getAllVerificationRequests = async (query: any) => {
 const updateVerificationStatus = async (id: string, status: "APPROVED" | "REJECTED", adminComment?: string) => {
     const verification = await IdentityVerificationModel.findById(id);
     if (!verification) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Verification request not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Demande de vérification introuvable");
     }
 
     if (status === "APPROVED") {

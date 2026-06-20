@@ -16,27 +16,27 @@ const submitVerification = catchAsync(async (req: Request, res: Response) => {
     };
 
     if (!payload.frontImage || !payload.selfieImage) {
-        throw new Error("Front image and selfie are required");
+        throw new Error("L'image recto de la pièce d'identité et le selfie sont requis");
     }
 
-    const result = await IdentityVerificationService.submitVerification(userId, payload);
+    const result = await IdentityVerificationService.submitVerification(userId as string, payload);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Verification request submitted successfully",
+        message: "Demande de vérification soumise avec succès",
         data: result,
     });
 });
 
 const getMyVerificationStatus = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await IdentityVerificationService.getMyVerificationStatus(userId);
+    const result = await IdentityVerificationService.getMyVerificationStatus(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Verification status retrieved successfully",
+        message: "Statut de vérification récupéré avec succès",
         data: result,
     });
 });
@@ -47,7 +47,7 @@ const getAllVerificationRequests = catchAsync(async (req: Request, res: Response
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Verification requests retrieved successfully",
+        message: "Demandes de vérification récupérées avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -62,7 +62,7 @@ const updateVerificationStatus = catchAsync(async (req: Request, res: Response) 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Verification request ${status.toLowerCase()} successfully`,
+        message: `Demande de vérification ${status.toLowerCase() === "approved" ? "approuvée" : "rejetée"} avec succès`,
         data: result,
     });
 });

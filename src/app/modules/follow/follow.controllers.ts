@@ -8,12 +8,12 @@ const toggleFollow = catchAsync(async (req: Request, res: Response) => {
     const followerId = req.user?._id;
     const { followingId } = req.body;
 
-    const result = await FollowService.toggleFollow(followerId, followingId);
+    const result = await FollowService.toggleFollow(followerId as string, followingId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: result.isFollowing ? "User followed successfully" : "User unfollowed successfully",
+        message: result.isFollowing ? "Utilisateur suivi avec succès" : "Abonnement retiré avec succès",
         data: result,
     });
 });
@@ -29,7 +29,7 @@ const getTopUsers = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Top users retrieved successfully",
+        message: "Meilleurs utilisateurs récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -42,7 +42,7 @@ const getFollowers = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Followers retrieved successfully",
+        message: "Abonnés récupérés avec succès",
         data: result,
     });
 });
@@ -54,7 +54,7 @@ const getFollowing = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Following users retrieved successfully",
+        message: "Abonnements récupérés avec succès",
         data: result,
     });
 });
@@ -63,12 +63,12 @@ const checkFollowStatus = catchAsync(async (req: Request, res: Response) => {
     const followerId = req.user?._id;
     const { followingId } = req.params;
 
-    const result = await FollowService.checkFollowStatus(followerId, followingId as string);
+    const result = await FollowService.checkFollowStatus(followerId as string, followingId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Follow status retrieved successfully",
+        message: "Statut d'abonnement récupéré avec succès",
         data: { isFollowing: result },
     });
 });

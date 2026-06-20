@@ -8,12 +8,12 @@ const toggleFavorite = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { productId } = req.body;
 
-    const result = await FavoriteService.toggleFavorite(userId, productId);
+    const result = await FavoriteService.toggleFavorite(userId as string, productId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: result.isFavorited ? "Product added to favorites" : "Product removed from favorites",
+        message: result.isFavorited ? "Produit ajouté aux favoris" : "Produit retiré des favoris",
         data: result,
     });
 });
@@ -23,12 +23,12 @@ const getMyFavorites = catchAsync(async (req: Request, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
-    const result = await FavoriteService.getMyFavorites(userId, { page, limit });
+    const result = await FavoriteService.getMyFavorites(userId as string, { page, limit });
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Favorite products retrieved successfully",
+        message: "Produits favoris récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });

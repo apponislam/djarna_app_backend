@@ -11,7 +11,7 @@ const toggleFavorite = async (userId: string, productId: string) => {
     // 1. Check if product exists
     const product = await ProductModel.findById(productId);
     if (!product) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Product not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable !");
     }
 
     // 2. Check if already favorited

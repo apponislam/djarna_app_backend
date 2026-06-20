@@ -9,13 +9,13 @@ import { UserModel } from "../auth/auth.model";
  */
 const toggleFollow = async (followerId: string, followingId: string) => {
     if (followerId === followingId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "You cannot follow yourself!");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Vous ne pouvez pas vous abonner à vous-même !");
     }
 
     // Check if user to follow exists
     const targetUser = await UserModel.findById(followingId);
     if (!targetUser) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable !");
     }
 
     // Check if already following
