@@ -6,7 +6,7 @@ import { ReviewService } from "./review.services";
 
 const createReview = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ReviewService.createReview(userId, req.body);
+    const result = await ReviewService.createReview(userId as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
@@ -21,7 +21,7 @@ const getMyReviews = catchAsync(async (req: Request, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
-    const result = await ReviewService.getUserReviews(userId, { page, limit });
+    const result = await ReviewService.getUserReviews(userId as string, { page, limit });
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -87,7 +87,7 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const isAdmin = req.user?.role === "ADMIN";
 
-    const result = await ReviewService.deleteReview(id as string, userId, isAdmin);
+    const result = await ReviewService.deleteReview(id as string, userId as string, isAdmin);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
