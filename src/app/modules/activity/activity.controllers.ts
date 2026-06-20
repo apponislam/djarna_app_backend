@@ -10,7 +10,7 @@ const getAllActivities = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Activities retrieved successfully",
+        message: "Activités récupérées avec succès",
         meta: result.meta,
         data: result.data,
     });
