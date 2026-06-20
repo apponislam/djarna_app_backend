@@ -290,7 +290,7 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
                     "Order Delivered - Escrow Started",
                     `Order #${order._id} marked as delivered. Funds will be released after ${escrowDurationHours} hours.`,
                     order.seller.toString(),
-                    "ORDER_DELIVERED",
+                    "COMMANDE_LIVREE",
                     {
                         screen: "order_detail",
                         orderId: order._id.toString(),
@@ -311,7 +311,7 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
                     "Order Shipped",
                     `Your order #${order._id} has been marked as shipped by the seller.`,
                     order.buyer.toString(),
-                    "ORDER_STATUS_UPDATE",
+                    "MISE_A_JOUR_STATUT_COMMANDE",
                     {
                         screen: "order_detail",
                         orderId: order._id.toString(),
@@ -327,7 +327,7 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
                     "Order Completed",
                     `The buyer has confirmed receipt of order #${order._id}.`,
                     order.seller.toString(),
-                    "ORDER_STATUS_UPDATE",
+                    "MISE_A_JOUR_STATUT_COMMANDE",
                     {
                         screen: "order_detail",
                         orderId: order._id.toString(),

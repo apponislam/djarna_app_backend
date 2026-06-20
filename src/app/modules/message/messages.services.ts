@@ -176,7 +176,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             const senderName = (messageToEmit?.senderId as any)?.name || "Someone";
             let title = `New Message from ${senderName}`;
             let body = payload.text || "Sent an attachment";
-            const type = "NEW_MESSAGE";
+            const type = "NOUVEAU_MESSAGE";
 
             if (payload.type === "OFFER") {
                 title = "New Offer Received";
@@ -393,7 +393,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
                         title,
                         body,
                         offerSender._id.toString(),
-                        "NEW_MESSAGE",
+                        "NOUVEAU_MESSAGE",
                         notificationData
                     );
                 }
@@ -503,7 +503,7 @@ const markMessageAsCompleted = async (messageId: string) => {
                     title,
                     body,
                     offerSender._id.toString(),
-                    "NEW_MESSAGE",
+                    "NOUVEAU_MESSAGE",
                     notificationData
                 );
             }

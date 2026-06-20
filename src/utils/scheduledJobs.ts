@@ -25,7 +25,7 @@ export const runBoostCleanup = async () => {
                         "Boost Ended",
                         `Your product "${product.title}" boost has expired.`,
                         product.user.toString(),
-                        "PRODUCT_PROMOTED",
+                        "PRODUIT_MIS_EN_AVANT",
                         {
                             screen: "product_detail",
                             productId: product._id.toString(),
@@ -92,7 +92,7 @@ export const runEscrowRelease = async () => {
                             "Funds Released!",
                             `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`,
                             payment.sellerId.toString(),
-                            "PAYMENT_COMPLETED",
+                            "PAIEMENT_EFFECTUE",
                             {
                                 screen: "order_detail",
                                 orderId: order ? order._id.toString() : "",

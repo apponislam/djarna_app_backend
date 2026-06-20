@@ -48,7 +48,7 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
             "Dispute Opened",
             `A dispute has been opened for your order #${order._id}.`,
             seller._id.toString(),
-            "DISPUTE_OPENED",
+            "LITIGE_OUVERT",
             {
                 screen: "dispute_detail",
                 orderId: order._id.toString(),
@@ -133,7 +133,7 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
                 "Refund Processed",
                 `A refund of ${refundAmount} FCFA has been processed for your dispute.`,
                 buyer._id.toString(),
-                "DISPUTE_RESOLVED",
+                "LITIGE_RESOLU",
                 {
                     screen: "dispute_detail",
                     orderId: dispute.order.toString(),
@@ -154,7 +154,7 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
                 "Dispute Cancelled",
                 `Your dispute for order #${dispute.order} has been cancelled.`,
                 buyer._id.toString(),
-                "DISPUTE_RESOLVED",
+                "LITIGE_RESOLU",
                 {
                     screen: "dispute_detail",
                     orderId: dispute.order.toString(),
@@ -203,7 +203,7 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
             "Dispute Cancelled",
             `The dispute for order #${dispute.order} has been cancelled by the buyer.`,
             seller._id.toString(),
-            "DISPUTE_RESOLVED",
+            "LITIGE_RESOLU",
             {
                 screen: "dispute_detail",
                 orderId: dispute.order.toString(),
