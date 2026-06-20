@@ -39,8 +39,8 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 user.fcmTokens,
-                "Withdrawal Successful",
-                `Your withdrawal of ${withdraw.amount} has been processed successfully.`,
+                "Retrait réussi",
+                `Votre retrait de ${withdraw.amount} a été traité avec succès.`,
                 withdraw.userId.toString(),
                 "RETRAIT_EFFECTUE",
                 {
@@ -61,8 +61,8 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 user.fcmTokens,
-                "Withdrawal Failed",
-                `Your withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`,
+                "Échec du retrait",
+                `Votre retrait de ${withdraw.amount} a échoué : ${withdraw.failReason}`,
                 withdraw.userId.toString(),
                 "RETRAIT_ECHOUE",
                 {
@@ -130,8 +130,8 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         if (user?.fcmTokens && user.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 user.fcmTokens,
-                "Boost Activated",
-                "Your product boost has been successfully activated.",
+                "Boost activé",
+                "Le boost de votre produit a été activé avec succès.",
                 payment.userId.toString(),
                 "PRODUIT_MIS_EN_AVANT",
                 {
@@ -179,8 +179,8 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
                 await NotificationUtils.sendPushNotification(
                     seller.fcmTokens,
-                    "New Sale!",
-                    `A buyer has paid for your product. Escrow will start when order is marked as delivered.`,
+                    "Nouvelle vente !",
+                    `Un acheteur a payé pour votre produit. Le séquestre commencera lorsque la commande sera marquée comme livrée.`,
                     payment.sellerId.toString(),
                     "PRODUIT_VENDU",
                     {
@@ -196,8 +196,8 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 buyer.fcmTokens,
-                "Payment Successful",
-                `Your payment of ${payment.totalAmount} FCFA has been confirmed.`,
+                "Paiement réussi",
+                `Votre paiement de ${payment.totalAmount} FCFA a été confirmé.`,
                 payment.userId.toString(),
                 "PAIEMENT_EFFECTUE",
                 {

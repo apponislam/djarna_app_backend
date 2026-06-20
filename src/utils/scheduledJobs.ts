@@ -22,8 +22,8 @@ export const runBoostCleanup = async () => {
                 if (user?.fcmTokens && user.fcmTokens.length > 0) {
                     await NotificationUtils.sendPushNotification(
                         user.fcmTokens,
-                        "Boost Ended",
-                        `Your product "${product.title}" boost has expired.`,
+                        "Boost terminé",
+                        `Le boost de votre produit "${product.title}" a expiré.`,
                         product.user.toString(),
                         "PRODUIT_MIS_EN_AVANT",
                         {
@@ -89,8 +89,8 @@ export const runEscrowRelease = async () => {
                         const order = await OrderModel.findOne({ payment: payment._id });
                         await NotificationUtils.sendPushNotification(
                             seller.fcmTokens,
-                            "Funds Released!",
-                            `Your escrowed funds of ${sellerBalanceIncrease} FCFA have been released to your balance.`,
+                            "Fonds libérés !",
+                            `Vos fonds séquestrés de ${sellerBalanceIncrease} FCFA ont été libérés sur votre solde.`,
                             payment.sellerId.toString(),
                             "PAIEMENT_EFFECTUE",
                             {

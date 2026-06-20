@@ -45,8 +45,8 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
         await NotificationUtils.sendPushNotification(
             seller.fcmTokens,
-            "Dispute Opened",
-            `A dispute has been opened for your order #${order._id}.`,
+            "Litige ouvert",
+            `Un litige a été ouvert pour votre commande #${order._id}.`,
             seller._id.toString(),
             "LITIGE_OUVERT",
             {
@@ -130,8 +130,8 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 buyer.fcmTokens,
-                "Refund Processed",
-                `A refund of ${refundAmount} FCFA has been processed for your dispute.`,
+                "Remboursement traité",
+                `Un remboursement de ${refundAmount} FCFA a été traité pour votre litige.`,
                 buyer._id.toString(),
                 "LITIGE_RESOLU",
                 {
@@ -151,8 +151,8 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
             await NotificationUtils.sendPushNotification(
                 buyer.fcmTokens,
-                "Dispute Cancelled",
-                `Your dispute for order #${dispute.order} has been cancelled.`,
+                "Litige annulé",
+                `Votre litige pour la commande #${dispute.order} a été annulé.`,
                 buyer._id.toString(),
                 "LITIGE_RESOLU",
                 {
@@ -200,8 +200,8 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
     if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
         await NotificationUtils.sendPushNotification(
             seller.fcmTokens,
-            "Dispute Cancelled",
-            `The dispute for order #${dispute.order} has been cancelled by the buyer.`,
+            "Litige annulé",
+            `Le litige pour la commande #${dispute.order} a été annulé par l'acheteur.`,
             seller._id.toString(),
             "LITIGE_RESOLU",
             {

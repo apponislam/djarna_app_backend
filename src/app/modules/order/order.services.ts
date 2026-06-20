@@ -287,8 +287,8 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
                 await NotificationUtils.sendPushNotification(
                     seller.fcmTokens,
-                    "Order Delivered - Escrow Started",
-                    `Order #${order._id} marked as delivered. Funds will be released after ${escrowDurationHours} hours.`,
+                    "Commande livrée - Séquestre démarré",
+                    `La commande #${order._id} a été marquée comme livrée. Les fonds seront libérés après ${escrowDurationHours} heures.`,
                     order.seller.toString(),
                     "COMMANDE_LIVREE",
                     {
@@ -308,8 +308,8 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
             if (buyer?.fcmTokens && buyer.fcmTokens.length > 0) {
                 await NotificationUtils.sendPushNotification(
                     buyer.fcmTokens,
-                    "Order Shipped",
-                    `Your order #${order._id} has been marked as shipped by the seller.`,
+                    "Commande expédiée",
+                    `Votre commande #${order._id} a été marquée comme expédiée par le vendeur.`,
                     order.buyer.toString(),
                     "MISE_A_JOUR_STATUT_COMMANDE",
                     {
@@ -324,8 +324,8 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
             if (seller?.fcmTokens && seller.fcmTokens.length > 0) {
                 await NotificationUtils.sendPushNotification(
                     seller.fcmTokens,
-                    "Order Completed",
-                    `The buyer has confirmed receipt of order #${order._id}.`,
+                    "Commande terminée",
+                    `L'acheteur a confirmé la réception de la commande #${order._id}.`,
                     order.seller.toString(),
                     "MISE_A_JOUR_STATUT_COMMANDE",
                     {

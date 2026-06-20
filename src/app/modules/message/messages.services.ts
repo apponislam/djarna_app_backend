@@ -174,16 +174,16 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
     if (receiverId.toString() !== senderId.toString() && receiver.fcmTokens && receiver.fcmTokens.length > 0) {
         try {
             const senderName = (messageToEmit?.senderId as any)?.name || "Someone";
-            let title = `New Message from ${senderName}`;
-            let body = payload.text || "Sent an attachment";
+            let title = `Nouveau message de ${senderName}`;
+            let body = payload.text || "Pièce jointe envoyée";
             const type = "NOUVEAU_MESSAGE";
 
             if (payload.type === "OFFER") {
-                title = "New Offer Received";
-                body = `${senderName} sent you an offer of ${payload.offerPrice || 0} FCFA`;
+                title = "Nouvelle offre reçue";
+                body = `${senderName} vous a envoyé une offre de ${payload.offerPrice || 0} FCFA`;
             } else if (payload.type === "LOCATION") {
-                title = "Location Shared";
-                body = `${senderName} shared their location.`;
+                title = "Localisation partagée";
+                body = `${senderName} a partagé sa localisation.`;
             }
 
             const notificationData = {
@@ -373,11 +373,11 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
                 let body = "";
                 
                 if (status === "ACCEPTED") {
-                    title = "Offer Accepted";
-                    body = `${updatorName} accepted your offer of ${message.offerPrice || 0} FCFA.`;
+                    title = "Offre acceptée";
+                    body = `${updatorName} a accepté votre offre de ${message.offerPrice || 0} FCFA.`;
                 } else if (status === "REJECTED") {
-                    title = "Offer Rejected";
-                    body = `${updatorName} rejected your offer of ${message.offerPrice || 0} FCFA.`;
+                    title = "Offre rejetée";
+                    body = `${updatorName} a rejeté votre offre de ${message.offerPrice || 0} FCFA.`;
                 }
                 
                 if (title && body) {
@@ -489,8 +489,8 @@ const markMessageAsCompleted = async (messageId: string) => {
         try {
             const offerSender = await UserModel.findById(message.senderId);
             if (offerSender && offerSender.fcmTokens && offerSender.fcmTokens.length > 0) {
-                const title = "Offer Completed";
-                const body = `Your offer of ${message.offerPrice || 0} FCFA has been completed.`;
+                const title = "Offre complétée";
+                const body = `Votre offre de ${message.offerPrice || 0} FCFA a été complétée.`;
                 const notificationData = {
                     screen: "chat",
                     conversationId: message.conversationId.toString(),
