@@ -8,12 +8,12 @@ const initializeBoostPayment = catchAsync(async (req: Request, res: Response) =>
     const { productId, boostPackId } = req.body;
     const userId = req.user?._id;
 
-    const result = await BoostPaymentService.initializeBoostPayment(userId, boostPackId, productId);
+    const result = await BoostPaymentService.initializeBoostPayment(userId as string, boostPackId, productId);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Boost payment initialized successfully",
+        message: "Paiement du boost initialisé avec succès",
         data: result,
     });
 });
@@ -25,19 +25,19 @@ const verifyBoostPayment = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost payment verified successfully",
+        message: "Paiement du boost vérifié avec succès",
         data: result,
     });
 });
 
 const getMyBoostPayments = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await BoostPaymentService.getMyBoostPayments(userId);
+    const result = await BoostPaymentService.getMyBoostPayments(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Boost payments retrieved successfully",
+        message: "Paiements du boost récupérés avec succès",
         data: result,
     });
 });

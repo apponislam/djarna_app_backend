@@ -12,17 +12,17 @@ const initializeBoostPayment = async (userId: string, boostPackId: string, produ
     // 1. Verify Boost Pack
     const boostPack = await BoostPackModel.findById(boostPackId);
     if (!boostPack || !boostPack.isActive) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost pack not found or inactive!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable ou inactif !");
     }
 
     // 2. If it's a PRODUCT boost, verify product ownership
     if (boostPack.type === "PRODUCT") {
         if (!productId) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Product ID is required for Product Boost!");
+            throw new ApiError(httpStatus.BAD_REQUEST, "L'identifiant du produit est requis pour le boost de produit !");
         }
         const product = await ProductModel.findOne({ _id: productId, user: userId });
         if (!product) {
-            throw new ApiError(httpStatus.NOT_FOUND, "Product not found or you are not the owner!");
+            throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable ou vous n'en êtes pas le propriétaire !");
         }
     }
 
@@ -78,7 +78,7 @@ const initializeBoostPayment = async (userId: string, boostPackId: string, produ
         if (!invoiceToken) {
             boostPayment.status = "FAILED";
             await boostPayment.save();
-            throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create Paydunya invoice");
+            throw new ApiError(httpStatus.BAD_REQUEST, "Échec de la création de la facture Paydunya");
         }
 
         // 5. Update Payment Record with Paydunya info
@@ -95,7 +95,7 @@ const initializeBoostPayment = async (userId: string, boostPackId: string, produ
         console.error("Paydunya API Error:", error.response?.data);
         boostPayment.status = "FAILED";
         await boostPayment.save();
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || error.message || "Payment initialization failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || error.message || "Échec de l'initialisation du paiement");
     }
 };
 
@@ -106,7 +106,7 @@ const applyBoostEffects = async (boostPaymentId: string) => {
     }
 
     const boostPack = await BoostPackModel.findById(boostPayment.boostPackId);
-    if (!boostPack) throw new ApiError(httpStatus.NOT_FOUND, "Boost Pack not found during verification!");
+    if (!boostPack) throw new ApiError(httpStatus.NOT_FOUND, "Pack de boost introuvable lors de la vérification !");
 
     const startTime = new Date();
     const endTime = new Date();
@@ -141,7 +141,7 @@ const applyBoostEffects = async (boostPaymentId: string) => {
 const verifyBoostPayment = async (invoiceToken: string) => {
     const boostPayment = await BoostPaymentModel.findOne({ paydunyaInvoiceToken: invoiceToken });
     if (!boostPayment) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Boost payment not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Paiement de boost introuvable");
     }
 
     if (boostPayment.status === "COMPLETED") {
@@ -173,7 +173,7 @@ const verifyBoostPayment = async (invoiceToken: string) => {
 
         return boostPayment;
     } catch (error: any) {
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Payment verification failed");
+        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || "Échec de la vérification du paiement");
     }
 };
 
