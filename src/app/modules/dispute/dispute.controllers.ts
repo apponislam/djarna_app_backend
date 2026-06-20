@@ -18,7 +18,7 @@ const createDispute = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Dispute opened successfully",
+        message: "Litige ouvert avec succès",
         data: result,
     });
 });
@@ -29,7 +29,7 @@ const getAllDisputes = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Disputes retrieved successfully",
+        message: "Litiges récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -41,7 +41,7 @@ const getDisputeById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dispute retrieved successfully",
+        message: "Litige récupéré avec succès",
         data: result,
     });
 });
@@ -54,7 +54,7 @@ const resolveDispute = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Dispute resolved as ${resolution}`,
+        message: `Litige résolu comme : ${resolution}`,
         data: result,
     });
 });
@@ -64,7 +64,7 @@ const getDisputeStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dispute stats retrieved successfully",
+        message: "Statistiques des litiges récupérées avec succès",
         data: result,
     });
 });
@@ -76,7 +76,7 @@ const cancelDispute = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dispute cancelled successfully",
+        message: "Litige annulé avec succès",
         data: result,
     });
 });
@@ -87,7 +87,7 @@ const getMyDisputes = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "My disputes retrieved successfully",
+        message: "Mes litiges récupérés avec succès",
         meta: result.meta,
         data: result.data,
     });
@@ -100,7 +100,7 @@ const getDisputeByOrderId = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dispute retrieved successfully",
+        message: "Litige récupéré avec succès",
         data: result,
     });
 });

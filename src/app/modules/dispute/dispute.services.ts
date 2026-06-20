@@ -15,14 +15,14 @@ import { UserModel } from "../auth/auth.model";
  */
 const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
     const order = await OrderModel.findById(payload.order);
-    if (!order) throw new ApiError(httpStatus.NOT_FOUND, "Order not found");
+    if (!order) throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
 
     if (!order.buyer.equals(buyerId)) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Only the buyer can open a dispute");
+        throw new ApiError(httpStatus.FORBIDDEN, "Seul l'acheteur peut ouvrir un litige");
     }
 
     const payment = await PaymentModel.findById(payload.payment);
-    if (!payment) throw new ApiError(httpStatus.NOT_FOUND, "Payment not found");
+    if (!payment) throw new ApiError(httpStatus.NOT_FOUND, "Paiement introuvable");
 
     const disputeData = {
         ...payload,
@@ -94,7 +94,7 @@ const getAllDisputes = async (query: Record<string, any>) => {
 const getDisputeById = async (id: string) => {
     const result = await DisputeModel.findById(id).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment");
 
-    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
+    if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Litige introuvable");
     return result;
 };
 
@@ -103,10 +103,10 @@ const getDisputeById = async (id: string) => {
  */
 const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED" | "CANCELLED", adminNote: string, refundAmount?: number) => {
     const dispute = await DisputeModel.findById(id);
-    if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
+    if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Litige introuvable");
 
     if (dispute.status !== "PENDING") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Dispute is already closed");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Le litige est déjà clos");
     }
 
     dispute.status = resolution;
@@ -177,14 +177,14 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
  */
 const cancelDispute = async (disputeId: string, buyerId: string) => {
     const dispute = await DisputeModel.findById(disputeId);
-    if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found");
+    if (!dispute) throw new ApiError(httpStatus.NOT_FOUND, "Litige introuvable");
 
     if (!dispute.buyer.equals(buyerId)) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Only the buyer can cancel this dispute");
+        throw new ApiError(httpStatus.FORBIDDEN, "Seul l'acheteur peut annuler ce litige");
     }
 
     if (dispute.status !== "PENDING") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Only pending disputes can be cancelled");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Seuls les litiges en attente peuvent être annulés");
     }
 
     dispute.status = "CANCELLED";
@@ -252,11 +252,11 @@ const getDisputeByOrderId = async (orderId: string, userId: string) => {
     const dispute = await DisputeModel.findOne({ order: orderId }).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment");
 
     if (!dispute) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Dispute not found for this order");
+        throw new ApiError(httpStatus.NOT_FOUND, "Aucun litige trouvé pour cette commande");
     }
 
     if (!dispute.buyer.equals(userId) && !dispute.seller.equals(userId)) {
-        throw new ApiError(httpStatus.FORBIDDEN, "You don't have access to this dispute");
+        throw new ApiError(httpStatus.FORBIDDEN, "Vous n'avez pas accès à ce litige");
     }
 
     return dispute;

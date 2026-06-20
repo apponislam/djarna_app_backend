@@ -10,7 +10,7 @@ const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dashboard stats retrieved successfully",
+        message: "Statistiques du tableau de bord récupérées avec succès",
         data: result,
     });
 });
@@ -21,7 +21,7 @@ const getOrdersChartData = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dashboard chart data retrieved successfully",
+        message: "Données de graphique du tableau de bord récupérées avec succès",
         data: result,
     });
 });
@@ -32,7 +32,7 @@ const getRevenueChartData = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dashboard revenue chart data retrieved successfully",
+        message: "Données de graphique des revenus du tableau de bord récupérées avec succès",
         data: result,
     });
 });
@@ -43,7 +43,7 @@ const getCategoryPerformance = catchAsync(async (req: Request, res: Response) =>
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Category performance data retrieved successfully",
+        message: "Données de performance des catégories récupérées avec succès",
         data: result,
     });
 });
@@ -54,7 +54,7 @@ const getCommissionStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Commission and escrow stats retrieved successfully",
+        message: "Statistiques des commissions et des séquestres récupérées avec succès",
         data: result,
     });
 });
@@ -65,7 +65,7 @@ const getThisMonthStats = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "This month stats retrieved successfully",
+        message: "Statistiques du mois en cours récupérées avec succès",
         data: result,
     });
 });
