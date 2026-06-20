@@ -26,7 +26,7 @@ const sendPushNotification = async (tokens: string[], title: string, body: strin
                 const failedTokens: string[] = [];
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
-                        console.error(`[NOTIFICATION] Error for token ${tokens[idx]}:`, resp.error);
+                        console.log(`[NOTIFICATION] Error for token ${tokens[idx]}:`, resp.error);
                         failedTokens.push(tokens[idx]);
                     }
                 });
