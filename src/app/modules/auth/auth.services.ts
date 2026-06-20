@@ -19,7 +19,7 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     // Check if user already exists
     const existingUser = await UserModel.findOne({ phone: normalizedPhone });
     if (existingUser) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already registered");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Ce numéro de téléphone est déjà inscrit");
     }
 
     // Generate 6-digit OTP
@@ -43,15 +43,15 @@ const verifyRegistrationOtp = async (phone: string, otp: string) => {
     const verification = await VerificationModel.findOne({ phone: normalizedPhone });
 
     if (!verification) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "No OTP request found for this number");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Aucune demande d'OTP trouvée pour ce numéro");
     }
 
     if (verification.expiry < new Date()) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "OTP expired");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP expiré");
     }
 
     if (verification.otp !== otp) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid OTP");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP invalide");
     }
 
     verification.isVerified = true;
@@ -66,7 +66,7 @@ const registerUser = async (data: any) => {
     // Check if phone was verified
     const verification = await VerificationModel.findOne({ phone: normalizedPhone });
     if (!verification || !verification.isVerified) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number not verified. Please verify OTP first.");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Numéro de téléphone non vérifié. Veuillez d'abord vérifier le code OTP.");
     }
 
     const { referralCode: inputReferralCode, ...rest } = data;
@@ -76,7 +76,7 @@ const registerUser = async (data: any) => {
 
     // Double check existing user
     const existing = await UserModel.findOne({ phone: normalizedPhone });
-    if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already in use");
+    if (existing) throw new ApiError(httpStatus.BAD_REQUEST, "Ce numéro de téléphone est déjà utilisé");
 
     // Handle referral logic
     let referredBy;
@@ -132,14 +132,14 @@ const loginUser = async (data: { phone: string; password: string }) => {
 
     // Find user
     const user = await UserModel.findOne({ phone: normalizedPhone });
-    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Le numéro de téléphone ou le mot de passe est incorrect");
 
     // Check password
     const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Le numéro de téléphone ou le mot de passe est incorrect");
 
     // Check if active
-    if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Account is deactivated");
+    if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Ce compte est désactivé");
 
     // Update last login
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
@@ -165,19 +165,19 @@ const loginUser = async (data: { phone: string; password: string }) => {
 
 const getUserById = async (userId: string) => {
     const user = await UserModel.findById(userId).select("-password");
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     return user;
 };
 
 const refreshAccessToken = async (refreshToken: string) => {
     console.log(refreshToken);
-    if (!refreshToken) throw new ApiError(httpStatus.UNAUTHORIZED, "Refresh token required");
+    if (!refreshToken) throw new ApiError(httpStatus.UNAUTHORIZED, "Jeton d'actualisation requis");
 
     try {
         const decoded = jwtHelper.verifyToken(refreshToken, config.jwt_refresh_secret as string);
 
         const user = await UserModel.findById(decoded._id).select("-password");
-        if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "User not found");
+        if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Utilisateur introuvable");
 
         const jwtPayload = {
             _id: user._id,
@@ -190,14 +190,14 @@ const refreshAccessToken = async (refreshToken: string) => {
 
         return { user, accessToken };
     } catch (error) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid refresh token");
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Jeton d'actualisation invalide");
     }
 };
 
 const requestPasswordReset = async (phone: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
     const user = await UserModel.findOne({ phone: normalizedPhone });
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -219,18 +219,18 @@ const requestPasswordReset = async (phone: string) => {
 const resetPassword = async (phone: string, otp: string, newPassword: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
     const user = await UserModel.findOne({ phone: normalizedPhone });
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     if (!user.resetPasswordOtp || !user.resetPasswordOtpExpiry) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "No OTP request found");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Aucune demande d'OTP trouvée");
     }
 
     if (user.resetPasswordOtpExpiry < new Date()) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "OTP expired");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP expiré");
     }
 
     if (user.resetPasswordOtp !== otp) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid OTP");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP invalide");
     }
 
     // Hash new password
@@ -253,16 +253,16 @@ const updateProfile = async (userId: string, data: any) => {
     }
     const user = await UserModel.findByIdAndUpdate(userId, { $set: data }, { returnDocument: "after", runValidators: true }).select("-password");
 
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     return user;
 };
 
 const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
     const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.BAD_REQUEST, "Current password is incorrect");
+    if (!isPasswordValid) throw new ApiError(httpStatus.BAD_REQUEST, "Le mot de passe actuel est incorrect");
 
     const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
     user.password = hashedPassword;
@@ -271,7 +271,7 @@ const changePassword = async (userId: string, currentPassword: string, newPasswo
 
 const setUserPassword = async (userId: string, newPassword: string) => {
     const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
     user.password = hashedPassword;
@@ -280,7 +280,7 @@ const setUserPassword = async (userId: string, newPassword: string) => {
 
 const getMyProfile = async (userId: string) => {
     const user = await UserModel.findById(userId).populate("referredBy", "name email phone").lean();
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     const followersCount = await FollowModel.countDocuments({ following: userId });
     const followingCount = await FollowModel.countDocuments({ follower: userId });
@@ -294,11 +294,11 @@ const getMyProfile = async (userId: string) => {
 
 const boostShop = async (userId: string, boostPackId: string) => {
     const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     const pack = await (mongoose.model("BoostPack") as any).findById(boostPackId);
     if (!pack || !pack.isActive || pack.type !== "SHOP") {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid or inactive shop boost pack");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Pack de boost de boutique invalide ou inactif");
     }
 
     const now = new Date();
@@ -327,19 +327,19 @@ const adminLogin = async (data: { phone: string; password: string }) => {
 
     // Find user
     const user = await UserModel.findOne({ phone: normalizedPhone });
-    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+    if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "Le numéro de téléphone ou le mot de passe est incorrect");
 
     // Check if role is ADMIN
     if (user.role !== "ADMIN") {
-        throw new ApiError(httpStatus.FORBIDDEN, "Access denied. Only admins can login here.");
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé. Seuls les administrateurs peuvent se connecter ici.");
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
-    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Phone number or password is incorrect");
+    if (!isPasswordValid) throw new ApiError(httpStatus.UNAUTHORIZED, "Le numéro de téléphone ou le mot de passe est incorrect");
 
     // Check if active
-    if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Account is deactivated");
+    if (!user.isActive) throw new ApiError(httpStatus.FORBIDDEN, "Ce compte est désactivé");
 
     // Update last login
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
@@ -369,7 +369,7 @@ const addFCMToken = async (userId: string, token: string) => {
 
     // 2. Find the user
     const user = await UserModel.findById(userId);
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     // 3. Update and clean up token array
     let updatedTokens = [...(user.fcmTokens || [])];
@@ -396,7 +396,7 @@ const addFCMToken = async (userId: string, token: string) => {
 
 const removeFCMToken = async (userId: string, token: string) => {
     const user = await UserModel.findByIdAndUpdate(userId, { $pull: { fcmTokens: token } }, { new: true });
-    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     return { message: "Jeton FCM supprimé avec succès" };
 };
@@ -520,7 +520,7 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
     // Check if phone already exists
     const existingPhoneUser = await UserModel.findOne({ phone: normalizedPhone });
     if (existingPhoneUser) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already registered");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Ce numéro de téléphone est déjà inscrit");
     }
 
     // Handle referral logic
