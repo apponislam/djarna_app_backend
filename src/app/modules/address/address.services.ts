@@ -7,7 +7,7 @@ const addAddress = async (userId: string, payload: IShippingAddress) => {
     // Check if user already has 2 addresses
     const existingAddressesCount = await ShippingAddressModel.countDocuments({ user: userId, isDeleted: { $ne: true } });
     if (existingAddressesCount >= 2) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "You can only have up to 2 shipping addresses");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Vous ne pouvez avoir que jusqu'à 2 adresses de livraison");
     }
 
     // If this is the first address, make it default
@@ -31,7 +31,7 @@ const getMyAddresses = async (userId: string) => {
 const updateAddress = async (userId: string, addressId: string, payload: Partial<IShippingAddress>) => {
     const address = await ShippingAddressModel.findOne({ _id: addressId, user: userId, isDeleted: { $ne: true } });
     if (!address) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Address not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Adresse introuvable");
     }
 
     if (payload.isDefault) {
@@ -45,7 +45,7 @@ const updateAddress = async (userId: string, addressId: string, payload: Partial
 const deleteAddress = async (userId: string, addressId: string) => {
     const address = await ShippingAddressModel.findOne({ _id: addressId, user: userId, isDeleted: { $ne: true } });
     if (!address) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Address not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Adresse introuvable");
     }
 
     const wasDefault = address.isDefault;
@@ -66,7 +66,7 @@ const deleteAddress = async (userId: string, addressId: string) => {
 const setDefaultAddress = async (userId: string, addressId: string) => {
     const address = await ShippingAddressModel.findOne({ _id: addressId, user: userId, isDeleted: { $ne: true } });
     if (!address) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Address not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "Adresse introuvable");
     }
 
     await ShippingAddressModel.updateMany({ user: userId, isDeleted: { $ne: true } }, { isDefault: false });

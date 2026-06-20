@@ -6,24 +6,24 @@ import { ShippingAddressService } from "./address.services";
 
 const addAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ShippingAddressService.addAddress(userId, req.body);
+    const result = await ShippingAddressService.addAddress(userId as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Address added successfully",
+        message: "Adresse ajoutée avec succès",
         data: result,
     });
 });
 
 const getMyAddresses = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ShippingAddressService.getMyAddresses(userId);
+    const result = await ShippingAddressService.getMyAddresses(userId as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Addresses retrieved successfully",
+        message: "Adresses récupérées avec succès",
         data: result,
     });
 });
@@ -31,12 +31,12 @@ const getMyAddresses = catchAsync(async (req: Request, res: Response) => {
 const updateAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    const result = await ShippingAddressService.updateAddress(userId, id as string, req.body);
+    const result = await ShippingAddressService.updateAddress(userId as string, id as string, req.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Address updated successfully",
+        message: "Adresse mise à jour avec succès",
         data: result,
     });
 });
@@ -44,12 +44,12 @@ const updateAddress = catchAsync(async (req: Request, res: Response) => {
 const deleteAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    await ShippingAddressService.deleteAddress(userId, id as string);
+    await ShippingAddressService.deleteAddress(userId as string, id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Address deleted successfully",
+        message: "Adresse supprimée avec succès",
         data: null,
     });
 });
@@ -57,12 +57,12 @@ const deleteAddress = catchAsync(async (req: Request, res: Response) => {
 const setDefaultAddress = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { id } = req.params;
-    const result = await ShippingAddressService.setDefaultAddress(userId, id as string);
+    const result = await ShippingAddressService.setDefaultAddress(userId as string, id as string);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Default address updated successfully",
+        message: "Adresse par défaut mise à jour avec succès",
         data: result,
     });
 });
