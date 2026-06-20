@@ -13,7 +13,7 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: "Category created successfully",
+        message: "Catégorie créée avec succès",
         data: result,
     });
 });
@@ -24,7 +24,7 @@ const getCategoryById = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Category retrieved successfully",
+        message: "Catégorie récupérée avec succès",
         data: result,
     });
 });
@@ -38,7 +38,7 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Category updated successfully",
+        message: "Catégorie mise à jour avec succès",
         data: result,
     });
 });
@@ -49,7 +49,7 @@ const deleteCategory = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Category deleted successfully",
+        message: "Catégorie supprimée avec succès",
         data: result,
     });
 });
@@ -61,7 +61,7 @@ const getParentCategories = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Parent categories (Level 1) retrieved successfully",
+        message: "Catégories parentes (Niveau 1) récupérées avec succès",
         data: result,
     });
 });
@@ -72,7 +72,7 @@ const getSubcategoriesByParent = catchAsync(async (req: Request, res: Response) 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Subcategories retrieved successfully",
+        message: "Sous-catégories récupérées avec succès",
         data: result,
     });
 });
@@ -84,7 +84,7 @@ const getAllSubcategories = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "All subcategories (Level > 1) retrieved successfully",
+        message: "Toutes les sous-catégories (Niveau > 1) récupérées avec succès",
         data: result,
     });
 });
@@ -97,7 +97,7 @@ const getCategoriesByLevel = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `Categories at level ${level} retrieved successfully`,
+        message: `Catégories de niveau ${level} récupérées avec succès`,
         data: result,
     });
 });
@@ -108,7 +108,7 @@ const getCategoryTree = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Full hierarchical category tree retrieved successfully",
+        message: "Arborescence complète des catégories récupérée avec succès",
         data: result,
     });
 });

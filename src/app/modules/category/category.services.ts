@@ -73,10 +73,10 @@ const createCategory = async (payload: ICategory) => {
     if (payload.parentCategory) {
         const parent = await CategoryModel.findById(payload.parentCategory);
         if (!parent) {
-            throw new ApiError(httpStatus.NOT_FOUND, "Parent category not found!");
+            throw new ApiError(httpStatus.NOT_FOUND, "Catégorie parente introuvable !");
         }
         if (parent.level >= 4) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Cannot create a category below level 4!");
+            throw new ApiError(httpStatus.BAD_REQUEST, "Impossible de créer une catégorie en dessous du niveau 4 !");
         }
         calculatedLevel = parent.level + 1;
     }
@@ -87,13 +87,13 @@ const createCategory = async (payload: ICategory) => {
         name: payload.name,
     });
     if (isExist) {
-        throw new ApiError(httpStatus.CONFLICT, `Category "${payload.name}" already exists under this parent!`);
+        throw new ApiError(httpStatus.CONFLICT, `La catégorie "${payload.name}" existe déjà sous ce parent !`);
     }
 
     if (payload.homePosition !== null && payload.homePosition !== undefined) {
         const positionExists = await CategoryModel.findOne({ homePosition: payload.homePosition });
         if (positionExists) {
-            throw new ApiError(httpStatus.CONFLICT, `Home position ${payload.homePosition} is already in use!`);
+            throw new ApiError(httpStatus.CONFLICT, `La position d'accueil ${payload.homePosition} est déjà utilisée !`);
         }
     }
 
@@ -109,7 +109,7 @@ const createCategory = async (payload: ICategory) => {
 const getCategoryById = async (id: string) => {
     const category = await CategoryModel.findById(id).lean();
     if (!category) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Category not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Catégorie introuvable !");
     }
 
     const subcategories = await CategoryModel.find({ parentCategory: id }).lean();
@@ -126,7 +126,7 @@ const getCategoryById = async (id: string) => {
 const updateCategory = async (id: string, payload: Partial<ICategory>) => {
     const category = await CategoryModel.findById(id);
     if (!category) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Category not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Catégorie introuvable !");
     }
 
     const currentParentId = category.parentCategory ? category.parentCategory.toString() : null;
@@ -140,16 +140,16 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
         if (newParentId) {
             // Check for circular dependency
             if (newParentId === id) {
-                throw new ApiError(httpStatus.BAD_REQUEST, "A category cannot be its own parent!");
+                throw new ApiError(httpStatus.BAD_REQUEST, "Une catégorie ne peut pas être son propre parent !");
             }
             const circular = await isDescendant(newParentId, id);
             if (circular) {
-                throw new ApiError(httpStatus.BAD_REQUEST, "Circular reference detected: Parent category cannot be a descendant of this category!");
+                throw new ApiError(httpStatus.BAD_REQUEST, "Référence circulaire détectée : la catégorie parente ne peut pas être un descendant de cette catégorie !");
             }
 
             const parent = await CategoryModel.findById(newParentId);
             if (!parent) {
-                throw new ApiError(httpStatus.NOT_FOUND, "Parent category not found!");
+                throw new ApiError(httpStatus.NOT_FOUND, "Catégorie parente introuvable !");
             }
 
             newLevel = parent.level + 1;
@@ -162,7 +162,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
         // Check if updating this level exceeds depth limit of 4 for any descendants
         const maxDescendantLevel = await getMaxLevelInSubtree(id, category.level);
         if (maxDescendantLevel + levelOffset > 4) {
-            throw new ApiError(httpStatus.BAD_REQUEST, `Changing parent would exceed the maximum depth limit of 4 levels!`);
+            throw new ApiError(httpStatus.BAD_REQUEST, `Changer de parent dépasserait la limite de profondeur maximale de 4 niveaux !`);
         }
     }
 
@@ -177,7 +177,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
             _id: { $ne: id },
         });
         if (isExist) {
-            throw new ApiError(httpStatus.CONFLICT, `Category "${checkName}" already exists under this parent!`);
+            throw new ApiError(httpStatus.CONFLICT, `La catégorie "${checkName}" existe déjà sous ce parent !`);
         }
     }
 
@@ -187,7 +187,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
             _id: { $ne: id },
         });
         if (positionExists) {
-            throw new ApiError(httpStatus.CONFLICT, `Home position ${payload.homePosition} is already in use!`);
+            throw new ApiError(httpStatus.CONFLICT, `La position d'accueil ${payload.homePosition} est déjà utilisée !`);
         }
     }
 
@@ -209,13 +209,13 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 const deleteCategory = async (id: string) => {
     const isExist = await CategoryModel.findById(id);
     if (!isExist) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Category not found!");
+        throw new ApiError(httpStatus.NOT_FOUND, "Catégorie introuvable !");
     }
 
     // Check if it has subcategories before deleting
     const subcategories = await CategoryModel.find({ parentCategory: id });
     if (subcategories.length > 0) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Cannot delete category with subcategories!");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Impossible de supprimer une catégorie contenant des sous-catégories !");
     }
 
     const result = await CategoryModel.findByIdAndDelete(id);
@@ -320,7 +320,7 @@ const getAllSubcategories = async (searchTerm?: string) => {
 
 const getCategoriesByLevel = async (level: number, searchTerm?: string) => {
     if (level < 1 || level > 4) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Level must be between 1 and 4!");
+        throw new ApiError(httpStatus.BAD_REQUEST, "Le niveau doit être compris entre 1 et 4 !");
     }
 
     const query: any = { level };
