@@ -107,6 +107,9 @@ const MessageSchema = new Schema<MessageDocument>(
         offerPrice: {
             type: Number,
         },
+        shippingPrice: {
+            type: Number,
+        },
         location: {
             fullAddress: String,
             latitude: Number,

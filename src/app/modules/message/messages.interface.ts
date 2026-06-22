@@ -32,6 +32,7 @@ export interface Message {
     productId?: Types.ObjectId;
     productOwner?: Types.ObjectId;
     offerPrice?: number;
+    shippingPrice?: number;
     location?: {
         fullAddress?: string;
         latitude?: number;
