@@ -21,6 +21,7 @@ router.post("/send", auth, uploadMessageFiles, messageControllers.sendMessage);
 // Offer management
 router.post("/:messageId/accept", auth, messageControllers.acceptOffer);
 router.post("/:messageId/reject", auth, messageControllers.rejectOffer);
+router.patch("/:messageId/offer-price", auth, messageControllers.updateOfferPrice);
 
 // Message editing/deletion
 router.get("/:messageId", auth, messageControllers.getSingleMessage);

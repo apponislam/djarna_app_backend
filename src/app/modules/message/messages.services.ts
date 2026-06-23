@@ -391,6 +391,77 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
 };
 
 /**
+ * Update the price and shipping fee of an offer message
+ */
+const updateOfferPrice = async (
+    userId: string,
+    messageId: string,
+    payload: { offerPrice?: number; shippingPrice?: number }
+) => {
+    const updateData: any = { isEdited: true, editedAt: new Date() };
+    if (payload.offerPrice !== undefined) updateData.offerPrice = payload.offerPrice;
+    if (payload.shippingPrice !== undefined) updateData.shippingPrice = payload.shippingPrice;
+
+    // Only update if it's an OFFER message and the user is the sender
+    const message = await MessageModel.findOneAndUpdate(
+        { _id: messageId, senderId: userId, type: "OFFER" },
+        { $set: updateData },
+        { returnDocument: "after" }
+    ).populate([
+        { path: "senderId", select: "_id name photo verifiedBadge" },
+        { path: "productId", select: "_id title images price" },
+    ]);
+
+    if (!message) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable ou non autorisé");
+    }
+
+    // Sync via socket
+    const conversation = await ConversationModel.findById(message.conversationId);
+    if (conversation) {
+        conversation.participantIds.forEach((id) => {
+            emitToUser(id.toString(), "message_updated", message);
+        });
+
+        // Send push notification to receiver
+        const otherParticipantId = conversation.participantIds.find((id) => id.toString() !== userId.toString());
+        if (otherParticipantId) {
+            try {
+                const receiver = await UserModel.findById(otherParticipantId);
+                if (receiver && receiver.fcmTokens && receiver.fcmTokens.length > 0) {
+                    const sender = await UserModel.findById(userId);
+                    const senderName = sender?.name || "Someone";
+                    const title = "Offre mise à jour";
+                    const body = `${senderName} a mis à jour son offre à ${message.offerPrice || 0} FCFA.`;
+                    const type = "NOUVEAU_MESSAGE";
+
+                    const notificationData = {
+                        screen: "chat",
+                        conversationId: conversation._id.toString(),
+                        messageId: message._id.toString(),
+                        offerPrice: message.offerPrice?.toString() || "0",
+                        shippingPrice: message.shippingPrice?.toString() || "0",
+                    };
+
+                    await NotificationUtils.sendPushNotification(
+                        receiver.fcmTokens,
+                        title,
+                        body,
+                        receiver._id.toString(),
+                        type,
+                        notificationData
+                    );
+                }
+            } catch (err) {
+                console.error("Error sending push notification for offer price update:", err);
+            }
+        }
+    }
+
+    return message;
+};
+
+/**
  * Edit a specific message (Supports text and location updates)
  */
 const editMessage = async (userId: string, messageId: string, payload: { text?: string; location?: any }) => {
@@ -529,6 +600,7 @@ export const messageServices = {
     markAsRead,
     updateOfferStatus,
     editMessage,
+    updateOfferPrice,
     deleteConversation,
     deleteMessage,
     markMessageAsCompleted,

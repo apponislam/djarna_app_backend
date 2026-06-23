@@ -198,6 +198,22 @@ const deleteConversation = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
+ * Update the price and shipping fee of an offer message
+ */
+const updateOfferPrice = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user!._id;
+    const { messageId } = req.params;
+    const result = await messageServices.updateOfferPrice(userId, messageId as string, req.body);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Offre mise à jour avec succès",
+        data: result,
+    });
+});
+
+/**
  * Get a single message by ID
  */
 const getSingleMessage = catchAsync(async (req: Request, res: Response) => {
@@ -226,4 +242,5 @@ export const messageControllers = {
     deleteMessage,
     deleteConversation,
     getSingleMessage,
+    updateOfferPrice,
 };
