@@ -94,8 +94,12 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
             total_price: payload.shippingCost.toString(),
         };
 
+        const invoiceCreateUrl = config.paydunya_mode === "live"
+            ? "https://app.paydunya.com/api/v1/checkout-invoice/create"
+            : "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create";
+
         const paydunyaResponse = await axios.post(
-            "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create",
+            invoiceCreateUrl,
             {
                 invoice: {
                     items,
@@ -153,7 +157,11 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
  */
 const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
     try {
-        const response = await axios.get(`https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${invoiceToken}`, {
+        const invoiceConfirmUrl = config.paydunya_mode === "live"
+            ? `https://app.paydunya.com/api/v1/checkout-invoice/confirm/${invoiceToken}`
+            : `https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${invoiceToken}`;
+
+        const response = await axios.get(invoiceConfirmUrl, {
             headers: {
                 "PAYDUNYA-MASTER-KEY": config.paydunya_master_key,
                 "PAYDUNYA-PRIVATE-KEY": config.paydunya_private_key,
@@ -268,9 +276,12 @@ const refundPayment = async (id: string, refundAmount?: number): Promise<IPaymen
 
     try {
         try {
-            // Try PayDunya sandbox refund API (using same sandbox domain as checkout)
+            const refundUrl = config.paydunya_mode === "live"
+                ? "https://app.paydunya.com/api/v1/refund"
+                : "https://app.paydunya.com/sandbox-api/v1/refund";
+
             const response = await axios.post(
-                `https://app.paydunya.com/sandbox-api/v1/refund`,
+                refundUrl,
                 {
                     invoice_token: payment.paydunyaInvoiceToken,
                     amount: amountToRefund,

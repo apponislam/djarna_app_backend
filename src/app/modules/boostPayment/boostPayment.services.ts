@@ -39,8 +39,12 @@ const initializeBoostPayment = async (userId: string, boostPackId: string, produ
 
     try {
         // 4. Initialize Paydunya Invoice
+        const invoiceCreateUrl = config.paydunya_mode === "live"
+            ? "https://app.paydunya.com/api/v1/checkout-invoice/create"
+            : "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create";
+
         const paydunyaResponse = await axios.post(
-            "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create",
+            invoiceCreateUrl,
             {
                 invoice: {
                     items: {
@@ -149,9 +153,15 @@ const verifyBoostPayment = async (invoiceToken: string) => {
     }
 
     try {
-        const response = await axios.get(`https://paydunya.com/api/v1/invoice/status/${invoiceToken}`, {
+        const invoiceConfirmUrl = config.paydunya_mode === "live"
+            ? `https://app.paydunya.com/api/v1/checkout-invoice/confirm/${invoiceToken}`
+            : `https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${invoiceToken}`;
+
+        const response = await axios.get(invoiceConfirmUrl, {
             headers: {
-                Authorization: `Bearer ${config.paydunya_master_key}`,
+                "PAYDUNYA-MASTER-KEY": config.paydunya_master_key,
+                "PAYDUNYA-PRIVATE-KEY": config.paydunya_private_key,
+                "PAYDUNYA-TOKEN": config.paydunya_token,
             },
         });
 
