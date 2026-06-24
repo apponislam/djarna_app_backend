@@ -398,13 +398,28 @@ const updateOfferPrice = async (
     messageId: string,
     payload: { offerPrice?: number; shippingPrice?: number }
 ) => {
+    // 1. Find the message of type OFFER
+    const messageExists = await MessageModel.findOne({ _id: messageId, type: "OFFER" });
+    if (!messageExists) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
+    }
+
+    // 2. Verify the user is a participant in the conversation
+    const conversation = await ConversationModel.findOne({
+        _id: messageExists.conversationId,
+        participantIds: userId,
+    });
+    if (!conversation) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès non autorisé à cette offre");
+    }
+
     const updateData: any = { isEdited: true, editedAt: new Date() };
     if (payload.offerPrice !== undefined) updateData.offerPrice = payload.offerPrice;
     if (payload.shippingPrice !== undefined) updateData.shippingPrice = payload.shippingPrice;
 
-    // Only update if it's an OFFER message and the user is the sender
-    const message = await MessageModel.findOneAndUpdate(
-        { _id: messageId, senderId: userId, type: "OFFER" },
+    // 3. Perform update
+    const message = await MessageModel.findByIdAndUpdate(
+        messageId,
         { $set: updateData },
         { returnDocument: "after" }
     ).populate([
@@ -413,11 +428,10 @@ const updateOfferPrice = async (
     ]);
 
     if (!message) {
-        throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable ou non autorisé");
+        throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
     }
 
     // Sync via socket
-    const conversation = await ConversationModel.findById(message.conversationId);
     if (conversation) {
         conversation.participantIds.forEach((id) => {
             emitToUser(id.toString(), "message_updated", message);
