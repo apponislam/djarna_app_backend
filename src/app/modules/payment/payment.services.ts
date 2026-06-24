@@ -40,11 +40,15 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
     const settings = await SettingsModel.findOne();
     const seller = await UserModel.findById(payload.sellerId);
 
+    const productPrice = Number(payload.productPrice || 0);
+    const buyerProtectionFee = Number(payload.buyerProtectionFee || 0);
+    const shippingCost = Number(payload.shippingCost || 0);
+
     // Calculations
     const commissionRate = seller?.noCommission && seller.noCommission > 0 ? 0 : settings?.payment?.commissionRate || 8;
-    const siteFee = (payload.productPrice * commissionRate) / 100;
-    const buyerFee = payload.productPrice - siteFee; // Amount for seller
-    const totalAmount = payload.productPrice + payload.buyerProtectionFee + payload.shippingCost;
+    const siteFee = (productPrice * commissionRate) / 100;
+    const buyerFee = productPrice - siteFee; // Amount for seller
+    const totalAmount = productPrice + buyerProtectionFee + shippingCost;
 
     // If commission was skipped, decrement seller's noCommission count after successful order
 
@@ -54,9 +58,9 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
         productId: new mongoose.Types.ObjectId(payload.productId),
         messageId: payload.messageId ? new mongoose.Types.ObjectId(payload.messageId) : undefined,
         addressId: payload.addressId ? new mongoose.Types.ObjectId(payload.addressId) : undefined,
-        productPrice: payload.productPrice,
-        buyerProtectionFee: payload.buyerProtectionFee,
-        shippingCost: payload.shippingCost,
+        productPrice: productPrice,
+        buyerProtectionFee: buyerProtectionFee,
+        shippingCost: shippingCost,
         totalAmount: totalAmount,
         siteFee: siteFee,
         buyerFee: buyerFee,
@@ -76,22 +80,22 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
         items[`item_${itemIndex++}`] = {
             name: "Product Price",
             quantity: 1,
-            unit_price: payload.productPrice.toString(),
-            total_price: payload.productPrice.toString(),
+            unit_price: productPrice.toString(),
+            total_price: productPrice.toString(),
         };
 
         items[`item_${itemIndex++}`] = {
             name: "Buyer Protection Fee",
             quantity: 1,
-            unit_price: payload.buyerProtectionFee.toString(),
-            total_price: payload.buyerProtectionFee.toString(),
+            unit_price: buyerProtectionFee.toString(),
+            total_price: buyerProtectionFee.toString(),
         };
 
         items[`item_${itemIndex++}`] = {
             name: "Shipping Fee",
             quantity: 1,
-            unit_price: payload.shippingCost.toString(),
-            total_price: payload.shippingCost.toString(),
+            unit_price: shippingCost.toString(),
+            total_price: shippingCost.toString(),
         };
 
         const invoiceCreateUrl = config.paydunya_mode === "live"
@@ -132,7 +136,8 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
         if (!invoiceToken) {
             payment.status = "FAILED";
             await payment.save();
-            throw new ApiError(httpStatus.BAD_REQUEST, "Échec de la création de la facture Paydunya");
+            const errMsg = paydunyaResponse.data?.description || paydunyaResponse.data?.response_text || "Échec de la création de la facture Paydunya";
+            throw new ApiError(httpStatus.BAD_REQUEST, errMsg);
         }
 
         payment.paydunyaInvoiceToken = invoiceToken;
@@ -145,10 +150,11 @@ const initializePayment = async (payload: IPaymentInitialize): Promise<{ payment
             invoiceToken,
         };
     } catch (error: any) {
-        console.error("Paydunya API Error:", error.response?.data);
+        console.error("Paydunya API Error:", error.response?.data || error.message);
         payment.status = "FAILED";
         await payment.save();
-        throw new ApiError(httpStatus.BAD_REQUEST, error.response?.data?.message || error.message || "Échec de l'initialisation du paiement");
+        const errMsg = error.response?.data?.description || error.response?.data?.message || error.message || "Échec de l'initialisation du paiement";
+        throw new ApiError(httpStatus.BAD_REQUEST, errMsg);
     }
 };
 
