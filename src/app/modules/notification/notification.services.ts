@@ -84,7 +84,7 @@ const deleteNotification = async (userId: string, notificationId: string) => {
             user: userId,
         },
         { $set: { isDeleted: true } },
-        { new: true },
+        { returnDocument: "after" },
     );
 
     if (!notification) {

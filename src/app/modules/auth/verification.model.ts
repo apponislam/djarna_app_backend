@@ -2,8 +2,8 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IVerification extends Document {
     phone: string;
-    otp: string;
-    expiry: Date;
+    otp?: string;
+    expiry?: Date;
     isVerified: boolean;
     referralCode?: string;
 }
@@ -17,11 +17,11 @@ const VerificationSchema = new Schema<IVerification>(
         },
         otp: {
             type: String,
-            required: true,
+            required: false,
         },
         expiry: {
             type: Date,
-            required: true,
+            required: false,
         },
         isVerified: {
             type: Boolean,

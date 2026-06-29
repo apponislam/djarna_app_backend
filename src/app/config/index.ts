@@ -31,6 +31,7 @@ export default {
     twilio_account_sid: process.env.TWILIO_ACCOUNT_SID,
     twilio_auth_token: process.env.TWILIO_AUTH_TOKEN,
     twilio_phone_number: process.env.TWILIO_PHONE_NUMBER,
+    twilio_verify_service_sid: process.env.TWILIO_VERIFY_SERVICE_SID,
 
     // Payment Config
     paydunya_mode: process.env.PAYDUNYA_MODE || "sandbox",
