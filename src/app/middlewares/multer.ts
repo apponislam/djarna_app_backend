@@ -240,19 +240,31 @@ export const uploadMessageFiles = (req: Request, res: Response, next: NextFuncti
                     (req.files as Express.Multer.File[]).map(async (file, index) => {
                         const timestamp = Date.now().toString().slice(-6);
                         const randomNum = Math.floor(Math.random() * 10000);
-                        const newName = `msg-${timestamp}-${randomNum}${path.extname(file.originalname)}`;
-                        const outputPath = path.join(messageFileDir, newName);
+                        
+                        let filename = "";
+                        let outputPath = "";
 
-                        // Save the file (not converting non-images to webp)
+                        // Save the file (converting images to webp)
                         if (file.mimetype.startsWith("image/")) {
-                            await sharp(file.buffer).resize(1200, 1200, { fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toFile(outputPath);
-                            file.filename = `${path.parse(newName).name}.webp`;
-                            file.path = `/uploads/messages/${file.filename}`;
+                            filename = `msg-${timestamp}-${randomNum}.webp`;
+                            outputPath = path.join(messageFileDir, filename);
+                            
+                            await sharp(file.buffer)
+                                .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+                                .webp({ quality: 80 })
+                                .toFile(outputPath);
+
+                            file.filename = filename;
+                            file.path = `/uploads/messages/${filename}`;
                             file.mimetype = "image/webp";
                         } else {
+                            filename = `msg-${timestamp}-${randomNum}${path.extname(file.originalname)}`;
+                            outputPath = path.join(messageFileDir, filename);
+                            
                             fs.writeFileSync(outputPath, file.buffer);
-                            file.filename = newName;
-                            file.path = `/uploads/messages/${newName}`;
+                            
+                            file.filename = filename;
+                            file.path = `/uploads/messages/${filename}`;
                         }
                         return file;
                     }),
