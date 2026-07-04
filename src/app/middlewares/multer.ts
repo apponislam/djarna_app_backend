@@ -41,6 +41,12 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
+// Multer setup for general files (no filter for file types, used in messaging)
+const uploadAny = multer({
+    storage,
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
+});
+
 // Helper to generate unique filename
 const generateFileName = (prefix: string) => {
     const timestamp = Date.now().toString().slice(-6);
@@ -229,7 +235,7 @@ export const uploadProductImages = (req: Request, res: Response, next: NextFunct
 
 // Middleware for multiple message file uploads
 export const uploadMessageFiles = (req: Request, res: Response, next: NextFunction) => {
-    const uploadMultiple = upload.array("files", 10); // Allow up to 10 files
+    const uploadMultiple = uploadAny.array("files", 10); // Allow up to 10 files
 
     uploadMultiple(req, res, async (err) => {
         if (err) return next(err);
