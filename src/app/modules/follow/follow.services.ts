@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { FollowModel } from "./follow.model";
 import { UserModel } from "../auth/auth.model";
+import { ActivityService } from "../activity/activity.services";
 
 /**
  * Toggle follow/unfollow a user.
@@ -27,6 +28,7 @@ const toggleFollow = async (followerId: string, followingId: string) => {
     if (existingFollow) {
         // Unfollow
         await FollowModel.deleteOne({ _id: existingFollow._id });
+        ActivityService.logActivity(followerId, "UNFOLLOW", `S'est désabonné de ${targetUser.name}`, { followingId });
         return { isFollowing: false };
     } else {
         // Follow
@@ -34,6 +36,7 @@ const toggleFollow = async (followerId: string, followingId: string) => {
             follower: followerId,
             following: followingId,
         });
+        ActivityService.logActivity(followerId, "FOLLOW", `S'est abonné à ${targetUser.name}`, { followingId });
         return { isFollowing: true };
     }
 };

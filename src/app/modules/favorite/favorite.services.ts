@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { FavoriteModel } from "./favorite.model";
 import { ProductModel } from "../product/product.model";
+import { ActivityService } from "../activity/activity.services";
 
 /**
  * Toggle favorite status of a product
@@ -23,6 +24,7 @@ const toggleFavorite = async (userId: string, productId: string) => {
     if (existingFavorite) {
         // Remove from favorites
         await FavoriteModel.deleteOne({ _id: existingFavorite._id });
+        ActivityService.logActivity(userId, "FAVORITE_REMOVE", `Produit retiré des favoris : ${product.title}`, { productId });
         return { isFavorited: false };
     } else {
         // Add to favorites
@@ -30,6 +32,7 @@ const toggleFavorite = async (userId: string, productId: string) => {
             user: userId,
             product: productId,
         });
+        ActivityService.logActivity(userId, "FAVORITE_ADD", `Produit ajouté aux favoris : ${product.title}`, { productId });
         return { isFavorited: true };
     }
 };

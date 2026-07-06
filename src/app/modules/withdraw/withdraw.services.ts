@@ -5,6 +5,7 @@ import { WithdrawModel } from "./withdraw.model";
 import { IWithdraw, WithdrawMethod } from "./withdraw.interface";
 import axios from "axios";
 import config from "../../config";
+import { ActivityService } from "../activity/activity.services";
 
 const requestWithdrawal = async (userId: string, payload: { amount: number; method: WithdrawMethod; accountNumber: string }) => {
     // 1. Validate user and balance
@@ -105,6 +106,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
                 withdraw.paydunyaDisbursementToken = disbursementToken;
                 withdraw.paydunyaTransactionId = submitResponse.data.transaction_id;
                 await withdraw.save();
+                ActivityService.logActivity(userId, "WITHDRAWAL_REQUEST", `Demande de retrait de ${payload.amount} FCFA soumise via ${payload.method}`, { withdrawalId: withdraw._id });
             } else {
                 throw new Error(submitResponse.data.response_text || "Échec de la soumission Paydunya");
             }
@@ -121,6 +123,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
         withdraw.status = "FAILED";
         withdraw.failReason = error.response?.data?.response_text || error.message;
         await withdraw.save();
+        ActivityService.logActivity(userId, "WITHDRAWAL_REQUEST", `Échec de la demande de retrait de ${payload.amount} FCFA : ${withdraw.failReason}`, { withdrawalId: withdraw._id });
 
         // Refund the user
         await UserModel.findByIdAndUpdate(userId, {

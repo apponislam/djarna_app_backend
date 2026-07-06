@@ -3,6 +3,7 @@ import ApiError from "../../../errors/ApiError";
 import { UserModel } from "../auth/auth.model";
 import { IdentityVerificationModel } from "./identityVerification.model";
 import { IIdentityVerification } from "./identityVerification.interface";
+import { ActivityService } from "../activity/activity.services";
 
 const submitVerification = async (userId: string, payload: Partial<IIdentityVerification>) => {
     const user = await UserModel.findById(userId);
@@ -21,10 +22,14 @@ const submitVerification = async (userId: string, payload: Partial<IIdentityVeri
 
     if (existingRequest) {
         // Update existing rejected request
-        return await IdentityVerificationModel.findOneAndUpdate({ user: userId }, { ...payload, status: "PENDING", adminComment: "" }, { returnDocument: "after" });
+        const updated = await IdentityVerificationModel.findOneAndUpdate({ user: userId }, { ...payload, status: "PENDING", adminComment: "" }, { returnDocument: "after" });
+        ActivityService.logActivity(userId, "IDENTITY_VERIFICATION", "Demande de vérification d'identité mise à jour");
+        return updated;
     }
 
-    return await IdentityVerificationModel.create({ ...payload, user: userId });
+    const created = await IdentityVerificationModel.create({ ...payload, user: userId });
+    ActivityService.logActivity(userId, "IDENTITY_VERIFICATION", "Demande de vérification d'identité soumise");
+    return created;
 };
 
 const getMyVerificationStatus = async (userId: string) => {
@@ -71,6 +76,8 @@ const updateVerificationStatus = async (id: string, status: "APPROVED" | "REJECT
     verification.status = status;
     if (adminComment) verification.adminComment = adminComment;
     await verification.save();
+
+    ActivityService.logActivity(verification.user.toString(), "IDENTITY_VERIFICATION", `Demande de vérification d'identité ${status === "APPROVED" ? "approuvée" : "rejetée"}`);
 
     return verification;
 };

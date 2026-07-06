@@ -384,6 +384,7 @@ const boostProduct = async (id: string, userId: string, boostPackId: string) => 
     product.boostEndTime = new Date(now.getTime() + pack.duration * 24 * 60 * 60 * 1000);
 
     await product.save();
+    ActivityService.logActivity(userId.toString(), "PRODUCT_UPDATE", `Produit boosté : ${product.title}`, { productId: id, boostPackId });
     return product;
 };
 
@@ -396,6 +397,7 @@ const deleteProduct = async (id: string, userId: string) => {
     }
 
     await ProductModel.findByIdAndUpdate(id, { isDeleted: true });
+    ActivityService.logActivity(userId.toString(), "PRODUCT_DELETE", `Produit supprimé : ${product.title}`, { productId: id });
     return { message: "Produit supprimé avec succès" };
 };
 

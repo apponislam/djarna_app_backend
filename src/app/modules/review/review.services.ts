@@ -5,6 +5,7 @@ import { IReview } from "./review.interface";
 import { ReviewModel } from "./review.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
+import { ActivityService } from "../activity/activity.services";
 
 /**
  * Create a new review
@@ -42,6 +43,8 @@ const createReview = async (userId: string, data: Partial<IReview>) => {
         rating,
         comment,
     });
+
+    ActivityService.logActivity(userId, "REVIEW_CREATE", `A laissé un avis de ${rating} étoiles pour le vendeur`, { reviewId: review._id, sellerId: product.user });
 
     return review;
 };
@@ -143,6 +146,8 @@ const deleteReview = async (reviewId: string, userId: string, isAdmin: boolean) 
     if (!result) {
         throw new ApiError(httpStatus.NOT_FOUND, "Avis introuvable ou vous n'êtes pas autorisé à le supprimer");
     }
+
+    ActivityService.logActivity(userId, "REVIEW_DELETE", `A supprimé un avis laissé pour le vendeur`, { reviewId });
 
     return result;
 };

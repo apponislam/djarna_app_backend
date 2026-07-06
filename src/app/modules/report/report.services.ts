@@ -2,9 +2,11 @@ import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { ReportModel } from "./report.model";
 import { IReport } from "./report.interface";
+import { ActivityService } from "../activity/activity.services";
 
 const createReport = async (payload: IReport) => {
     const result = await ReportModel.create(payload);
+    ActivityService.logActivity(payload.reporter.toString(), "REPORT_CREATE", `Signalement soumis pour un(e) ${payload.type.toLowerCase()}`, { reportId: result._id });
     return result;
 };
 
@@ -43,6 +45,7 @@ const getReportById = async (id: string) => {
 const updateReportStatus = async (id: string, status: string) => {
     const result = await ReportModel.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Signalement introuvable");
+    ActivityService.logActivity(result.reporter.toString(), "REPORT_UPDATE", `Signalement #${id} mis à jour : ${status}`, { reportId: id });
     return result;
 };
 
