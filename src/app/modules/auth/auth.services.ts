@@ -394,12 +394,15 @@ const getMyReferrals = async (userId: string, query: Record<string, any> = {}) =
 
     const total = await UserModel.countDocuments(filter);
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: referrals,
     };
@@ -415,12 +418,15 @@ const getAllReferrals = async (query: Record<string, any> = {}) => {
 
     const total = await UserModel.countDocuments(filter);
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: referrals,
     };

@@ -253,12 +253,15 @@ const getAllPayments = async (filters?: IPaymentFilter) => {
     const total = await PaymentModel.countDocuments(query);
     const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: payments,
     };

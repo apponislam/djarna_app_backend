@@ -50,7 +50,7 @@ const getAllActivities = async (query: Record<string, any>) => {
         } else {
             // If invalid userId is passed, return empty data
             return {
-                meta: { page: pageNumber, limit: limitNumber, total: 0, totalPage: 0 },
+                meta: { page: pageNumber, limit: limitNumber, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
                 data: [],
             };
         }
@@ -76,12 +76,15 @@ const getAllActivities = async (query: Record<string, any>) => {
     const total = await ActivityModel.countDocuments(filter);
     const data = await ActivityModel.find(filter).populate("user", "name email photo phone").sort({ createdAt: -1 }).skip(skip).limit(limitNumber);
 
+    const totalPages = Math.ceil(total / limitNumber);
     return {
         meta: {
             page: pageNumber,
             limit: limitNumber,
             total,
-            totalPage: Math.ceil(total / limitNumber),
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
         },
         data,
     };

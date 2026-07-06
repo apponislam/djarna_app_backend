@@ -41,12 +41,15 @@ const getAllVerificationRequests = async (query: any) => {
 
     const total = await IdentityVerificationModel.countDocuments(filter);
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: result,
     };

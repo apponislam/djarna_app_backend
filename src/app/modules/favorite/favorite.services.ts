@@ -98,14 +98,16 @@ const getMyFavorites = async (userId: string, query: { page?: number; limit?: nu
 
     const total = result[0]?.metadata[0]?.total || 0;
     const data = result[0]?.data || [];
-    const totalPage = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / limit);
 
     return {
         meta: {
             page,
             limit,
             total,
-            totalPage,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
         },
         data,
     };

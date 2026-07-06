@@ -201,12 +201,15 @@ const getMyOrders = async (userId: string, role: "buyer" | "seller", query: Reco
 
     const orders = await OrderModel.aggregate(pipeline);
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: orders,
     };
@@ -501,12 +504,15 @@ const adminGetAllOrders = async (query: Record<string, any>) => {
 
     const orders = await OrderModel.aggregate(pipeline);
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data: orders,
     };

@@ -153,14 +153,16 @@ const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: 
 
     const data = result[0].data;
     const total = result[0].totalCount[0]?.count || 0;
-    const totalPage = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / limit);
 
     return {
         meta: {
             page,
             limit,
             total,
-            totalPage,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
         },
         data,
     };

@@ -77,12 +77,15 @@ const getAllDisputes = async (query: Record<string, any>) => {
     const total = await DisputeModel.countDocuments(filter);
     const data = await DisputeModel.find(filter).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data,
     };
@@ -234,12 +237,15 @@ const getMyDisputes = async (userId: string, query: Record<string, any> = {}) =>
     const total = await DisputeModel.countDocuments(filter);
     const data = await DisputeModel.find(filter).populate("buyer", "name email phone photo").populate("seller", "name email phone photo").populate("order").populate("payment").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
 
+    const totalPages = Math.ceil(total / Number(limit));
     return {
         meta: {
             page: Number(page),
             limit: Number(limit),
             total,
-            totalPage: Math.ceil(total / Number(limit)),
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
         },
         data,
     };
