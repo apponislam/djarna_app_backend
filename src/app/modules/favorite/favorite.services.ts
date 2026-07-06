@@ -105,6 +105,7 @@ const getMyFavorites = async (userId: string, query: { page?: number; limit?: nu
             page,
             limit,
             total,
+            totalPage: totalPages,
             totalPages,
             hasNext: page < totalPages,
             hasPrev: page > 1,

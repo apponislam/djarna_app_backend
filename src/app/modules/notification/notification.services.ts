@@ -35,6 +35,7 @@ const getNotifications = async (userId: string, page: number = 1, limit: number 
             page,
             limit,
             total,
+            totalPage: Math.ceil(total / limit),
             totalPages: Math.ceil(total / limit),
         },
     };

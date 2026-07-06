@@ -160,6 +160,7 @@ const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: 
             page,
             limit,
             total,
+            totalPage: totalPages,
             totalPages,
             hasNext: page < totalPages,
             hasPrev: page > 1,

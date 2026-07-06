@@ -259,6 +259,7 @@ const getAllPayments = async (filters?: IPaymentFilter) => {
             page: Number(page),
             limit: Number(limit),
             total,
+            totalPage: totalPages,
             totalPages,
             hasNext: Number(page) < totalPages,
             hasPrev: Number(page) > 1,

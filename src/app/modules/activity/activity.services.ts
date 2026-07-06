@@ -50,7 +50,7 @@ const getAllActivities = async (query: Record<string, any>) => {
         } else {
             // If invalid userId is passed, return empty data
             return {
-                meta: { page: pageNumber, limit: limitNumber, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+                meta: { page: pageNumber, limit: limitNumber, total: 0, totalPage: 0, totalPages: 0, hasNext: false, hasPrev: false },
                 data: [],
             };
         }
@@ -82,6 +82,7 @@ const getAllActivities = async (query: Record<string, any>) => {
             page: pageNumber,
             limit: limitNumber,
             total,
+            totalPage: totalPages,
             totalPages,
             hasNext: pageNumber < totalPages,
             hasPrev: pageNumber > 1,

@@ -47,6 +47,7 @@ const getAllVerificationRequests = async (query: any) => {
             page: Number(page),
             limit: Number(limit),
             total,
+            totalPage: totalPages,
             totalPages,
             hasNext: Number(page) < totalPages,
             hasPrev: Number(page) > 1,
