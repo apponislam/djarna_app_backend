@@ -40,32 +40,35 @@ const getAllProducts = catchAsync(async (req: Request, res: Response) => {
         statusCode: httpStatus.OK,
         success: true,
         message: "Produits récupérés avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 
 const getMyProducts = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const result = await ProductService.getMyProducts(userId as string);
+    const result = await ProductService.getMyProducts(userId as string, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Vos produits récupérés avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 
 const getProductsByUserId = catchAsync(async (req: Request, res: Response) => {
     const currentUserId = req.user?._id;
     const targetUserId = req.params.userId;
-    const result = await ProductService.getProductsByUserId(targetUserId as string, currentUserId);
+    const result = await ProductService.getProductsByUserId(targetUserId as string, currentUserId, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Produits de l'utilisateur récupérés avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 

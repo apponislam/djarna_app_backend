@@ -34,7 +34,11 @@ const createProduct = async (payload: IProduct) => {
 };
 
 const getAllProducts = async (query: any, userId?: string) => {
-    const { searchTerm, category, subcategory, subSubcategory, subSubSubcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
+    const { page = 1, limit = 10, searchTerm, category, subcategory, subSubcategory, subSubSubcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
+
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
 
     const filters: any = { status: "ACTIVE", isDeleted: false };
 
@@ -166,14 +170,57 @@ const getAllProducts = async (query: any, userId?: string) => {
     }
 
     pipeline.push({ $sort: sort });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNumber });
 
     const products = await ProductModel.aggregate(pipeline);
-    return products;
+    const total = await ProductModel.countDocuments(filters);
+
+    const totalPages = Math.ceil(total / limitNumber);
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPage: totalPages,
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
+        },
+        data: products,
+    };
 };
 
-const getMyProducts = async (userId: string) => {
-    const result = await ProductModel.find({ user: userId, isDeleted: false }).populate("boostPack").populate("user", "name email phone photo verifiedBadge").sort({ createdAt: -1 });
-    return result;
+const getMyProducts = async (userId: string, query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filters = { user: userId, isDeleted: false };
+
+    const result = await ProductModel.find(filters)
+        .populate("boostPack")
+        .populate("user", "name email phone photo verifiedBadge")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber);
+
+    const total = await ProductModel.countDocuments(filters);
+
+    const totalPages = Math.ceil(total / limitNumber);
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPage: totalPages,
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
+        },
+        data: result,
+    };
 };
 
 const getProductById = async (id: string, userId?: string) => {
@@ -193,7 +240,12 @@ const getProductById = async (id: string, userId?: string) => {
     return result;
 };
 
-const getProductsByUserId = async (targetUserId: string, currentUserId?: string) => {
+const getProductsByUserId = async (targetUserId: string, currentUserId?: string, query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
+
     const filters: any = { user: targetUserId, status: "ACTIVE", isDeleted: false };
 
     const pipeline: any[] = [
@@ -254,9 +306,25 @@ const getProductsByUserId = async (targetUserId: string, currentUserId?: string)
     }
 
     pipeline.push({ $sort: { createdAt: -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNumber });
 
     const products = await ProductModel.aggregate(pipeline);
-    return products;
+    const total = await ProductModel.countDocuments(filters);
+
+    const totalPages = Math.ceil(total / limitNumber);
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPage: totalPages,
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
+        },
+        data: products,
+    };
 };
 
 const updateProduct = async (id: string, userId: string, payload: Partial<IProduct>) => {
