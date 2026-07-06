@@ -4,6 +4,7 @@ import { UserModel } from "../auth/auth.model";
 import { IdentityVerificationModel } from "./identityVerification.model";
 import { IIdentityVerification } from "./identityVerification.interface";
 import { ActivityService } from "../activity/activity.services";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 const submitVerification = async (userId: string, payload: Partial<IIdentityVerification>) => {
     const user = await UserModel.findById(userId);
@@ -42,11 +43,12 @@ const getAllVerificationRequests = async (query: any) => {
     if (status) filter.status = status;
 
     if (searchTerm) {
+        const escapedSearch = escapeRegex(searchTerm);
         const users = await UserModel.find({
             $or: [
-                { name: { $regex: searchTerm, $options: "i" } },
-                { email: { $regex: searchTerm, $options: "i" } },
-                { phone: { $regex: searchTerm, $options: "i" } }
+                { name: { $regex: escapedSearch, $options: "i" } },
+                { email: { $regex: escapedSearch, $options: "i" } },
+                { phone: { $regex: escapedSearch, $options: "i" } }
             ]
         }).select("_id");
         const userIds = users.map(u => u._id);

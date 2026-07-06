@@ -4,6 +4,7 @@ import { UserModel } from "../auth/auth.model";
 import { ProductModel } from "../product/product.model";
 import { FollowModel } from "../follow/follow.model";
 import { Types } from "mongoose";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 const getPopularUsers = async (currentUserId?: string, query: Record<string, any> = {}) => {
     const { searchTerm, page = 1, limit = 10 } = query;
@@ -12,7 +13,8 @@ const getPopularUsers = async (currentUserId?: string, query: Record<string, any
     const filter: any = { isActive: true };
 
     if (searchTerm) {
-        filter.$or = [{ name: { $regex: searchTerm, $options: "i" } }, { email: { $regex: searchTerm, $options: "i" } }, { phone: { $regex: searchTerm, $options: "i" } }];
+        const escapedSearch = escapeRegex(searchTerm);
+        filter.$or = [{ name: { $regex: escapedSearch, $options: "i" } }, { email: { $regex: escapedSearch, $options: "i" } }, { phone: { $regex: escapedSearch, $options: "i" } }];
     }
 
     const aggregationPipeline: any[] = [
@@ -109,7 +111,8 @@ const getAllUsers = async (query: Record<string, any>) => {
     const filter: any = {};
 
     if (searchTerm) {
-        filter.$or = [{ name: { $regex: searchTerm, $options: "i" } }, { email: { $regex: searchTerm, $options: "i" } }, { phone: { $regex: searchTerm, $options: "i" } }];
+        const escapedSearch = escapeRegex(searchTerm);
+        filter.$or = [{ name: { $regex: escapedSearch, $options: "i" } }, { email: { $regex: escapedSearch, $options: "i" } }, { phone: { $regex: escapedSearch, $options: "i" } }];
     }
 
     if (verifiedBadge !== undefined) {

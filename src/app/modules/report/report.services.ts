@@ -3,6 +3,7 @@ import ApiError from "../../../errors/ApiError";
 import { ReportModel } from "./report.model";
 import { IReport } from "./report.interface";
 import { ActivityService } from "../activity/activity.services";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 const createReport = async (payload: IReport) => {
     const result = await ReportModel.create(payload);
@@ -16,7 +17,8 @@ const getAllReports = async (query: any) => {
     const filters: any = {};
 
     if (searchTerm) {
-        filters.$or = [{ reportId: { $regex: searchTerm, $options: "i" } }, { reason: { $regex: searchTerm, $options: "i" } }];
+        const escapedSearch = escapeRegex(searchTerm);
+        filters.$or = [{ reportId: { $regex: escapedSearch, $options: "i" } }, { reason: { $regex: escapedSearch, $options: "i" } }];
     }
 
     if (type) filters.type = type;

@@ -9,6 +9,7 @@ import { ActivityService } from "../activity/activity.services";
 import { PaymentService } from "../payment/payment.services";
 import { NotificationUtils } from "../../../utils/notification";
 import { UserModel } from "../auth/auth.model";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 /**
  * Create a new dispute
@@ -71,7 +72,8 @@ const getAllDisputes = async (query: Record<string, any>) => {
     if (status) filter.status = status;
 
     if (searchTerm) {
-        filter.$or = [{ description: { $regex: searchTerm, $options: "i" } }, { reason: { $regex: searchTerm, $options: "i" } }];
+        const escapedSearch = escapeRegex(searchTerm);
+        filter.$or = [{ description: { $regex: escapedSearch, $options: "i" } }, { reason: { $regex: escapedSearch, $options: "i" } }];
     }
 
     const total = await DisputeModel.countDocuments(filter);

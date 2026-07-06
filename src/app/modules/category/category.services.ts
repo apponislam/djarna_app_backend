@@ -4,6 +4,7 @@ import { CategoryModel } from "./category.model";
 import { ProductModel } from "../product/product.model";
 import { ICategory } from "./category.interface";
 import { Types } from "mongoose";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 // Helper to check for cycles: is parentId a descendant of childId?
 const isDescendant = async (parentId: string, childId: string): Promise<boolean> => {
@@ -226,7 +227,8 @@ const getParentCategories = async (searchTerm?: string) => {
     const query: any = { level: 1 }; // Level 1 is the root parent category
 
     if (searchTerm) {
-        query.name = { $regex: searchTerm, $options: "i" };
+        const escapedSearch = escapeRegex(searchTerm);
+        query.name = { $regex: escapedSearch, $options: "i" };
     }
 
     const categories = await CategoryModel.find(query).sort({ homePosition: 1, name: 1 }).lean();
@@ -256,7 +258,8 @@ const getSubcategoriesByParent = async (parentId: string, query: any = {}) => {
     }
 
     if (query.searchTerm) {
-        filters.name = { $regex: query.searchTerm, $options: "i" };
+        const escapedSearch = escapeRegex(query.searchTerm);
+        filters.name = { $regex: escapedSearch, $options: "i" };
     }
 
     const subcategories = await CategoryModel.find(filters).sort({ homePosition: 1, name: 1 }).populate(recursiveParentPopulate).lean();
@@ -289,7 +292,8 @@ const getAllSubcategories = async (searchTerm?: string) => {
     const query: any = { level: { $gt: 1 } }; // Level 2, 3, and 4 are subcategories
 
     if (searchTerm) {
-        query.name = { $regex: searchTerm, $options: "i" };
+        const escapedSearch = escapeRegex(searchTerm);
+        query.name = { $regex: escapedSearch, $options: "i" };
     }
 
     const subcategories = await CategoryModel.find(query).populate(recursiveParentPopulate).lean();
@@ -325,7 +329,8 @@ const getCategoriesByLevel = async (level: number, searchTerm?: string) => {
 
     const query: any = { level };
     if (searchTerm) {
-        query.name = { $regex: searchTerm, $options: "i" };
+        const escapedSearch = escapeRegex(searchTerm);
+        query.name = { $regex: escapedSearch, $options: "i" };
     }
 
     const categories = await CategoryModel.find(query).sort({ homePosition: 1, name: 1 }).populate(recursiveParentPopulate).lean();

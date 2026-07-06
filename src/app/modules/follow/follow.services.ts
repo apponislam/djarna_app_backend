@@ -4,6 +4,7 @@ import ApiError from "../../../errors/ApiError";
 import { FollowModel } from "./follow.model";
 import { UserModel } from "../auth/auth.model";
 import { ActivityService } from "../activity/activity.services";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 /**
  * Toggle follow/unfollow a user.
@@ -95,9 +96,10 @@ const getTopUsers = async (query: { searchTerm?: string; page?: number; limit?: 
 
     // Add search filter if searchTerm exists
     if (searchTerm) {
+        const escapedSearch = escapeRegex(searchTerm);
         aggregationPipeline.push({
             $match: {
-                "userDetails.name": { $regex: searchTerm, $options: "i" },
+                "userDetails.name": { $regex: escapedSearch, $options: "i" },
             },
         });
     }

@@ -10,6 +10,7 @@ import { NotificationUtils } from "../../../utils/notification";
 import { UserModel } from "../auth/auth.model";
 import { PaymentModel } from "../payment/payment.model";
 import { SettingsModel } from "../settings/settings.model";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 const createOrder = async (
     buyerId: string,
@@ -111,9 +112,10 @@ const getMyOrders = async (userId: string, role: "buyer" | "seller", query: Reco
     ];
 
     if (searchTerm) {
+        const escapedSearch = escapeRegex(searchTerm);
         pipeline.push({
             $match: {
-                $or: [{ "product.title": { $regex: searchTerm, $options: "i" } }, { "buyer.name": { $regex: searchTerm, $options: "i" } }, { "seller.name": { $regex: searchTerm, $options: "i" } }],
+                $or: [{ "product.title": { $regex: escapedSearch, $options: "i" } }, { "buyer.name": { $regex: escapedSearch, $options: "i" } }, { "seller.name": { $regex: escapedSearch, $options: "i" } }],
             },
         });
     }
@@ -417,9 +419,10 @@ const adminGetAllOrders = async (query: Record<string, any>) => {
     ];
 
     if (searchTerm) {
+        const escapedSearch = escapeRegex(searchTerm);
         pipeline.push({
             $match: {
-                $or: [{ "product.title": { $regex: searchTerm, $options: "i" } }, { "buyer.name": { $regex: searchTerm, $options: "i" } }, { "seller.name": { $regex: searchTerm, $options: "i" } }],
+                $or: [{ "product.title": { $regex: escapedSearch, $options: "i" } }, { "buyer.name": { $regex: escapedSearch, $options: "i" } }, { "seller.name": { $regex: escapedSearch, $options: "i" } }],
             },
         });
     }

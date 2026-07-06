@@ -6,6 +6,7 @@ import { BoostPackModel } from "../boostPack/boostPack.model";
 import mongoose from "mongoose";
 import { FavoriteModel } from "../favorite/favorite.model";
 import { ActivityService } from "../activity/activity.services";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -43,7 +44,8 @@ const getAllProducts = async (query: any, userId?: string) => {
     const filters: any = { status: "ACTIVE", isDeleted: false };
 
     if (searchTerm) {
-        filters.$or = [{ title: { $regex: searchTerm, $options: "i" } }, { description: { $regex: searchTerm, $options: "i" } }, { address: { $regex: searchTerm, $options: "i" } }];
+        const escapedSearch = escapeRegex(searchTerm);
+        filters.$or = [{ title: { $regex: escapedSearch, $options: "i" } }, { description: { $regex: escapedSearch, $options: "i" } }, { address: { $regex: escapedSearch, $options: "i" } }];
     }
 
     if (category) filters.category = category;

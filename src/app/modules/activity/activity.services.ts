@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { ActivityModel } from "./activity.model";
 import { ActivityType } from "./activity.interface";
 import { emitToAdmin } from "../../socket/socket";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 /**
  * Log a new activity
@@ -58,11 +59,12 @@ const getAllActivities = async (query: Record<string, any>) => {
 
     // Add search functionality
     if (searchTerm) {
-        filter.$or = [{ message: { $regex: searchTerm, $options: "i" } }, { "details.productId": mongoose.Types.ObjectId.isValid(searchTerm) ? new mongoose.Types.ObjectId(searchTerm) : null }, { "details.orderId": mongoose.Types.ObjectId.isValid(searchTerm) ? new mongoose.Types.ObjectId(searchTerm) : null }].filter((item) => item !== null && Object.values(item)[0] !== null);
+        const escapedSearch = escapeRegex(searchTerm);
+        filter.$or = [{ message: { $regex: escapedSearch, $options: "i" } }, { "details.productId": mongoose.Types.ObjectId.isValid(searchTerm) ? new mongoose.Types.ObjectId(searchTerm) : null }, { "details.orderId": mongoose.Types.ObjectId.isValid(searchTerm) ? new mongoose.Types.ObjectId(searchTerm) : null }].filter((item) => item !== null && Object.values(item)[0] !== null);
 
         // If details search didn't yield valid filters, just search message
         if (filter.$or.length === 0) {
-            filter.$or = [{ message: { $regex: searchTerm, $options: "i" } }];
+            filter.$or = [{ message: { $regex: escapedSearch, $options: "i" } }];
         }
     }
 

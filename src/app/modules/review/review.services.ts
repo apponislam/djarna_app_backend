@@ -6,6 +6,7 @@ import { ReviewModel } from "./review.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { ActivityService } from "../activity/activity.services";
+import { escapeRegex } from "../../../utils/escapeRegex";
 
 /**
  * Create a new review
@@ -110,7 +111,8 @@ const getAllReviews = async (query: { page?: number; limit?: number; searchTerm?
     const filters: any = { isDeleted: false };
 
     if (searchTerm) {
-        filters.comment = { $regex: searchTerm, $options: "i" };
+        const escapedSearch = escapeRegex(searchTerm);
+        filters.comment = { $regex: escapedSearch, $options: "i" };
     }
 
     const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("seller", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
