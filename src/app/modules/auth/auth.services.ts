@@ -100,7 +100,7 @@ const registerUser = async (data: any) => {
     const createdUser = await UserModel.create(userData);
 
     // Log activity
-    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Account registered successfully");
+    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Compte enregistré avec succès");
 
     // Delete verification record
     await VerificationModel.deleteOne({ phone: normalizedPhone });
@@ -140,7 +140,7 @@ const loginUser = async (data: { phone: string; password: string }) => {
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
 
     // Log activity
-    ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in successfully");
+    ActivityService.logActivity(user._id.toString(), "LOGIN", "Utilisateur connecté avec succès");
 
     // Generate tokens
     const jwtPayload = {
@@ -323,7 +323,7 @@ const adminLogin = async (data: { phone: string; password: string }) => {
     await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
 
     // Log activity
-    ActivityService.logActivity(user._id.toString(), "LOGIN", "Admin logged in successfully");
+    ActivityService.logActivity(user._id.toString(), "LOGIN", "Administrateur connecté avec succès");
 
     // Generate tokens
     const jwtPayload = {
@@ -441,7 +441,7 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
     if (user) {
         // User exists, log them in
         await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
-        ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in via OAuth");
+        ActivityService.logActivity(user._id.toString(), "LOGIN", "Utilisateur connecté via OAuth");
 
         const jwtPayload = {
             _id: user._id,
@@ -467,7 +467,7 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
             await user.save();
 
             await UserModel.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
-            ActivityService.logActivity(user._id.toString(), "LOGIN", "User logged in via OAuth");
+            ActivityService.logActivity(user._id.toString(), "LOGIN", "Utilisateur connecté via OAuth");
 
             const jwtPayload = {
                 _id: user._id,
@@ -538,7 +538,7 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
 
     const createdUser = await UserModel.create(userData);
 
-    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Account registered via OAuth");
+    ActivityService.logActivity(createdUser._id.toString(), "REGISTER", "Compte enregistré via OAuth");
 
     const jwtPayload = {
         _id: createdUser._id,

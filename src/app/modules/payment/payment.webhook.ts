@@ -32,7 +32,7 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
             withdraw.paydunyaTransactionId = transactionId;
         }
         // Log activity (Admin)
-        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} successful`, { withdrawalId: withdraw._id });
+        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Retrait de ${withdraw.amount} effectué avec succès`, { withdrawalId: withdraw._id });
 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
@@ -54,7 +54,7 @@ const handleWithdrawWebhook = async (disbursementToken: string, status: string, 
         withdraw.failReason = failReason || "Withdrawal failed at provider";
 
         // Log activity (Admin)
-        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Withdrawal of ${withdraw.amount} failed: ${withdraw.failReason}`, { withdrawalId: withdraw._id });
+        ActivityService.logActivity(withdraw.userId.toString(), "WITHDRAWAL_REQUEST", `Échec du retrait de ${withdraw.amount} : ${withdraw.failReason}`, { withdrawalId: withdraw._id });
 
         // Send Push Notification to User
         const user = await UserModel.findById(withdraw.userId);
@@ -218,8 +218,8 @@ const handleWebhook = async (invoiceToken: string, status: string, transactionId
         });
 
         // 5. Log Activity (Admin)
-        ActivityService.logActivity(payment.userId.toString(), "PAYMENT_COMPLETED", `Payment of ${payment.totalAmount} completed for product order`, { paymentId: payment._id });
-        ActivityService.logActivity(payment.userId.toString(), "ORDER_PLACED", "Order placed successfully", { paymentId: payment._id });
+        ActivityService.logActivity(payment.userId.toString(), "PAYMENT_COMPLETED", `Paiement de ${payment.totalAmount} complété pour la commande`, { paymentId: payment._id });
+        ActivityService.logActivity(payment.userId.toString(), "ORDER_PLACED", "Commande passée avec succès", { paymentId: payment._id });
     }
 
     return payment;

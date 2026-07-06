@@ -271,7 +271,7 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
     await order.save();
 
     // Log activity (Admin)
-    ActivityService.logActivity(userId.toString(), "ORDER_STATUS_UPDATE", `Order status updated to ${status}`, { orderId: order._id, status });
+    ActivityService.logActivity(userId.toString(), "ORDER_STATUS_UPDATE", `Statut de la commande mis à jour en ${status}`, { orderId: order._id, status });
 
     // ESCROW SYSTEM: When order is delivered, set up escrow
     if (status === "DELIVERED" && order.payment) {

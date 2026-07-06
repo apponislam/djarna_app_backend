@@ -38,7 +38,7 @@ const createDispute = async (buyerId: string, payload: Partial<IDispute>) => {
     await OrderModel.findByIdAndUpdate(order._id, { status: "DISPUTED" });
 
     // Log activity (Admin)
-    ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Dispute opened for order #${order._id}`, { disputeId: (result as any)._id, orderId: order._id });
+    ActivityService.logActivity(buyerId, "DISPUTE_CREATED", `Litige ouvert pour la commande #${order._id}`, { disputeId: (result as any)._id, orderId: order._id });
 
     // Notify Seller about Dispute
     const seller = await UserModel.findById(order.seller);
@@ -127,7 +127,7 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
         await OrderModel.findByIdAndUpdate(dispute.order, { status: "CANCELLED" });
 
         // Log activity for refund (Admin)
-        ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Refund of ${refundAmount} processed for dispute #${dispute._id}`, { disputeId: dispute._id, amount: refundAmount });
+        ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Remboursement de ${refundAmount} traité pour le litige #${dispute._id}`, { disputeId: dispute._id, amount: refundAmount });
 
         // Notify Buyer about Refund
         const buyer = await UserModel.findById(dispute.buyer);
@@ -171,7 +171,7 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
     await dispute.save();
 
     // Log activity for resolution (Admin)
-    ActivityService.logActivity(adminId, "DISPUTE_RESOLVED", `Dispute #${dispute._id} marked as ${resolution}`, { disputeId: dispute._id, resolution });
+    ActivityService.logActivity(adminId, "DISPUTE_RESOLVED", `Litige #${dispute._id} marqué comme ${resolution}`, { disputeId: dispute._id, resolution });
 
     return dispute;
 };
@@ -217,7 +217,7 @@ const cancelDispute = async (disputeId: string, buyerId: string) => {
     }
 
     // Log activity
-    ActivityService.logActivity(buyerId, "DISPUTE_CANCELLED", `Dispute #${dispute._id} cancelled by buyer`, { disputeId: dispute._id });
+    ActivityService.logActivity(buyerId, "DISPUTE_CANCELLED", `Litige #${dispute._id} annulé par l'acheteur`, { disputeId: dispute._id });
 
     return dispute;
 };
