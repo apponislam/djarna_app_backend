@@ -37,9 +37,21 @@ const getMyVerificationStatus = async (userId: string) => {
 };
 
 const getAllVerificationRequests = async (query: any) => {
-    const { status, page = 1, limit = 10 } = query;
+    const { status, page = 1, limit = 10, searchTerm } = query;
     const filter: any = {};
     if (status) filter.status = status;
+
+    if (searchTerm) {
+        const users = await UserModel.find({
+            $or: [
+                { name: { $regex: searchTerm, $options: "i" } },
+                { email: { $regex: searchTerm, $options: "i" } },
+                { phone: { $regex: searchTerm, $options: "i" } }
+            ]
+        }).select("_id");
+        const userIds = users.map(u => u._id);
+        filter.user = { $in: userIds };
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     const result = await IdentityVerificationModel.find(filter).populate("user", "name phone photo email verifiedBadge").sort({ createdAt: -1 }).skip(skip).limit(Number(limit));
