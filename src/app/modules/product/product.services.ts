@@ -35,7 +35,7 @@ const createProduct = async (payload: IProduct) => {
 };
 
 const getAllProducts = async (query: any, userId?: string) => {
-    const { page = 1, limit = 10, searchTerm, category, subcategory, subSubcategory, subSubSubcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
+    const { page = 1, limit = 10, searchTerm, address, category, subcategory, subSubcategory, subSubSubcategory, minPrice, maxPrice, sortBy, order = "desc" } = query;
 
     const pageNumber = Math.max(1, Number(page));
     const limitNumber = Math.max(1, Number(limit));
@@ -46,6 +46,11 @@ const getAllProducts = async (query: any, userId?: string) => {
     if (searchTerm) {
         const escapedSearch = escapeRegex(searchTerm);
         filters.$or = [{ title: { $regex: escapedSearch, $options: "i" } }, { description: { $regex: escapedSearch, $options: "i" } }, { address: { $regex: escapedSearch, $options: "i" } }];
+    }
+
+    if (address) {
+        const escapedAddress = escapeRegex(address);
+        filters.address = { $regex: escapedAddress, $options: "i" };
     }
 
     if (category) filters.category = category;
@@ -414,8 +419,8 @@ const getPriceRange = async () => {
         {
             $group: {
                 _id: null,
-                minPrice: { $min: "$price" },
                 maxPrice: { $max: "$price" },
+                maxOriginalPrice: { $max: "$originalPrice" },
             },
         },
     ]);
@@ -423,11 +428,16 @@ const getPriceRange = async () => {
     const min = 0;
     let max = 1000; // Default fallback if no active products exist
 
-    if (result.length > 0 && result[0].maxPrice !== undefined) {
-        const dbMax = result[0].maxPrice;
-        max = Math.ceil(dbMax / 1000) * 1000;
-        if (max === dbMax) {
-            max += 1000;
+    if (result.length > 0) {
+        const dbMaxPrice = result[0].maxPrice || 0;
+        const dbMaxOriginalPrice = result[0].maxOriginalPrice || 0;
+        const dbMax = Math.max(dbMaxPrice, dbMaxOriginalPrice);
+
+        if (dbMax > 0) {
+            max = Math.ceil(dbMax / 1000) * 1000;
+            if (max === dbMax) {
+                max += 1000;
+            }
         }
     }
 
