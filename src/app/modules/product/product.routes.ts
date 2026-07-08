@@ -12,6 +12,7 @@ const router = Router();
 router.get("/", checkAuth, ProductController.getAllProducts);
 router.get("/my-products", auth, ProductController.getMyProducts);
 router.get("/user/:userId", checkAuth, ProductController.getProductsByUserId);
+router.get("/price-range", ProductController.getPriceRange);
 router.get("/:id", checkAuth, ProductController.getProductById);
 
 // Protected User routes

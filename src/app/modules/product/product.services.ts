@@ -408,6 +408,32 @@ const deleteProduct = async (id: string, userId: string) => {
     return { message: "Produit supprimé avec succès" };
 };
 
+const getPriceRange = async () => {
+    const result = await ProductModel.aggregate([
+        { $match: { isDeleted: false, status: "ACTIVE" } },
+        {
+            $group: {
+                _id: null,
+                minPrice: { $min: "$price" },
+                maxPrice: { $max: "$price" },
+            },
+        },
+    ]);
+
+    const min = 0;
+    let max = 1000; // Default fallback if no active products exist
+
+    if (result.length > 0 && result[0].maxPrice !== undefined) {
+        const dbMax = result[0].maxPrice;
+        max = Math.ceil(dbMax / 1000) * 1000;
+        if (max === dbMax) {
+            max += 1000;
+        }
+    }
+
+    return { min, max };
+};
+
 export const ProductService = {
     createProduct,
     getAllProducts,
@@ -418,4 +444,5 @@ export const ProductService = {
     updateProductStatus,
     boostProduct,
     deleteProduct,
+    getPriceRange,
 };

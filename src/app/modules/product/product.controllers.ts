@@ -148,6 +148,17 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getPriceRange = catchAsync(async (req: Request, res: Response) => {
+    const result = await ProductService.getPriceRange();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Plage de prix récupérée avec succès",
+        data: result,
+    });
+});
+
 export const ProductController = {
     createProduct,
     getAllProducts,
@@ -158,4 +169,5 @@ export const ProductController = {
     updateProductStatus,
     boostProduct,
     deleteProduct,
+    getPriceRange,
 };
