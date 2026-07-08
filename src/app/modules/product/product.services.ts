@@ -248,7 +248,7 @@ const getProductsByUserId = async (targetUserId: string, currentUserId?: string,
     const limitNumber = Math.max(1, Number(limit));
     const skip = (pageNumber - 1) * limitNumber;
 
-    const filters: any = { user: targetUserId, status: "ACTIVE", isDeleted: false };
+    const filters: any = { user: new mongoose.Types.ObjectId(targetUserId), status: "ACTIVE", isDeleted: false };
 
     const pipeline: any[] = [
         { $match: filters },
@@ -256,23 +256,28 @@ const getProductsByUserId = async (targetUserId: string, currentUserId?: string,
         {
             $lookup: {
                 from: "users",
-                localField: "user",
-                foreignField: "_id",
+                let: { userId: "$user" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$_id", "$$userId"] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                            photo: 1,
+                            verifiedBadge: 1,
+                        },
+                    },
+                ],
                 as: "user",
             },
         },
         { $unwind: "$user" },
-        {
-            $project: {
-                "user.password": 0,
-                "user.resetPasswordOtp": 0,
-                "user.resetPasswordOtpExpiry": 0,
-                "user.resetPasswordToken": 0,
-                "user.resetPasswordTokenExpiry": 0,
-                "user.phoneVerificationOtp": 0,
-                "user.phoneVerificationExpiry": 0,
-            },
-        },
     ];
 
     // Add favorite status if currentUserId is provided
