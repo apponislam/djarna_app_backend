@@ -7,6 +7,7 @@ export const createBoostPackSchema = z.object({
     duration: z.number().int().min(1, "Duration must be at least 1 day"),
     price: z.number().min(0, "Price cannot be negative"),
     currency: z.string().default("FCFA").optional(),
+    features: z.array(z.string()).default([]).optional(),
     isActive: z.boolean().default(true).optional(),
     isRecommended: z.boolean().default(false).optional(),
 });
@@ -18,6 +19,7 @@ export const updateBoostPackSchema = z.object({
     duration: z.number().int().min(1).optional(),
     price: z.number().min(0).optional(),
     currency: z.string().optional(),
+    features: z.array(z.string()).optional(),
     isActive: z.boolean().optional(),
     isRecommended: z.boolean().optional(),
 });

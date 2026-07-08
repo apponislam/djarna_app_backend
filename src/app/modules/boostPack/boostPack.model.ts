@@ -30,6 +30,10 @@ const BoostPackSchema = new Schema<IBoostPack>(
             type: String,
             default: "FCFA",
         },
+        features: {
+            type: [String],
+            default: [],
+        },
         isActive: {
             type: Boolean,
             default: true,

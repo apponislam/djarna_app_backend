@@ -7,6 +7,7 @@ export interface IBoostPack {
     duration: number; // in days
     price: number;
     currency: string; // default "FCFA"
+    features: string[];
     isActive: boolean;
     isRecommended: boolean;
     isDeleted: boolean;
