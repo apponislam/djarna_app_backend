@@ -225,7 +225,10 @@ const getOrderById = async (orderId: string, userId: string) => {
         throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
     }
 
-    if (order.buyer.toString() !== userId && order.seller.toString() !== userId) {
+    const buyerId = (order.buyer as any)?._id?.toString() || (order.buyer as any)?.toString();
+    const sellerId = (order.seller as any)?._id?.toString() || (order.seller as any)?.toString();
+
+    if (buyerId !== userId && sellerId !== userId) {
         throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé");
     }
 
