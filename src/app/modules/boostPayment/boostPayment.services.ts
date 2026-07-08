@@ -190,7 +190,7 @@ const verifyBoostPayment = async (invoiceToken: string) => {
 const getMyBoostPayments = async (userId: string) => {
     return await BoostPaymentModel.find({ userId: new Types.ObjectId(userId) })
         .populate("boostPackId")
-        .populate("productId", "name images")
+        .populate("productId")
         .sort({ createdAt: -1 })
         .lean();
 };

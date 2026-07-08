@@ -1,5 +1,5 @@
 import httpStatus from "http-status";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { ConversationModel, MessageModel } from "./messages.model";
 import { Message, MessageType } from "./messages.interface";
@@ -7,6 +7,7 @@ import { emitToUser } from "../../socket/socket";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { NotificationUtils } from "../../../utils/notification";
+import { send } from "process";
 
 /**
  * Create a new conversation
@@ -153,13 +154,13 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
             arrayFilters: [{ "elem.userId": receiverId }],
             returnDocument: "after",
         },
-    ).populate([{ path: "participantIds", select: "_id name photo phone verifiedBadge" }, { path: "productId", select: "_id title images price" }, { path: "lastMessage" }]);
+    ).populate([{ path: "participantIds", select: "_id name photo phone verifiedBadge" }, { path: "productId" }, { path: "lastMessage" }]);
 
     // 4. Emit events
     const messageToEmit = await MessageModel.findById(newMessage._id)
         .populate([
             { path: "senderId", select: "_id name photo verifiedBadge" },
-            { path: "productId", select: "_id title images price" },
+            { path: "productId" },
         ])
         .lean();
 
@@ -217,7 +218,7 @@ const getMyConversations = async (userId: string, page: number = 1, limit: numbe
     const data = await ConversationModel.find(query)
         .populate([
             { path: "participantIds", select: "_id name photo phone verifiedBadge" },
-            { path: "productId", select: "_id title images price" },
+            { path: "productId" },
             {
                 path: "lastMessage",
                 populate: { path: "senderId", select: "_id name photo verifiedBadge" },
@@ -251,7 +252,7 @@ const getConversationById = async (userId: string, conversationId: string) => {
         participantIds: userId,
     }).populate([
         { path: "participantIds", select: "_id name photo phone verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
         {
             path: "lastMessage",
             populate: { path: "senderId", select: "_id name photo verifiedBadge" },
@@ -295,7 +296,7 @@ const getMessages = async (userId: string, conversationId: string, page: number 
     const data = await MessageModel.find(query)
         .populate([
             { path: "senderId", select: "_id name photo verifiedBadge" },
-            { path: "productId", select: "_id title images price" },
+            { path: "productId" },
         ])
         .sort({ createdAt: -1 }) // Get latest messages first for pagination
         .skip(skip)
@@ -342,7 +343,7 @@ const markAsRead = async (userId: string, conversationId: string) => {
 const updateOfferStatus = async (userId: string, messageId: string, status: MessageType) => {
     const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: { $in: ["OFFER", "ACCEPTED", "REJECTED"] } }, { $set: { type: status } }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
     ]);
 
     if (!message) throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
@@ -426,7 +427,7 @@ const updateOfferPrice = async (
         { returnDocument: "after" }
     ).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
     ]);
 
     if (!message) {
@@ -487,7 +488,7 @@ const editMessage = async (userId: string, messageId: string, payload: { text?: 
 
     const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: updateData }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
     ]);
 
     if (!message) {
@@ -546,7 +547,7 @@ const deleteMessage = async (userId: string, messageId: string) => {
 const markMessageAsCompleted = async (messageId: string) => {
     const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { returnDocument: "after" }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
     ]);
 
     if (message) {
@@ -587,7 +588,7 @@ const getSingleMessage = async (userId: string, messageId: string) => {
         deletedBy: { $ne: new Types.ObjectId(userId) },
     }).populate([
         { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId", select: "_id title images price" },
+        { path: "productId" },
     ]);
 
     if (!message) {

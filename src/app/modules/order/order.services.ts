@@ -219,7 +219,7 @@ const getMyOrders = async (userId: string, role: "buyer" | "seller", query: Reco
 };
 
 const getOrderById = async (orderId: string, userId: string) => {
-    const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product", "title images price category subcategory").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
+    const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
 
     if (!order) {
         throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
@@ -233,7 +233,7 @@ const getOrderById = async (orderId: string, userId: string) => {
 };
 
 const adminGetOrderById = async (orderId: string) => {
-    const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product", "title images price category subcategory").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
+    const order = await OrderModel.findOne({ _id: orderId, isDeleted: false }).populate("product").populate("buyer", "name photo email phone verifiedBadge role").populate("seller", "name photo email phone verifiedBadge role").populate("address").populate("payment", "paydunyaInvoiceToken paydunyaReceiptUrl paidAt currency status method metadata");
 
     if (!order) {
         throw new ApiError(httpStatus.NOT_FOUND, "Commande introuvable");
@@ -351,7 +351,7 @@ const updateOrderStatus = async (orderId: string, userId: any, status: string) =
     // }
 
     const result = await OrderModel.findById(order._id)
-        .populate("product", "title images price category subcategory")
+        .populate("product")
         .populate("buyer", "name photo email phone verifiedBadge role")
         .populate("seller", "name photo email phone verifiedBadge role")
         .populate("address")

@@ -59,7 +59,7 @@ const getUserReviews = async (sellerId: string, query: { page?: number; limit?: 
 
     const filters = { seller: sellerId, isDeleted: false, adminVisibility: "show" as const };
 
-    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("product").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
     const total = await ReviewModel.countDocuments(filters);
     const totalPage = Math.ceil(total / limit);
@@ -115,7 +115,7 @@ const getAllReviews = async (query: { page?: number; limit?: number; searchTerm?
         filters.comment = { $regex: escapedSearch, $options: "i" };
     }
 
-    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("seller", "_id name photo verifiedBadge").populate("product", "_id title images").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+    const reviews = await ReviewModel.find(filters).populate("user", "_id name photo verifiedBadge").populate("seller", "_id name photo verifiedBadge").populate("product").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
     const total = await ReviewModel.countDocuments(filters);
     const totalPage = Math.ceil(total / limit);

@@ -194,7 +194,7 @@ const verifyPayment = async (invoiceToken: string): Promise<IPayment> => {
 };
 
 const getPaymentById = async (id: string): Promise<IPayment> => {
-    const payment = await PaymentModel.findById(id).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
+    const payment = await PaymentModel.findById(id).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId").lean();
     if (!payment) {
         throw new ApiError(httpStatus.NOT_FOUND, "Paiement introuvable");
     }
@@ -220,7 +220,7 @@ const getUserPayments = async (userId: string, filters?: IPaymentFilter): Promis
         }
     }
 
-    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
+    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId").lean();
     return payments;
 };
 
@@ -251,7 +251,7 @@ const getAllPayments = async (filters?: IPaymentFilter) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const total = await PaymentModel.countDocuments(query);
-    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId", "title price images").lean();
+    const payments = await PaymentModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate("userId", "name email phone").populate("sellerId", "name email phone").populate("productId").lean();
 
     const totalPages = Math.ceil(total / Number(limit));
     return {
