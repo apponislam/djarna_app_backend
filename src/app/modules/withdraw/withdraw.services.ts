@@ -107,11 +107,11 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
                 ActivityService.logActivity(userId, "WITHDRAWAL_REQUEST", `Demande de retrait de ${payload.amount} FCFA soumise via ${payload.method}`, { withdrawalId: withdraw._id });
             } else {
                 console.error("PayDunya Submit-Invoice Failure Payload:", JSON.stringify(submitResponse.data, null, 2));
-                throw new Error(JSON.stringify(submitResponse.data));
+                throw new Error(submitResponse.data.response_text || "Échec de la soumission Paydunya");
             }
         } else {
             console.error("PayDunya Get-Invoice Failure Payload:", JSON.stringify(paydunyaResponse.data, null, 2));
-            throw new Error(JSON.stringify(paydunyaResponse.data));
+            throw new Error(paydunyaResponse.data.response_text || "Échec de la création de la facture Paydunya");
         }
 
         return withdraw;
@@ -126,7 +126,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
         // If Paydunya fails, we should probably keep it as PENDING and let an admin check,
         // or fail it and refund the user. For now, let's fail it and refund.
         withdraw.status = "FAILED";
-        withdraw.failReason = error.response ? JSON.stringify(error.response.data) : error.message;
+        withdraw.failReason = error.response?.data?.response_text || error.message;
         await withdraw.save();
         ActivityService.logActivity(userId, "WITHDRAWAL_REQUEST", `Échec de la demande de retrait de ${payload.amount} FCFA : ${withdraw.failReason}`, { withdrawalId: withdraw._id });
 
