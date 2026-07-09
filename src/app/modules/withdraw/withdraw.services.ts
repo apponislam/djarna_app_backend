@@ -58,12 +58,10 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
         const paydunyaResponse = await axios.post(
             getInvoiceUrl,
             {
-                disburse: {
-                    account_alias: cleanAccountNumber,
-                    amount: payload.amount,
-                    withdraw_mode: withdrawMode,
-                    callback_url: `${config.client_url}/api/v1/payment/webhook`,
-                },
+                account_alias: cleanAccountNumber,
+                amount: payload.amount,
+                withdraw_mode: withdrawMode,
+                callback_url: `${config.client_url}/api/v1/payment/webhook`,
             },
             {
                 headers: {
@@ -86,7 +84,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
             const submitResponse = await axios.post(
                 submitInvoiceUrl,
                 {
-                    disburse_token: disbursementToken,
+                    disburse_invoice: disbursementToken,
                     disburse_id: internalId,
                 },
                 {
