@@ -14,6 +14,14 @@ const sendPushNotification = async (tokens: string[], title: string, body: strin
                 body,
             },
             data: data || {},
+            apns: {
+                payload: {
+                    aps: {
+                        sound: "default",
+                        badge: 1,
+                    },
+                },
+            },
             tokens: tokens,
         };
 
