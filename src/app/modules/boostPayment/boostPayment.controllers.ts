@@ -64,9 +64,26 @@ const getAllBoostPayments = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getSingleBoostPayment = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userId = req.user?._id;
+    const userRole = req.user?.role;
+
+    const result = await BoostPaymentService.getSingleBoostPayment(id as string, userId as string, userRole as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Paiement de boost récupéré avec succès",
+        data: result,
+    });
+});
+
 export const BoostPaymentController = {
     initializeBoostPayment,
     verifyBoostPayment,
     getMyBoostPayments,
     getAllBoostPayments,
+    getSingleBoostPayment,
 };
+

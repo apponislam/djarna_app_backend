@@ -13,6 +13,8 @@ router.post("/verify", auth, validateRequest(verifyBoostPaymentSchema), BoostPay
 
 router.get("/my-payments", auth, BoostPaymentController.getMyBoostPayments);
 
+router.get("/:id", auth, BoostPaymentController.getSingleBoostPayment);
+
 router.get("/", auth, authorize(["ADMIN"]), BoostPaymentController.getAllBoostPayments);
 
 export const BoostPaymentRoutes = router;

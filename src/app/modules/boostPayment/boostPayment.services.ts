@@ -255,10 +255,31 @@ const getAllBoostPayments = async (filters?: {
     };
 };
 
+const getSingleBoostPayment = async (id: string, userId: string, userRole: string) => {
+    const result = await BoostPaymentModel.findById(id)
+        .populate("userId", "name email phone photo")
+        .populate("boostPackId")
+        .populate("productId")
+        .lean();
+
+    if (!result) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Paiement de boost introuvable");
+    }
+
+    // Check if user is the owner or an admin
+    if (userRole !== "ADMIN" && result.userId.toString() !== userId) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé");
+    }
+
+    return result;
+};
+
 export const BoostPaymentService = {
     initializeBoostPayment,
     verifyBoostPayment,
     getMyBoostPayments,
     getAllBoostPayments,
     applyBoostEffects,
+    getSingleBoostPayment,
 };
+
