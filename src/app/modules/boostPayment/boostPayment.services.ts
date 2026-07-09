@@ -234,7 +234,7 @@ const getAllBoostPayments = async (filters?: {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
-        .populate("userId", "name email phone")
+        .populate("userId", "name email phone photo")
         .populate("boostPackId")
         .populate("productId")
         .lean();
