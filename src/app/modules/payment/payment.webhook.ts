@@ -257,7 +257,12 @@ const webhookController = catchAsync(async (req: Request, res: Response) => {
     const receiptUrl = data.receipt_url;
 
     if (!invoiceToken) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invoice or Disbursement token is required");
+        return sendResponse(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: "Webhook ping received successfully",
+            data: null,
+        });
     }
 
     const result = await handleWebhook(invoiceToken, status, transactionId, receiptUrl);

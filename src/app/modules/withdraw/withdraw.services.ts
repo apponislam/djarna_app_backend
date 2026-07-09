@@ -61,7 +61,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
                 account_alias: cleanAccountNumber,
                 amount: payload.amount,
                 withdraw_mode: withdrawMode,
-                callback_url: `${config.client_url}/api/v1/payment/webhook`,
+                callback_url: `${config.backend_url}/api/v1/payment/webhook`,
             },
             {
                 headers: {

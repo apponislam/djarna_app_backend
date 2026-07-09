@@ -16,6 +16,7 @@ export default {
     jwt_refresh_expire: process.env.JWT_REFRESH_EXPIRE,
     jwt_password_reset_secret: process.env.JWT_PASSWORD_RESET_SECRET,
     client_url: process.env.CLIENT_URL,
+    backend_url: process.env.BACKEND_URL,
     mail: {
         smtp_host: process.env.SMTP_HOST,
         smtp_port: process.env.SMTP_PORT,
