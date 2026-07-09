@@ -18,13 +18,17 @@ const requestWithdrawal = catchAsync(async (req: Request, res: Response) => {
 
 const getMyWithdrawals = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user!._id;
-    const result = await WithdrawService.getMyWithdrawals(userId);
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+    const result = await WithdrawService.getMyWithdrawals(userId, { page, limit });
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Retraits récupérés avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 
@@ -35,7 +39,8 @@ const getAllWithdrawals = catchAsync(async (req: Request, res: Response) => {
         statusCode: httpStatus.OK,
         success: true,
         message: "Tous les retraits récupérés avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 

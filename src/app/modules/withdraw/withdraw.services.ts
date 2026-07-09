@@ -29,10 +29,13 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
 
     const withdrawMode = methodMapping[payload.method];
 
-    // Clean account_alias (remove +221 or other country codes if present)
-    let cleanAccountNumber = payload.accountNumber.replace(/^\+221/, "");
-    if (cleanAccountNumber.startsWith("+")) {
-        cleanAccountNumber = cleanAccountNumber.substring(1);
+    // Format account_alias to be in the form: 221XXXXXXXXX (Country code + local number, without the '+' sign)
+    let cleanAccountNumber = payload.accountNumber.replace(/[^\d]/g, ""); // Keep only digits
+    if (!cleanAccountNumber.startsWith("221")) {
+        if (cleanAccountNumber.startsWith("0")) {
+            cleanAccountNumber = cleanAccountNumber.substring(1); // Remove leading zero if present
+        }
+        cleanAccountNumber = "221" + cleanAccountNumber;
     }
 
     // 3. Create withdrawal record
@@ -134,12 +137,61 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
     }
 };
 
-const getMyWithdrawals = async (userId: string) => {
-    return await WithdrawModel.find({ userId }).sort({ createdAt: -1 });
+const getMyWithdrawals = async (userId: string, query: { page?: number; limit?: number }) => {
+    const { page = 1, limit = 10 } = query;
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const data = await WithdrawModel.find({ userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber);
+
+    const total = await WithdrawModel.countDocuments({ userId });
+    const totalPage = Math.ceil(total / limitNumber);
+
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPage,
+            totalPages: totalPage,
+            hasNext: pageNumber < totalPage,
+            hasPrev: pageNumber > 1,
+        },
+        data,
+    };
 };
 
-const getAllWithdrawals = async (filters: any) => {
-    return await WithdrawModel.find(filters).populate("userId", "name email phone").sort({ createdAt: -1 });
+const getAllWithdrawals = async (query: any) => {
+    const { page = 1, limit = 10, ...filters } = query;
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const data = await WithdrawModel.find(filters)
+        .populate("userId", "name email phone")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber);
+
+    const total = await WithdrawModel.countDocuments(filters);
+    const totalPage = Math.ceil(total / limitNumber);
+
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPage,
+            totalPages: totalPage,
+            hasNext: pageNumber < totalPage,
+            hasPrev: pageNumber > 1,
+        },
+        data,
+    };
 };
 
 export const WithdrawService = {
