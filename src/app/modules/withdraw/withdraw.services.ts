@@ -40,12 +40,11 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
         transactionId: internalId,
     });
 
-    // Format account_alias to be in the form: 221XXXXXXXXX (Country code + local number, without the '+' sign)
+    // Format account_alias to be in the form: XXXXXXXXX (local number without the country code '221', as required by PayDunya documentation)
     let cleanAccountNumber = payload.accountNumber.replace(/[^\d]/g, ""); // Keep only digits
     cleanAccountNumber = cleanAccountNumber.replace(/^00/, "");          // Remove international prefix '00' if present
     cleanAccountNumber = cleanAccountNumber.replace(/^221/, "");         // Remove Senegal country code '221' if present
-    cleanAccountNumber = cleanAccountNumber.replace(/^0+/, "");          // Remove any leading zeroes
-    cleanAccountNumber = "221" + cleanAccountNumber;                     // Prepend standard country code '221'
+    cleanAccountNumber = cleanAccountNumber.replace(/^0+/, "");          // Remove any leading zeroes (local 0)
 
     // 4. Deduct balance immediately (Escrow-like)
     await UserModel.findByIdAndUpdate(userId, {
