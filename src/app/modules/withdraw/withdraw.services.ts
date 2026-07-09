@@ -29,15 +29,6 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
 
     const withdrawMode = methodMapping[payload.method];
 
-    // Format account_alias to be in the form: 221XXXXXXXXX (Country code + local number, without the '+' sign)
-    let cleanAccountNumber = payload.accountNumber.replace(/[^\d]/g, ""); // Keep only digits
-    if (!cleanAccountNumber.startsWith("221")) {
-        if (cleanAccountNumber.startsWith("0")) {
-            cleanAccountNumber = cleanAccountNumber.substring(1); // Remove leading zero if present
-        }
-        cleanAccountNumber = "221" + cleanAccountNumber;
-    }
-
     // 3. Create withdrawal record
     const internalId = `WD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const withdraw = await WithdrawModel.create({
@@ -62,7 +53,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
             getInvoiceUrl,
             {
                 disburse: {
-                    account_alias: cleanAccountNumber,
+                    account_alias: payload.accountNumber,
                     amount: payload.amount,
                     withdraw_mode: withdrawMode,
                     callback_url: `${config.client_url}/api/v1/payment/webhook`,
