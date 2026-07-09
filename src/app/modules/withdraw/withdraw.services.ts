@@ -69,7 +69,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
             },
         );
 
-        console.log("PayDunya Get-Invoice Response:", paydunyaResponse.data);
+        console.log("PayDunya Get-Invoice Full Response:", JSON.stringify(paydunyaResponse.data, null, 2));
 
         if (paydunyaResponse.data.response_code === "00") {
             const disbursementToken = paydunyaResponse.data.disburse_token;
@@ -93,7 +93,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
                 },
             );
 
-            console.log("PayDunya Submit-Invoice Response:", submitResponse.data);
+            console.log("PayDunya Submit-Invoice Full Response:", JSON.stringify(submitResponse.data, null, 2));
 
             if (submitResponse.data.response_code === "00") {
                 withdraw.status = "PROCESSING";
@@ -110,7 +110,12 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
 
         return withdraw;
     } catch (error: any) {
-        console.error("Withdrawal Error:", error.response?.data || error.message);
+        if (error.response) {
+            console.error("PayDunya Error Response Data:", JSON.stringify(error.response.data, null, 2));
+            console.error("PayDunya Error Response Status:", error.response.status);
+        } else {
+            console.error("Withdrawal Error Message:", error.message);
+        }
 
         // If Paydunya fails, we should probably keep it as PENDING and let an admin check,
         // or fail it and refund the user. For now, let's fail it and refund.
