@@ -42,8 +42,31 @@ const getMyBoostPayments = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getAllBoostPayments = catchAsync(async (req: Request, res: Response) => {
+    const { userId, status, type, startDate, endDate, page, limit } = req.query;
+    const filters: any = {};
+    if (userId) filters.userId = userId as string;
+    if (status) filters.status = status;
+    if (type) filters.type = type;
+    if (startDate) filters.startDate = new Date(startDate as string);
+    if (endDate) filters.endDate = new Date(endDate as string);
+    if (page) filters.page = Number(page);
+    if (limit) filters.limit = Number(limit);
+
+    const result = await BoostPaymentService.getAllBoostPayments(filters);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Tous les paiements de boost récupérés avec succès",
+        data: result.data,
+        meta: result.meta,
+    });
+});
+
 export const BoostPaymentController = {
     initializeBoostPayment,
     verifyBoostPayment,
     getMyBoostPayments,
+    getAllBoostPayments,
 };

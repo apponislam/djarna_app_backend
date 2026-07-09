@@ -195,9 +195,70 @@ const getMyBoostPayments = async (userId: string) => {
         .lean();
 };
 
+const getAllBoostPayments = async (filters?: {
+    userId?: string;
+    status?: string;
+    type?: string;
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    limit?: number;
+}) => {
+    const query: any = {};
+
+    if (filters?.userId) {
+        query.userId = new Types.ObjectId(filters.userId);
+    }
+    if (filters?.status) {
+        query.status = filters.status;
+    }
+    if (filters?.type) {
+        query.type = filters.type;
+    }
+    if (filters?.startDate || filters?.endDate) {
+        query.createdAt = {};
+        if (filters.startDate) {
+            query.createdAt.$gte = filters.startDate;
+        }
+        if (filters.endDate) {
+            query.createdAt.$lte = filters.endDate;
+        }
+    }
+
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 10;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const total = await BoostPaymentModel.countDocuments(query);
+    const payments = await BoostPaymentModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .populate("userId", "name email phone")
+        .populate("boostPackId")
+        .populate("productId")
+        .lean();
+
+    const totalPages = Math.ceil(total / Number(limit));
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: totalPages,
+            totalPages,
+            hasNext: Number(page) < totalPages,
+            hasPrev: Number(page) > 1,
+        },
+        data: payments,
+    };
+};
+
 export const BoostPaymentService = {
     initializeBoostPayment,
     verifyBoostPayment,
     getMyBoostPayments,
+    getAllBoostPayments,
     applyBoostEffects,
 };
