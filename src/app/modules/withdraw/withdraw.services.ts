@@ -40,6 +40,13 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
         transactionId: internalId,
     });
 
+    // Format account_alias to be in the form: 221XXXXXXXXX (Country code + local number, without the '+' sign)
+    let cleanAccountNumber = payload.accountNumber.replace(/[^\d]/g, ""); // Keep only digits
+    cleanAccountNumber = cleanAccountNumber.replace(/^00/, "");          // Remove international prefix '00' if present
+    cleanAccountNumber = cleanAccountNumber.replace(/^221/, "");         // Remove Senegal country code '221' if present
+    cleanAccountNumber = cleanAccountNumber.replace(/^0+/, "");          // Remove any leading zeroes
+    cleanAccountNumber = "221" + cleanAccountNumber;                     // Prepend standard country code '221'
+
     // 4. Deduct balance immediately (Escrow-like)
     await UserModel.findByIdAndUpdate(userId, {
         $inc: { balance: -payload.amount },
@@ -53,7 +60,7 @@ const requestWithdrawal = async (userId: string, payload: { amount: number; meth
             getInvoiceUrl,
             {
                 disburse: {
-                    account_alias: payload.accountNumber,
+                    account_alias: cleanAccountNumber,
                     amount: payload.amount,
                     withdraw_mode: withdrawMode,
                     callback_url: `${config.client_url}/api/v1/payment/webhook`,
