@@ -119,17 +119,19 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
     dispute.adminNote = adminNote;
     dispute.resolvedAt = new Date();
 
-    if (resolution === "RESOLVED" && refundAmount && refundAmount > 0) {
-        // Trigger refund via PayDunya
-        await PaymentService.refundPayment(dispute.payment.toString(), refundAmount);
-        dispute.refundAmount = refundAmount;
+    if (resolution === "RESOLVED") {
+        // Trigger refund via PayDunya (if refundAmount is not passed, it defaults to full payment amount inside refundPayment)
+        const payment = await PaymentService.refundPayment(dispute.payment.toString(), refundAmount);
+        
+        // Use the actual refund amount (whether specified or defaulted to totalAmount)
+        const actualRefundAmount = refundAmount && refundAmount > 0 ? refundAmount : payment.totalAmount;
+        dispute.refundAmount = actualRefundAmount;
 
-        // Update payment and order statuses
-        await PaymentModel.findByIdAndUpdate(dispute.payment, { status: "REFUNDED" });
+        // Update order status (payment status is already updated inside refundPayment)
         await OrderModel.findByIdAndUpdate(dispute.order, { status: "CANCELLED" });
 
         // Log activity for refund (Admin)
-        ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Remboursement de ${refundAmount} traité pour le litige #${dispute._id}`, { disputeId: dispute._id, amount: refundAmount });
+        ActivityService.logActivity(adminId, "REFUND_PROCESSED", `Remboursement de ${actualRefundAmount} traité pour le litige #${dispute._id}`, { disputeId: dispute._id, amount: actualRefundAmount });
 
         // Notify Buyer about Refund
         const buyer = await UserModel.findById(dispute.buyer);
@@ -137,7 +139,7 @@ const resolveDispute = async (id: string, adminId: string, resolution: "RESOLVED
             await NotificationUtils.sendPushNotification(
                 buyer.fcmTokens,
                 "Remboursement traité",
-                `Un remboursement de ${refundAmount} FCFA a été traité pour votre litige.`,
+                `Un remboursement de ${actualRefundAmount} FCFA a été traité pour votre litige.`,
                 buyer._id.toString(),
                 "LITIGE_RESOLU",
                 {
