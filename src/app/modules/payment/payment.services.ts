@@ -313,8 +313,8 @@ const refundPayment = async (id: string, refundAmount?: number): Promise<IPaymen
         if (amountToRefund === payment.totalAmount) {
             payment.status = "REFUNDED";
         } else {
-            // Optional: You might want a "PARTIALLY_REFUNDED" status if your interface supports it
-            // For now, let's stick to the existing status or just keep it COMPLETED with metadata
+            // Set the payment status to REFUNDED so it doesn't remain DISPUTED after resolution
+            payment.status = "REFUNDED";
             payment.metadata = { ...payment.metadata, lastRefundAmount: amountToRefund, refundedAt: new Date() };
         }
 

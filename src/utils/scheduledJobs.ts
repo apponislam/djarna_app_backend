@@ -61,11 +61,12 @@ export const runEscrowRelease = async () => {
     try {
         const now = new Date();
 
-        // Find all payments where escrow is true, escrowReleaseAt has passed, and not yet released
+        // Find all payments where escrow is true, escrowReleaseAt has passed, and not yet released, excluding disputed/refunded/cancelled payments
         const paymentsToRelease = await PaymentModel.find({
             escrow: true,
             escrowReleaseAt: { $lt: now },
             escrowReleasedAt: { $exists: false },
+            status: { $nin: ["DISPUTED", "REFUNDED", "CANCELLED"] },
         });
 
         if (paymentsToRelease.length === 0) {
