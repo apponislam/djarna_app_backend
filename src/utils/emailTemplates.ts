@@ -56,12 +56,12 @@ export const sendEmailUpdateVerification = (email: string, name: string, verific
 export const sendPasswordResetByAdminEmail = (email: string, name: string, newPassword: string) => {
     const html = `
         <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
-            <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 30px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #b8841d 0%, #916512 100%); padding: 30px; text-align: center;">
                 <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.5px;">Password Updated</h2>
             </div>
             <div style="padding: 30px 40px; background-color: #ffffff;">
                 <p style="color: #1e293b; font-size: 16px; line-height: 1.6; margin-top: 0;">Hello ${name},</p>
-                <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your account password has been reset by the administrator. You can now log in using the temporary credentials below:</p>
+                <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your account password has been reset by the administrator. You can now log in using the credentials below:</p>
                 
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 24px 0;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -80,7 +80,7 @@ export const sendPasswordResetByAdminEmail = (email: string, name: string, newPa
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
                     <p style="color: #94a3b8; font-size: 12px; margin: 0 0 4px 0;">If you did not request this change, please contact support.</p>
-                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">Support Email: <a href="mailto:contact@djarna.com" style="color: #4f46e5; text-decoration: none; font-weight: 500;">contact@djarna.com</a></p>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">Support Email: <a href="mailto:contact@djarna.com" style="color: #b8841d; text-decoration: none; font-weight: 500;">contact@djarna.com</a></p>
                 </div>
             </div>
         </div>
