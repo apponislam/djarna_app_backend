@@ -9,7 +9,7 @@ import config from "../app/config";
 import { TErrorSources } from "../types/error";
 
 const globalErrorHandler: ErrorRequestHandler = (err, req, res, next): void => {
-    console.error("Error Caught in Global Handler:", err);
+    // console.error("Error Caught in Global Handler:", err);
     let statusCode = 500;
     let message = "Something went wrong!";
     let errorSources: TErrorSources = [
