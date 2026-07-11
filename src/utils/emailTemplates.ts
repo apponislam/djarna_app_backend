@@ -53,7 +53,7 @@ export const sendEmailUpdateVerification = (email: string, name: string, verific
     sendMail(email, "Verify Your New Email", html);
 };
 
-export const sendPasswordResetByAdminEmail = (email: string, name: string, newPassword: string) => {
+export const sendPasswordResetByAdminEmail = (email: string, name: string, phone: string, newPassword: string) => {
     const html = `
         <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
             <div style="background: linear-gradient(135deg, #b8841d 0%, #916512 100%); padding: 30px; text-align: center;">
@@ -67,7 +67,7 @@ export const sendPasswordResetByAdminEmail = (email: string, name: string, newPa
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 90px; font-weight: 500;">Phone:</td>
-                            <td style="padding: 6px 0; font-size: 14px; color: #0f172a; font-weight: 600; word-break: break-all;">${email}</td>
+                            <td style="padding: 6px 0; font-size: 14px; color: #0f172a; font-weight: 600; word-break: break-all;">${phone}</td>
                         </tr>
                         <tr>
                             <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 90px; font-weight: 500;">Password:</td>

@@ -5,6 +5,7 @@ import config from "../../config";
 import { UserModel } from "./auth.model";
 import { VerificationModel } from "./verification.model";
 import { ProductModel } from "../product/product.model";
+import { sendPasswordResetByAdminEmail } from "../../../utils/emailTemplates";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendVerificationCode, checkVerificationCode } from "../../../utils/twilioHelper";
@@ -254,6 +255,12 @@ const setUserPassword = async (userId: string, newPassword: string) => {
     const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
     user.password = hashedPassword;
     await user.save();
+
+    if (user.email) {
+        process.nextTick(() => {
+            sendPasswordResetByAdminEmail(user.email!, user.name, user.phone, newPassword);
+        });
+    }
 };
 
 const getMyProfile = async (userId: string) => {

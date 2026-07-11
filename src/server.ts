@@ -7,7 +7,7 @@ import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
 import { initSocket } from "./app/socket/socket";
 import { startScheduledJobs } from "./utils/scheduledJobs";
-import { testMail } from "./utils/testmail";
+// import { testMail } from "./utils/testmail";
 
 let server: Server;
 
