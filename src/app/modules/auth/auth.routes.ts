@@ -136,7 +136,7 @@ router.post("/add-fcm-token", auth, authControllers.addFCMToken);
 router.post("/remove-fcm-token", auth, authControllers.removeFCMToken);
 
 // Admin only routes
-router.post("/set-password/:userId", auth, authControllers.setUserPassword);
+router.post("/set-password/:userId", auth, authorize(["ADMIN"]), authControllers.setUserPassword);
 router.get("/all-referrals", auth, authorize(["ADMIN"]), authControllers.getAllReferrals);
 
 export const authRoutes = router;

@@ -7,6 +7,7 @@ import { seedAdmin } from "./app/modules/auth/auth.seed";
 import { seedSettings } from "./app/modules/settings/settings.seed";
 import { initSocket } from "./app/socket/socket";
 import { startScheduledJobs } from "./utils/scheduledJobs";
+import { testMail } from "./utils/testmail";
 
 let server: Server;
 
@@ -19,6 +20,7 @@ async function main() {
         await seedAdmin();
         await seedSettings();
         startScheduledJobs();
+        // await testMail();
 
         server.listen(Number(config.port), config.ip, () => {
             console.log(`✅ App listening on port ${config.port} at ${config.ip}`);
