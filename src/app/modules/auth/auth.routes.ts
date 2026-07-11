@@ -134,6 +134,7 @@ router.patch("/profile", auth, uploadProfileImage, parseBodyData, validateReques
 router.post("/change-password", auth, validateRequest(changePasswordSchema), authControllers.changePassword);
 router.post("/add-fcm-token", auth, authControllers.addFCMToken);
 router.post("/remove-fcm-token", auth, authControllers.removeFCMToken);
+router.delete("/delete-account", auth, authControllers.deleteAccount);
 
 // Admin only routes
 router.post("/set-password/:userId", auth, authorize(["ADMIN"]), authControllers.setUserPassword);

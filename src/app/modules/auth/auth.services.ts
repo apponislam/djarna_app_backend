@@ -555,6 +555,24 @@ const oauthLoginSignup = async (data: { provider: "GOOGLE" | "FACEBOOK" | "APPLE
     return { user: userWithoutSensitive, accessToken, refreshToken, isNewUser: true };
 };
 
+const deleteAccount = async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    // Pause all of the user's products
+    await ProductModel.updateMany(
+        { user: userId },
+        { status: "PAUSED" }
+    );
+
+    return { message: "Compte supprimé avec succès et produits mis en pause" };
+};
+
 export const authServices = {
     sendRegistrationOtp,
     verifyRegistrationOtp,
@@ -576,4 +594,5 @@ export const authServices = {
     getMyReferrals,
     getAllReferrals,
     oauthLoginSignup,
+    deleteAccount,
 };
