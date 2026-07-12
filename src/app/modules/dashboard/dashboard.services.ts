@@ -2,6 +2,7 @@ import { OrderModel } from "../order/order.model";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { PaymentModel } from "../payment/payment.model";
+import { BoostPaymentModel } from "../boostPayment/boostPayment.model";
 
 const getDashboardStats = async () => {
     const totalUsers = await UserModel.countDocuments();
@@ -79,10 +80,87 @@ const getCommissionStats = async () => {
         },
     ]);
 
+    const totalBoost = await BoostPaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$amount" },
+            },
+        },
+    ]);
+
+    const thisMonthBoost = await BoostPaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$amount" },
+            },
+        },
+    ]);
+
+    const totalBuyerProtection = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                buyerProtectionFee: { $exists: true },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$buyerProtectionFee" },
+            },
+        },
+    ]);
+
+    const thisMonthBuyerProtection = await PaymentModel.aggregate([
+        {
+            $match: {
+                status: "COMPLETED",
+                buyerProtectionFee: { $exists: true },
+                createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$buyerProtectionFee" },
+            },
+        },
+    ]);
+
+    const totalCommissionVal = totalCommission.length > 0 ? totalCommission[0].total : 0;
+    const thisMonthCommissionVal = thisMonthCommission.length > 0 ? thisMonthCommission[0].total : 0;
+    const pendingEscrowVal = pendingEscrow.length > 0 ? pendingEscrow[0].total : 0;
+    const totalBoostVal = totalBoost.length > 0 ? totalBoost[0].total : 0;
+    const thisMonthBoostVal = thisMonthBoost.length > 0 ? thisMonthBoost[0].total : 0;
+    const totalBuyerProtectionVal = totalBuyerProtection.length > 0 ? totalBuyerProtection[0].total : 0;
+    const thisMonthBuyerProtectionVal = thisMonthBuyerProtection.length > 0 ? thisMonthBuyerProtection[0].total : 0;
+
+    const totalRevenueVal = totalCommissionVal + totalBoostVal + totalBuyerProtectionVal;
+    const thisMonthRevenueVal = thisMonthCommissionVal + thisMonthBoostVal + thisMonthBuyerProtectionVal;
+
     return {
-        totalRevenue: totalCommission.length > 0 ? totalCommission[0].total : 0,
-        thisMonthCommission: thisMonthCommission.length > 0 ? thisMonthCommission[0].total : 0,
-        pendingEscrow: pendingEscrow.length > 0 ? pendingEscrow[0].total : 0,
+        totalRevenue: totalRevenueVal,
+        thisMonthRevenue: thisMonthRevenueVal,
+        totalCommission: totalCommissionVal,
+        thisMonthCommission: thisMonthCommissionVal,
+        totalBoost: totalBoostVal,
+        thisMonthBoost: thisMonthBoostVal,
+        totalBuyerProtectionFee: totalBuyerProtectionVal,
+        thisMonthBuyerProtectionFee: thisMonthBuyerProtectionVal,
+        pendingEscrow: pendingEscrowVal,
     };
 };
 
