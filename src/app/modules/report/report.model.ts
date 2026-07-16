@@ -15,8 +15,10 @@ const ReportSchema = new Schema<IReport>(
         },
         reportedItem: {
             type: Schema.Types.ObjectId,
-            required: true,
-            refPath: "type", // Dynamic reference based on type
+            ref: "Product",
+            required: function (this: any) {
+                return this.type === "LISTING";
+            },
         },
         reporter: {
             type: Schema.Types.ObjectId,
