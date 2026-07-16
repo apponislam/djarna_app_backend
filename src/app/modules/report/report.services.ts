@@ -31,7 +31,13 @@ const getAllReports = async (query: any) => {
     const sortOptions: any = {};
     sortOptions[sortBy] = order === "desc" ? -1 : 1;
 
-    const result = await ReportModel.find(filters).populate("reporter", "name email phone verifiedBadge").populate("reportedUser", "name email phone verifiedBadge").sort(sortOptions).skip(skip).limit(limitNumber);
+    const result = await ReportModel.find(filters)
+        .populate("reporter", "name email phone photo verifiedBadge")
+        .populate("reportedUser", "name email phone photo verifiedBadge")
+        .populate("reportedItem")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNumber);
 
     const total = await ReportModel.countDocuments(filters);
     const totalPages = Math.ceil(total / limitNumber);
@@ -50,7 +56,10 @@ const getAllReports = async (query: any) => {
 };
 
 const getReportById = async (id: string) => {
-    const result = await ReportModel.findById(id).populate("reporter", "name email phone verifiedBadge").populate("reportedUser", "name email phone verifiedBadge");
+    const result = await ReportModel.findById(id)
+        .populate("reporter", "name email phone photo verifiedBadge")
+        .populate("reportedUser", "name email phone photo verifiedBadge")
+        .populate("reportedItem");
 
     if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Signalement introuvable");
     return result;
