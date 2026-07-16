@@ -35,13 +35,14 @@ const unblockUser = catchAsync(async (req: Request, res: Response) => {
 const getBlockedUsers = catchAsync(async (req: Request, res: Response) => {
     const blockerId = req.user?._id;
 
-    const result = await BlockService.getBlockedUsers(blockerId as string);
+    const result = await BlockService.getBlockedUsers(blockerId as string, req.query);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Liste des utilisateurs bloqués récupérée avec succès",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 

@@ -1,5 +1,5 @@
 import httpStatus from "http-status";
-import mongoose, { Types } from "mongoose";
+import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import { ConversationModel, MessageModel } from "./messages.model";
 import { Message, MessageType } from "./messages.interface";
@@ -7,7 +7,7 @@ import { emitToUser } from "../../socket/socket";
 import { ProductModel } from "../product/product.model";
 import { UserModel } from "../auth/auth.model";
 import { NotificationUtils } from "../../../utils/notification";
-import { send } from "process";
+import { BlockService } from "../block/block.services";
 
 /**
  * Create a new conversation
@@ -37,6 +37,12 @@ const createConversation = async (senderId: string, payload: { receiverId?: stri
     const receiver = await UserModel.findById(receiverId);
     if (!receiver) {
         throw new ApiError(httpStatus.NOT_FOUND, "Destinataire introuvable !");
+    }
+
+    // Check if either user has blocked the other
+    const isBlocked = await BlockService.isBlocked(senderId, receiverId);
+    if (isBlocked) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Impossible d'initier la conversation car l'un de vous a bloqué l'autre");
     }
 
     let conversation = await ConversationModel.findOne({
@@ -109,6 +115,12 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
         throw new ApiError(httpStatus.NOT_FOUND, "Destinataire introuvable !");
     }
 
+    // Check if either user has blocked the other
+    const isBlocked = await BlockService.isBlocked(senderId, receiverId);
+    if (isBlocked) {
+        throw new ApiError(httpStatus.FORBIDDEN, "Impossible d'envoyer le message car l'un de vous a bloqué l'autre");
+    }
+
     // 2. Find or Create conversation
     let conversation = await ConversationModel.findOne({
         participantIds: { $all: [senderId, receiverId], $size: 2 },
@@ -158,10 +170,7 @@ const sendMessage = async (senderId: string, payload: Partial<Message> & { recei
 
     // 4. Emit events
     const messageToEmit = await MessageModel.findById(newMessage._id)
-        .populate([
-            { path: "senderId", select: "_id name photo verifiedBadge" },
-            { path: "productId" },
-        ])
+        .populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }])
         .lean();
 
     [senderId, receiverId].forEach((id) => {
@@ -294,10 +303,7 @@ const getMessages = async (userId: string, conversationId: string, page: number 
     const totalPages = Math.ceil(total / limit);
 
     const data = await MessageModel.find(query)
-        .populate([
-            { path: "senderId", select: "_id name photo verifiedBadge" },
-            { path: "productId" },
-        ])
+        .populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }])
         .sort({ createdAt: -1 }) // Get latest messages first for pagination
         .skip(skip)
         .limit(limit)
@@ -341,10 +347,7 @@ const markAsRead = async (userId: string, conversationId: string) => {
  * Update offer status
  */
 const updateOfferStatus = async (userId: string, messageId: string, status: MessageType) => {
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: { $in: ["OFFER", "ACCEPTED", "REJECTED"] } }, { $set: { type: status } }, { returnDocument: "after" }).populate([
-        { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId" },
-    ]);
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, type: { $in: ["OFFER", "ACCEPTED", "REJECTED"] } }, { $set: { type: status } }, { returnDocument: "after" }).populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }]);
 
     if (!message) throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
 
@@ -396,11 +399,7 @@ const updateOfferStatus = async (userId: string, messageId: string, status: Mess
 /**
  * Update the price and shipping fee of an offer message
  */
-const updateOfferPrice = async (
-    userId: string,
-    messageId: string,
-    payload: { offerPrice?: number; shippingPrice?: number }
-) => {
+const updateOfferPrice = async (userId: string, messageId: string, payload: { offerPrice?: number; shippingPrice?: number }) => {
     // 1. Find the message of type OFFER
     const messageExists = await MessageModel.findOne({ _id: messageId, type: "OFFER" });
     if (!messageExists) {
@@ -421,14 +420,7 @@ const updateOfferPrice = async (
     if (payload.shippingPrice !== undefined) updateData.shippingPrice = payload.shippingPrice;
 
     // 3. Perform update
-    const message = await MessageModel.findByIdAndUpdate(
-        messageId,
-        { $set: updateData },
-        { returnDocument: "after" }
-    ).populate([
-        { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId" },
-    ]);
+    const message = await MessageModel.findByIdAndUpdate(messageId, { $set: updateData }, { returnDocument: "after" }).populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }]);
 
     if (!message) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message d'offre introuvable");
@@ -460,14 +452,7 @@ const updateOfferPrice = async (
                         shippingPrice: message.shippingPrice?.toString() || "0",
                     };
 
-                    await NotificationUtils.sendPushNotification(
-                        receiver.fcmTokens,
-                        title,
-                        body,
-                        receiver._id.toString(),
-                        type,
-                        notificationData
-                    );
+                    await NotificationUtils.sendPushNotification(receiver.fcmTokens, title, body, receiver._id.toString(), type, notificationData);
                 }
             } catch (err) {
                 console.error("Error sending push notification for offer price update:", err);
@@ -486,10 +471,7 @@ const editMessage = async (userId: string, messageId: string, payload: { text?: 
     if (payload.text !== undefined) updateData.text = payload.text;
     if (payload.location !== undefined) updateData.location = payload.location;
 
-    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: updateData }, { returnDocument: "after" }).populate([
-        { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId" },
-    ]);
+    const message = await MessageModel.findOneAndUpdate({ _id: messageId, senderId: userId }, { $set: updateData }, { returnDocument: "after" }).populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }]);
 
     if (!message) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message introuvable ou non autorisé");
@@ -545,10 +527,7 @@ const deleteMessage = async (userId: string, messageId: string) => {
  * Mark a message as COMPLETED and sync via socket
  */
 const markMessageAsCompleted = async (messageId: string) => {
-    const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { returnDocument: "after" }).populate([
-        { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId" },
-    ]);
+    const message = await MessageModel.findByIdAndUpdate(messageId, { type: "COMPLETED" }, { returnDocument: "after" }).populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }]);
 
     if (message) {
         const conversation = await ConversationModel.findById(message.conversationId);
@@ -586,10 +565,7 @@ const getSingleMessage = async (userId: string, messageId: string) => {
     const message = await MessageModel.findOne({
         _id: messageId,
         deletedBy: { $ne: new Types.ObjectId(userId) },
-    }).populate([
-        { path: "senderId", select: "_id name photo verifiedBadge" },
-        { path: "productId" },
-    ]);
+    }).populate([{ path: "senderId", select: "_id name photo verifiedBadge" }, { path: "productId" }]);
 
     if (!message) {
         throw new ApiError(httpStatus.NOT_FOUND, "Message introuvable");

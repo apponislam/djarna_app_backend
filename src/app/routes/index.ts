@@ -20,6 +20,7 @@ import { DashboardRoutes } from "../modules/dashboard/dashboard.routes";
 import { ActivityRoutes } from "../modules/activity/activity.routes";
 import { DisputeRoutes } from "../modules/dispute/dispute.routes";
 import { NotificationRoutes } from "../modules/notification/notification.routes";
+import { BlockRoutes } from "../modules/block/block.routes";
 
 const router = express.Router();
 
@@ -107,6 +108,10 @@ const moduleRoutes = [
     {
         path: "/notifications",
         route: NotificationRoutes,
+    },
+    {
+        path: "/block",
+        route: BlockRoutes,
     },
 ];
 

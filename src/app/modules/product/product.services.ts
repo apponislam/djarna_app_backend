@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import { FavoriteModel } from "../favorite/favorite.model";
 import { ActivityService } from "../activity/activity.services";
 import { escapeRegex } from "../../../utils/escapeRegex";
+import { BlockService } from "../block/block.services";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -42,6 +43,13 @@ const getAllProducts = async (query: any, userId?: string) => {
     const skip = (pageNumber - 1) * limitNumber;
 
     const filters: any = { status: "ACTIVE", isDeleted: false };
+
+    if (userId) {
+        const blockedUserIds = await BlockService.getBlockedUserIds(userId);
+        if (blockedUserIds.length > 0) {
+            filters.user = { $nin: blockedUserIds.map(id => new mongoose.Types.ObjectId(id)) };
+        }
+    }
 
     if (searchTerm) {
         const escapedSearch = escapeRegex(searchTerm);
@@ -238,6 +246,10 @@ const getProductById = async (id: string, userId?: string) => {
     }
 
     if (userId) {
+        const isBlocked = await BlockService.isBlocked(userId, (result.user as any)._id.toString());
+        if (isBlocked) {
+            throw new ApiError(httpStatus.FORBIDDEN, "Accès refusé");
+        }
         const favorite = await FavoriteModel.findOne({ user: userId, product: id });
         (result as any).isFavorite = !!favorite;
     } else {

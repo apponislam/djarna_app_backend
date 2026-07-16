@@ -5,6 +5,7 @@ import { FollowModel } from "./follow.model";
 import { UserModel } from "../auth/auth.model";
 import { ActivityService } from "../activity/activity.services";
 import { escapeRegex } from "../../../utils/escapeRegex";
+import { BlockService } from "../block/block.services";
 
 /**
  * Toggle follow/unfollow a user.
@@ -32,6 +33,12 @@ const toggleFollow = async (followerId: string, followingId: string) => {
         ActivityService.logActivity(followerId, "UNFOLLOW", `S'est désabonné de ${targetUser.name}`, { followingId });
         return { isFollowing: false };
     } else {
+        // Check if either user has blocked the other
+        const isBlocked = await BlockService.isBlocked(followerId, followingId);
+        if (isBlocked) {
+            throw new ApiError(httpStatus.FORBIDDEN, "Impossible de suivre cet utilisateur : un blocage existe entre vous");
+        }
+
         // Follow
         await FollowModel.create({
             follower: followerId,

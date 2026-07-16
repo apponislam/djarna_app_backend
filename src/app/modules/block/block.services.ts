@@ -40,9 +40,33 @@ const unblockUser = async (blockerId: string, blockedId: string) => {
     return block;
 };
 
-const getBlockedUsers = async (blockerId: string) => {
-    const blocks = await BlockModel.find({ blocker: blockerId }).populate("blocked", "name email phone photo verifiedBadge");
-    return blocks.map(block => block.blocked);
+const getBlockedUsers = async (blockerId: string, query: Record<string, any> = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const filters = { blocker: blockerId };
+
+    const blocks = await BlockModel.find(filters)
+        .populate("blocked", "name email phone photo verifiedBadge")
+        .skip(skip)
+        .limit(limitNumber);
+
+    const total = await BlockModel.countDocuments(filters);
+    const totalPages = Math.ceil(total / limitNumber);
+
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
+        },
+        data: blocks.map(block => block.blocked),
+    };
 };
 
 /**
