@@ -12,7 +12,11 @@ const createReport = async (payload: IReport) => {
 };
 
 const getAllReports = async (query: any) => {
-    const { searchTerm, type, status, sortBy = "createdAt", order = "desc" } = query;
+    const { page = 1, limit = 10, searchTerm, type, status, sortBy = "createdAt", order = "desc" } = query;
+
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
 
     const filters: any = {};
 
@@ -27,14 +31,22 @@ const getAllReports = async (query: any) => {
     const sortOptions: any = {};
     sortOptions[sortBy] = order === "desc" ? -1 : 1;
 
-    const result = await ReportModel.find(filters)
-        .populate("reporter", "name email phone verifiedBadge")
-        .populate("reportedUser", "name email phone verifiedBadge")
-        // Note: populate reportedItem might require specific logic due to refPath,
-        // but for listing type we can explicitly populate product details if needed.
-        .sort(sortOptions);
+    const result = await ReportModel.find(filters).populate("reporter", "name email phone verifiedBadge").populate("reportedUser", "name email phone verifiedBadge").sort(sortOptions).skip(skip).limit(limitNumber);
 
-    return result;
+    const total = await ReportModel.countDocuments(filters);
+    const totalPages = Math.ceil(total / limitNumber);
+
+    return {
+        meta: {
+            page: pageNumber,
+            limit: limitNumber,
+            total,
+            totalPages,
+            hasNext: pageNumber < totalPages,
+            hasPrev: pageNumber > 1,
+        },
+        data: result,
+    };
 };
 
 const getReportById = async (id: string) => {
