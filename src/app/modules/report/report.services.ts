@@ -72,9 +72,32 @@ const updateReportStatus = async (id: string, status: string) => {
     return result;
 };
 
+const getReportStats = async () => {
+    const total = await ReportModel.countDocuments();
+    const open = await ReportModel.countDocuments({ status: "OPEN" });
+    const inReview = await ReportModel.countDocuments({ status: "IN_REVIEW" });
+    const resolved = await ReportModel.countDocuments({ status: "RESOLVED" });
+    const listing = await ReportModel.countDocuments({ type: "LISTING" });
+    const user = await ReportModel.countDocuments({ type: "USER" });
+
+    return {
+        total,
+        status: {
+            open,
+            inReview,
+            resolved,
+        },
+        type: {
+            listing,
+            user,
+        },
+    };
+};
+
 export const ReportService = {
     createReport,
     getAllReports,
     getReportById,
     updateReportStatus,
+    getReportStats,
 };

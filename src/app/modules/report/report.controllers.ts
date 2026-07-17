@@ -58,9 +58,21 @@ const updateReportStatus = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getReportStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await ReportService.getReportStats();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Statistiques des signalements récupérées avec succès",
+        data: result,
+    });
+});
+
 export const ReportController = {
     createReport,
     getAllReports,
     getReportById,
     updateReportStatus,
+    getReportStats,
 };

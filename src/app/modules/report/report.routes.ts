@@ -11,8 +11,8 @@ const router = Router();
 router.post("/", auth, validateRequest(createReportSchema), ReportController.createReport);
 
 // Protected Admin only management routes
+router.get("/stats", auth, authorize(["ADMIN"]), ReportController.getReportStats);
 router.get("/", auth, authorize(["ADMIN"]), ReportController.getAllReports);
-
 router.get("/:id", auth, authorize(["ADMIN"]), ReportController.getReportById);
 
 router.patch("/:id/status", auth, authorize(["ADMIN"]), validateRequest(updateReportStatusSchema), ReportController.updateReportStatus);
