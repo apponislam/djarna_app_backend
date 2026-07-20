@@ -18,8 +18,12 @@ jobs:
                   key: ${{ secrets.SSH_KEY }}
                   port: ${{ secrets.PORT }}
                   script: |
-                      eval "$(fnm env --use-on-cd)"
+                      export FNM_PATH="/root/.local/share/fnm"
+                      export PATH="$FNM_PATH:$PATH"
+                      eval "$(/root/.local/share/fnm/fnm env --shell bash)"
+
                       cd /srv/Djarna_Backend
+
                       npm install
                       npm run build
                       pm2 restart Djarna_Backend
