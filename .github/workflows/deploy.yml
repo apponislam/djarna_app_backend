@@ -1,0 +1,25 @@
+name: Deploy Backend
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy to Hostinger VPS
+              uses: appleboy/ssh-action@v1.2.2
+              with:
+                  host: ${{ secrets.HOST }}
+                  username: ${{ secrets.USERNAME }}
+                  key: ${{ secrets.SSH_KEY }}
+                  port: ${{ secrets.PORT }}
+                  script: |
+                      cd /srv/Djarna_Backend
+                      git pull origin main
+                      npm ci
+                      npm run build
+                      pm2 restart Djarna_Backend
