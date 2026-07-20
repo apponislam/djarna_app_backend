@@ -23,7 +23,7 @@ async function main() {
         // await testMail();
 
         server.listen(Number(config.port), config.ip, () => {
-            console.log(`✅ App listening on port ${config.port} at ${config.ip}`);
+            console.log(`✅ App listening on port ${config.port} at ${config.ip} |`);
         });
     } catch (err) {
         console.log("❌ DB Connection Failed:", err);
