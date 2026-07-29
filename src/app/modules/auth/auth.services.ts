@@ -7,12 +7,20 @@ import { VerificationModel } from "./verification.model";
 import { ProductModel } from "../product/product.model";
 import { sendPasswordResetByAdminEmail } from "../../../utils/emailTemplates";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import { sendVerificationCode, checkVerificationCode } from "../../../utils/twilioHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 import mongoose from "mongoose";
 import { FollowModel } from "../follow/follow.model";
 import { ActivityService } from "../activity/activity.services";
+import { ShippingAddressModel } from "../address/address.model";
+import { FavoriteModel } from "../favorite/favorite.model";
+import { BlockModel } from "../block/block.model";
+import { NotificationModel } from "../notification/notification.model";
+import { IdentityVerificationModel } from "../identityVerification/identityVerification.model";
+import { ConversationModel, MessageModel } from "../message/messages.model";
+import { ActivityModel } from "../activity/activity.model";
+import { OrderModel } from "../order/order.model";
+import { WithdrawModel } from "../withdraw/withdraw.model";
 
 const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
@@ -27,11 +35,7 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     await sendVerificationCode(normalizedPhone);
 
     // Upsert verification record (to track verification state and referral code)
-    await VerificationModel.findOneAndUpdate(
-        { phone: normalizedPhone },
-        { isVerified: false, referralCode },
-        { upsert: true, returnDocument: "after" }
-    );
+    await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { isVerified: false, referralCode }, { upsert: true, returnDocument: "after" });
 
     return { message: "OTP envoyé avec succès" };
 };
@@ -358,13 +362,13 @@ const addFCMToken = async (userId: string, token: string) => {
 
     // 3. Update and clean up token array
     let updatedTokens = [...(user.fcmTokens || [])];
-    
+
     // If the token already exists, remove it first so we can push it to the end (making it the most recent)
     const tokenIndex = updatedTokens.indexOf(token);
     if (tokenIndex > -1) {
         updatedTokens.splice(tokenIndex, 1);
     }
-    
+
     // Push the current token to the end of the array
     updatedTokens.push(token);
 
@@ -568,16 +572,69 @@ const deleteAccount = async (userId: string) => {
         throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
     }
 
-    user.isActive = false;
-    await user.save();
+    // Check for active orders (buyer or seller status is not completed/cancelled)
+    const activeOrder = await OrderModel.findOne({
+        $or: [{ buyer: userId }, { seller: userId }],
+        status: { $in: ["PENDING", "SHIPPED", "DISPUTED"] },
+    });
+    if (activeOrder) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Impossible de supprimer votre compte avec des transactions ou commandes en cours."
+        );
+    }
 
-    // Pause all of the user's products
-    await ProductModel.updateMany(
-        { user: userId },
-        { status: "PAUSED" }
-    );
+    // Check for active/pending withdrawals
+    const activeWithdrawal = await WithdrawModel.findOne({
+        userId,
+        status: { $in: ["PENDING", "PROCESSING"] },
+    });
+    if (activeWithdrawal) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Impossible de supprimer votre compte avec des demandes de retrait en cours."
+        );
+    }
 
-    return { message: "Compte supprimé avec succès et produits mis en pause" };
+    // Delete user from UserModel
+    await UserModel.findByIdAndDelete(userId);
+
+    // Delete verification records
+    await VerificationModel.deleteMany({ phone: user.phone });
+
+    // Delete products
+    await ProductModel.deleteMany({ user: userId });
+
+    // Delete shipping addresses
+    await ShippingAddressModel.deleteMany({ user: userId });
+
+    // Delete favorites
+    await FavoriteModel.deleteMany({ user: userId });
+
+    // Delete follows
+    await FollowModel.deleteMany({ $or: [{ follower: userId }, { following: userId }] });
+
+    // Delete blocks
+    await BlockModel.deleteMany({ $or: [{ blocker: userId }, { blocked: userId }] });
+
+    // Delete notifications
+    await NotificationModel.deleteMany({ user: userId });
+
+    // Delete identity verifications
+    await IdentityVerificationModel.deleteMany({ user: userId });
+
+    // Delete conversations and messages
+    const conversations = await ConversationModel.find({ participantIds: userId });
+    const conversationIds = conversations.map((c) => c._id);
+    if (conversationIds.length > 0) {
+        await ConversationModel.deleteMany({ _id: { $in: conversationIds } });
+        await MessageModel.deleteMany({ conversationId: { $in: conversationIds } });
+    }
+
+    // Delete activity records
+    await ActivityModel.deleteMany({ user: userId });
+
+    return { message: "Compte supprimé avec succès" };
 };
 
 export const authServices = {
