@@ -34,6 +34,10 @@ export default {
     twilio_phone_number: process.env.TWILIO_PHONE_NUMBER,
     twilio_verify_service_sid: process.env.TWILIO_VERIFY_SERVICE_SID,
 
+    // Dexchange SMS Config
+    dexchange_sms_api_key: process.env.DEXCHANGE_SMS_API_KEY,
+    dexchange_sms_signature: process.env.DEXCHANGE_SMS_SIGNATURE,
+
     // Payment Config
     paydunya_mode: process.env.PAYDUNYA_MODE || "sandbox",
     paydunya_master_key: process.env.PAYDUNYA_MASTER_KEY,
