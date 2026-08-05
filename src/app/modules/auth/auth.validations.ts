@@ -47,7 +47,7 @@ export const sendOtpSchema = z.object({
 
 export const verifyOtpSchema = z.object({
     phone: z.string().trim().min(1, "Phone is required"),
-    otp: z.string().length(6, "OTP must be 6 digits"),
+    otp: z.string().min(4).max(6, "OTP must be 4 to 6 digits"),
 });
 
 export const resendVerificationSchema = z.object({
@@ -74,7 +74,7 @@ export const requestPasswordResetSchema = z.object({
 
 export const resetPasswordSchema = z.object({
     phone: z.string().trim().min(1, "Phone is required"),
-    otp: z.string().length(6, "OTP must be 6 digits"),
+    otp: z.string().min(4).max(6, "OTP must be 4 to 6 digits"),
     newPassword: z.string().min(6),
 });
 
