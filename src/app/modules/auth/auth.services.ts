@@ -7,8 +7,8 @@ import { VerificationModel } from "./verification.model";
 import { ProductModel } from "../product/product.model";
 import { sendPasswordResetByAdminEmail } from "../../../utils/emailTemplates";
 import bcrypt from "bcrypt";
-import { sendVerificationCode, checkVerificationCode } from "../../../utils/twilioHelper";
-// import { sendVerificationCode as sendDexchangeOtp, checkVerificationCode as checkDexchangeOtp } from "../../../utils/dexchangeSmsHelper";
+// import { sendVerificationCode, checkVerificationCode } from "../../../utils/twilioHelper";
+import { sendVerificationCode as sendDexchangeOtp, checkVerificationCode as checkDexchangeOtp } from "../../../utils/dexchangeSmsHelper";
 import { normalizePhoneNumber } from "../../../utils/phoneHelper";
 import mongoose from "mongoose";
 import { FollowModel } from "../follow/follow.model";
@@ -33,9 +33,9 @@ const sendRegistrationOtp = async (phone: string, referralCode?: string) => {
     }
 
     // Send SMS verification via Twilio Verify
-    await sendVerificationCode(normalizedPhone);
+    // await sendVerificationCode(normalizedPhone);
     // Send SMS verification via Dexchange SMS OTP
-    // await sendDexchangeOtp(normalizedPhone);
+    await sendDexchangeOtp(normalizedPhone);
 
     // Upsert verification record (to track verification state and referral code)
     await VerificationModel.findOneAndUpdate({ phone: normalizedPhone }, { isVerified: false, referralCode }, { upsert: true, returnDocument: "after" });
@@ -47,9 +47,9 @@ const verifyRegistrationOtp = async (phone: string, otp: string) => {
     const normalizedPhone = normalizePhoneNumber(phone);
 
     // Verify OTP code via Twilio Verify
-    const isValid = await checkVerificationCode(normalizedPhone, otp);
+    // const isValid = await checkVerificationCode(normalizedPhone, otp);
     // Verify OTP code via Dexchange SMS OTP
-    // const isValid = await checkDexchangeOtp(normalizedPhone, otp);
+    const isValid = await checkDexchangeOtp(normalizedPhone, otp);
     if (!isValid) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP invalide ou expiré");
     }
@@ -205,9 +205,9 @@ const requestPasswordReset = async (phone: string) => {
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     // Send password reset OTP via Twilio Verify
-    await sendVerificationCode(normalizedPhone);
+    // await sendVerificationCode(normalizedPhone);
     // Send password reset OTP via Dexchange SMS OTP
-    // await sendDexchangeOtp(normalizedPhone);
+    await sendDexchangeOtp(normalizedPhone);
 
     return { message: "OTP envoyé avec succès" };
 };
@@ -218,7 +218,9 @@ const resetPassword = async (phone: string, otp: string, newPassword: string) =>
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, "Utilisateur introuvable");
 
     // Verify OTP code via Twilio Verify
-    const isValid = await checkVerificationCode(normalizedPhone, otp);
+    // const isValid = await checkVerificationCode(normalizedPhone, otp);
+    // Verify OTP code via Dexchange SMS OTP
+    const isValid = await checkDexchangeOtp(normalizedPhone, otp);
     if (!isValid) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Code OTP invalide ou expiré");
     }
@@ -585,10 +587,7 @@ const deleteAccount = async (userId: string) => {
         status: { $in: ["PENDING", "SHIPPED", "DISPUTED"] },
     });
     if (activeOrder) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Impossible de supprimer votre compte avec des transactions ou commandes en cours."
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Impossible de supprimer votre compte avec des transactions ou commandes en cours.");
     }
 
     // Check for active/pending withdrawals
@@ -597,10 +596,7 @@ const deleteAccount = async (userId: string) => {
         status: { $in: ["PENDING", "PROCESSING"] },
     });
     if (activeWithdrawal) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Impossible de supprimer votre compte avec des demandes de retrait en cours."
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Impossible de supprimer votre compte avec des demandes de retrait en cours.");
     }
 
     // Delete user from UserModel
