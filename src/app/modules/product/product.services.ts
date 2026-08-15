@@ -425,6 +425,15 @@ const deleteProduct = async (id: string, userId: string) => {
     return { message: "Produit supprimé avec succès" };
 };
 
+const deleteProductByAdmin = async (id: string, adminId: string) => {
+    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
+
+    await ProductModel.findByIdAndUpdate(id, { isDeleted: true });
+    ActivityService.logActivity(adminId.toString(), "PRODUCT_DELETE", `Produit supprimé par l'administrateur : ${product.title}`, { productId: id });
+    return { message: "Produit supprimé avec succès par l'administrateur" };
+};
+
 const getPriceRange = async () => {
     const result = await ProductModel.aggregate([
         { $match: { isDeleted: false, status: "ACTIVE" } },
@@ -466,5 +475,6 @@ export const ProductService = {
     updateProductStatus,
     boostProduct,
     deleteProduct,
+    deleteProductByAdmin,
     getPriceRange,
 };
