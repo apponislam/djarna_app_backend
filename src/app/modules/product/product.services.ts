@@ -426,12 +426,12 @@ const deleteProduct = async (id: string, userId: string) => {
 };
 
 const deleteProductByAdmin = async (id: string, adminId: string) => {
-    const product = await ProductModel.findOne({ _id: id, isDeleted: false });
+    const product = await ProductModel.findById(id);
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
 
-    await ProductModel.findByIdAndUpdate(id, { isDeleted: true });
-    ActivityService.logActivity(adminId.toString(), "PRODUCT_DELETE", `Produit supprimé par l'administrateur : ${product.title}`, { productId: id });
-    return { message: "Produit supprimé avec succès par l'administrateur" };
+    await ProductModel.findByIdAndDelete(id);
+    ActivityService.logActivity(adminId.toString(), "PRODUCT_DELETE", `Produit supprimé définitivement par l'administrateur : ${product.title}`, { productId: id });
+    return { message: "Produit supprimé définitivement avec succès par l'administrateur" };
 };
 
 const getPriceRange = async () => {
