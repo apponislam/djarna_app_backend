@@ -150,7 +150,8 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
 
 const deleteProductByAdmin = catchAsync(async (req: Request, res: Response) => {
     const adminId = req.user?._id;
-    const result = await ProductService.deleteProductByAdmin(req.params.id as string, adminId as string);
+    const reportId = (req.query.reportId || req.body?.reportId) as string | undefined;
+    const result = await ProductService.deleteProductByAdmin(req.params.id as string, adminId as string, reportId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
