@@ -8,48 +8,74 @@ A robust, production-grade backend API for **Djarna** — a peer-to-peer (P2P) s
 
 ---
 
-## 🚀 Core Features
+## 🚀 Core Features & Business Logic
 
-### 👤 Authentication & Profiles
-- **JWT-Based Authentication**: Secure access token and refresh token rotation.
-- **OTP Verification**: Email-based and SMS-based OTP verification using Nodemailer and Twilio.
-- **Social Login**: Integrated passport strategies for Apple, Google, and Facebook auth.
-- **Identity Verification**: Document upload and review workflows for KYC and verified user badging.
-- **Follow System**: Users can follow and unfollow sellers, tracking popular merchants.
+### 👤 1. Authentication, Profiles & Identity Verification (KYC)
+- **JWT Authentication & Rotation**: Secure short-lived Access Tokens and Refresh Token rotation mechanisms.
+- **Dual SMS & Email OTP Engine**: Phone verification powered by **DExchange SMS** & **Twilio**, with fallback email verification via Nodemailer SMTP.
+- **Social OAuth Integration**: One-click authentication with Google OAuth 2.0, Apple ID, and Facebook Passport strategies.
+- **KYC Identity Verification Workflow**: Sellers submit National ID / Passport documents and live selfie checks for admin review to earn official `verifiedBadge` status.
+- **Social Follow & Block System**: Follow merchants/sellers to receive listing updates, or block problematic accounts.
+- **Referral Program & Rewards**: User referral code generation, tracking referral signups (`referredBy`), and granting 0%-commission sales bonus counts (`noCommission`).
 
-### 🛍️ Product Listings
-- **Search & Filters**: Multi-criteria search (terms, category, subcategory, sub-subcategories, price limits, gender, sizes, brands, etc.).
-- **Effective Boosting**: Dynamic promotional package calculations (`isEffectiveBoosted` checks expiration dates in real-time).
-- **Favorites & Wishlist**: Bookmark favorite items for future purchasing.
+### 🛍️ 2. Peer-to-Peer Marketplace & Listing Management
+- **Multi-Level Category Taxonomy**: Hierarchical item categorization (`Category` -> `Subcategory` -> `SubSubcategory` -> `SubSubSubcategory`).
+- **Advanced Search & Filtering**: Multi-criteria search (keyword, price range, condition, gender, sizes, brands, material, distance radius, category).
+- **Listing Promotion & Boost Packs**:
+  - Purchase visibility packages (Product Spotlight / Shop Boosts).
+  - Dynamic `isEffectiveBoosted` real-time evaluation checking active boost boundaries.
+- **Favorites & Wishlists**: Bookmark items and track seller updates.
 
-### 💬 Real-Time Chat & Offers
-- **WebSockets (Socket.io)**: Real-time messaging and chat threads sync.
-- **Rich Message Formats**: Standard text, location sharing, and file attachments (images, PDFs, documents).
-- **Negotiation System**:
-  - Propose custom price and shipping offers.
-  - Real-time offer updating, accepting, counter-offering, or rejecting.
-  - Automatic push notifications and socket sync alerts on state changes.
+### 💬 3. Real-Time Chat & Price Offer Negotiation System
+- **WebSocket Synchronization (Socket.io)**: Instant message delivery, typing indicators, read receipts (`isRead`), and dynamic unread counters.
+- **Rich Media Payload Handling**: Text messages, image uploads, document/PDF attachments, and live GPS location sharing (`location`).
+- **Interactive Price Bidding & Counter-Offers**:
+  - Buyers send custom price (`offerPrice`) and shipping (`shippingPrice`) proposals directly in chat threads.
+  - Sellers accept, counter-offer, or reject proposals in real-time with instant Socket sync and FCM notifications.
+  - Automatic locking and shift to `COMPLETED` state once checkout is finished.
 
-### 💳 Orders & Payments
-- **Secure Checkouts**: Built-in payment flow utilizing the **Paydunya** invoice checkouts and redirect mechanisms.
-- **Payment Webhooks**: Paydunya webhook integrations to capture successful transactions, automatically mark products as SOLD, create orders, and complete pending offers.
-- **Dispute Claims**: Users can raise order disputes to claim refunds.
+### 💳 4. Secure Payments, Orders & Automated Escrow Hold
+- **Multi-Channel Paydunya Checkout**: Integration with Paydunya invoice gateways supporting credit/debit cards, mobile wallets, Wave, Orange Money, Free Money, and Expresso.
+- **Instant Webhook Reconciliation (IPN)**: Webhook listeners validate payment integrity, update payment states to `COMPLETED`, automatically set product status to `SOLD`, and generate order records.
+- **Escrow Hold & Automated Disbursement**:
+  - Buyer payments are locked in escrow (`escrow: true`) with customizable release countdowns (`escrowReleaseAt`).
+  - Automated hourly cron jobs disburse funds to the seller's available wallet balance (`balance`) upon delivery confirmation or escrow expiry.
+- **Order Logistics Tracking**: Fulfillment lifecycle tracking (`PENDING` -> `PROCESSING` -> `SHIPPED` -> `DELIVERED` -> `COMPLETED`).
 
-### 🔔 Notifications & Cron Jobs
-- **Push Notifications**: Firebase Cloud Messaging (FCM) integration for direct device alerts.
-- **Cron Schedules**: Automatic cleanups for expired boost packages and uncompleted/cancelled actions.
+### 💸 5. Seller Wallet & Mobile Money Withdrawals
+- **Wallet Earnings Hub**: Real-time balance tracking, gross earnings auditing, and commission subtractions.
+- **Automated Payout Disbursements**: Sellers request wallet payouts via Wave, Orange Money, Free Money, Expresso, or Paydunya.
+- **Instant Disbursement API**: Automated administrative approval triggering Paydunya Disbursement endpoints directly to seller mobile numbers.
+
+### 🚩 6. Moderation, Dispute Resolution & Reviews
+- **Order Conflict Disputes**: Buyers can flag non-deliveries or damaged goods (`ITEM_NOT_RECEIVED`, `ITEM_NOT_AS_DESCRIBED`), freezing escrow payout until admin resolution.
+- **Community Moderation Reports**: Flag improper listings or abusive user behavior with reason tags and evidence attachments.
+- **P2P Star Ratings & Reviews**: Post 1 to 5-star ratings and written reviews upon order completion, updating seller aggregate ratings.
+
+### 🔔 7. Push Notifications & Background Cron Jobs
+- **Firebase Cloud Messaging (FCM)**: Target device push alerts for new messages, offer updates, order state changes, boost expiry, and dispute alerts.
+- **Automated Cron Cleaning**:
+  - `0 */12 * * *`: Scans and cleans expired product boosts, sending expiration alerts.
+  - `0 * * * *`: Automated escrow release agent releasing cleared funds to seller wallets.
 
 ---
 
 ## 🛠️ Technology Stack
+
 - **Runtime**: [Node.js](https://nodejs.org/) (v18+)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Web Framework**: [Express.js](https://expressjs.com/)
+- **Web Framework**: [Express.js](https://expressjs.com/) (v5)
 - **Database**: [MongoDB](https://www.mongodb.com/) (using [Mongoose ODM](https://mongoosejs.com/))
-- **Real-Time Communication**: [Socket.io](https://socket.io/)
-- **Push Notification Service**: [Firebase Admin SDK](https://firebase.google.com/docs/admin)
+- **Real-Time Communication**: [Socket.io](https://socket.io/) (WebSockets engine)
+- **Push Notification Service**: [Firebase Admin SDK](https://firebase.google.com/docs/admin) (FCM)
 - **Validation Middleware**: [Zod](https://zod.dev/)
-- **File Uploads**: [Multer](https://github.com/expressjs/multer) & [Sharp](https://sharp.pixelplumbing.com/) (image optimization)
+- **SMS & Phone OTP Verification**: [DExchange SMS API](https://dexchange-sms.com/) & [Twilio SMS Gateway](https://www.twilio.com/)
+- **Payment Gateway & Payout Disbursements**: [Paydunya API Gateway](https://paydunya.com/) (Checkout Invoices, IPN Webhooks & Mobile Disbursements: Wave, Orange Money, Free Money)
+- **Authentication & Security**: [JWT (JSON Web Tokens)](https://jwt.io/), [Bcrypt](https://github.com/kelektiv/node.bcrypt.js), [Cookie Parser](https://github.com/expressjs/cookie-parser) & [Cors](https://github.com/expressjs/cors)
+- **Social OAuth Login Strategies**: [Passport.js](http://www.passportjs.org/) (`passport-google-oauth20`, `passport-apple`, `passport-facebook`)
+- **Transactional Email Gateway**: [Nodemailer](https://nodemailer.com/) (SMTP integration)
+- **Automated Background Jobs**: [Node Cron](https://github.com/node-cron/node-cron) (Boost expiration cleanup & automated escrow release engine)
+- **File Uploads & Image Processing**: [Multer](https://github.com/expressjs/multer) & [Sharp](https://sharp.pixelplumbing.com/) (RAM memory buffer optimization & WebP image compression)
 
 ---
 
