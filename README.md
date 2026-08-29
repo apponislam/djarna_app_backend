@@ -100,214 +100,343 @@ To prevent disk storage leaks from unprocessed original images, the upload pipel
 
 ## 🗄️ Database Relationships & Schemas Analysis
 
-Below is an overview of the core database schema models and how they relate across the ecosystem:
+Below is the complete database schema architecture for **Djarna Backend API**, accurately matching all 20 module TypeScript interfaces (`User`, `IProduct`, `IOrder`, `IPayment`, `Conversation`, `Message`, `IDispute`, `IIdentityVerification`, `ICategory`, `IReview`, `IWithdraw`, `IBoostPack`, `IBoostPayment`, `IReport`, `IActivity`, `INotification`, `IShippingAddress`, `IFavorite`, `IFollow`, `IBlock`, `IPlatformSettings`) rendered in full diagram view:
 
 ```mermaid
 erDiagram
-    USER ||--o{ RESTAURANT : "owns"
-    USER ||--o{ RESERVATION : "books"
-    USER ||--o{ USER_SUBSCRIPTION : "subscribes"
-    USER ||--o{ REVIEW : "writes"
+    USER {
+        ObjectId _id PK
+        String name
+        String email "Optional, Unique"
+        String password "Required, Select false"
+        UserRole role "USER | ADMIN"
+        String phone "Required"
+        String photo
+        Object location "lat, lng"
+        String language
+        Object address "fullName, country, addressLine1, addressLine2, postcode, city"
+        Boolean isActive
+        Boolean isPhoneVerified
+        Boolean verifiedBadge
+        Date lastLogin
+        String resetPasswordOtp
+        Date resetPasswordOtpExpiry
+        String resetPasswordToken
+        Date resetPasswordTokenExpiry
+        String phoneVerificationOtp
+        Date phoneVerificationExpiry
+        OAuthProvider oauthProvider "GOOGLE | FACEBOOK | APPLE"
+        String oauthId
+        String referralCode "Required, Unique"
+        ObjectId referredBy FK "Ref: USER"
+        Number balance "Default: 0"
+        Number noCommission "Default: 0"
+        Array_String fcmTokens
+        Date createdAt
+        Date updatedAt
+    }
+
+    PRODUCT {
+        ObjectId _id PK
+        String title "Required"
+        String description "Required"
+        Number price "Required"
+        Number originalPrice
+        String category "Required"
+        String subcategory "Required"
+        String subSubcategory "Required"
+        String subSubSubcategory
+        Object location "lat, lng"
+        String address
+        Enum gender "MEN | WOMEN | KID"
+        ProductSize size "XS | S | M | L | XL | XXL | XXXL | 4XL | 5XL | 6XL | 7XL | 8XL"
+        String brand
+        String material
+        ObjectId user FK "Ref: USER"
+        Array_String images "Required"
+        ProductStatus status "ACTIVE | SOLD | PENDING | REJECTED | DRAFT | PAUSED"
+        Boolean isBoosted
+        ObjectId boostPack FK "Ref: BOOST_PACK"
+        Date boostStartTime
+        Date boostEndTime
+        Boolean isDeleted
+        Date createdAt
+        Date updatedAt
+    }
+
+    ORDER {
+        ObjectId _id PK
+        ObjectId buyer FK "Ref: USER"
+        ObjectId seller FK "Ref: USER"
+        ObjectId product FK "Ref: PRODUCT"
+        ObjectId address FK "Ref: SHIPPING_ADDRESS"
+        DeliveryMethod deliveryMethod "HOME_DELIVERY | PICKUP_POINT | MEET_UP"
+        OrderStatus status "PENDING | SHIPPED | DELIVERED | CANCELLED | COMPLETED | DISPUTED"
+        Number productPrice "Required"
+        Number buyerProtectionFee "Required"
+        Number shippingCost "Required"
+        Number totalAmount "Required"
+        Number buyerFee "Required"
+        Number siteFee "Required"
+        ObjectId payment FK "Ref: PAYMENT"
+        Boolean isDeleted
+        Date createdAt
+        Date updatedAt
+    }
+
+    PAYMENT {
+        ObjectId _id PK
+        ObjectId userId FK "Ref: USER"
+        ObjectId sellerId FK "Ref: USER"
+        ObjectId productId FK "Ref: PRODUCT"
+        ObjectId messageId FK "Ref: MESSAGE"
+        ObjectId addressId FK "Ref: SHIPPING_ADDRESS"
+        Number productPrice
+        Number buyerProtectionFee
+        Number shippingCost
+        Number totalAmount
+        Number siteFee
+        Number buyerFee
+        Boolean escrow
+        Date escrowReleaseAt
+        Date escrowReleasedAt
+        Currency currency "FCFA | USD | EUR"
+        PaymentStatus status "PENDING | COMPLETED | FAILED | REFUNDED | CANCELLED | DISPUTED"
+        PaymentMethod method "PAYDUNYA | CARD | MOBILE_MONEY | WALLET | APPLE_PAY | GOOGLE_PAY"
+        String transactionId
+        String paydunyaInvoiceToken
+        String paydunyaReceiptUrl
+        String description
+        Object metadata
+        Date paidAt
+        Date createdAt
+        Date updatedAt
+    }
+
+    CONVERSATION {
+        ObjectId _id PK
+        Array_ObjectId participantIds FK "Ref: USER"
+        ObjectId lastMessage FK "Ref: MESSAGE"
+        ObjectId productId FK "Ref: PRODUCT"
+        ObjectId productOwner FK "Ref: USER"
+        Array_Object unreadCounts "userId, count"
+        Array_ObjectId deletedBy FK "Ref: USER"
+        Date createdAt
+        Date updatedAt
+    }
+
+    MESSAGE {
+        ObjectId _id PK
+        ObjectId conversationId FK "Ref: CONVERSATION"
+        ObjectId senderId FK "Ref: USER"
+        MessageType type "MESSAGE | LOCATION | OFFER | ACCEPTED | REJECTED | COMPLETED"
+        String text
+        Array_Object files "url, fileName, fileSize, mimeType"
+        ObjectId productId FK "Ref: PRODUCT"
+        ObjectId productOwner FK "Ref: USER"
+        Number offerPrice
+        Number shippingPrice
+        Object location "fullAddress, latitude, longitude, updatedAt"
+        Boolean isEdited
+        Date editedAt
+        Boolean isDeleted
+        Date deletedAt
+        Array_ObjectId deletedBy FK "Ref: USER"
+        Date createdAt
+        Date updatedAt
+    }
+
+    DISPUTE {
+        ObjectId _id PK
+        ObjectId order FK "Ref: ORDER"
+        ObjectId payment FK "Ref: PAYMENT"
+        ObjectId buyer FK "Ref: USER"
+        ObjectId seller FK "Ref: USER"
+        DisputeReason reason "ITEM_NOT_RECEIVED | ITEM_NOT_AS_DESCRIBED | DAMAGED_ITEM | UNAUTHORIZED_TRANSACTION | OTHER"
+        String description "Required"
+        Array_String images
+        DisputeStatus status "PENDING | RESOLVED | CANCELLED"
+        String adminNote
+        Number refundAmount
+        Date resolvedAt
+        Date createdAt
+        Date updatedAt
+    }
+
+    IDENTITY_VERIFICATION {
+        ObjectId _id PK
+        ObjectId user FK "Ref: USER"
+        DocumentType documentType "NID | PASSPORT"
+        String frontImage "Required"
+        String backImage
+        String selfieImage "Required"
+        VerificationStatus status "PENDING | APPROVED | REJECTED"
+        String adminComment
+        Date createdAt
+        Date updatedAt
+    }
+
+    CATEGORY {
+        ObjectId _id PK
+        String name "Required"
+        String icon
+        Boolean isActive
+        ObjectId parentCategory FK "Ref: CATEGORY"
+        Number level "Required"
+        Number homePosition
+        Boolean homeVisibility
+        Date createdAt
+        Date updatedAt
+    }
+
+    REVIEW {
+        ObjectId _id PK
+        ObjectId user FK "Ref: USER"
+        ObjectId seller FK "Ref: USER"
+        ObjectId product FK "Ref: PRODUCT"
+        Number rating "Required (1-5)"
+        String comment "Required"
+        Boolean isDeleted
+        Enum adminVisibility "show | hidden"
+    }
+
+    WITHDRAW {
+        ObjectId _id PK
+        ObjectId userId FK "Ref: USER"
+        Number amount "Required"
+        WithdrawStatus status "PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED"
+        WithdrawMethod method "WAVE | ORANGE_MONEY | FREE_MONEY | EXPRESSO | PAYDUNYA"
+        String accountNumber "Required"
+        String transactionId
+        String paydunyaTransactionId
+        String paydunyaDisbursementToken
+        String failReason
+        Object metadata
+        Date createdAt
+        Date updatedAt
+    }
+
+    BOOST_PACK {
+        ObjectId _id PK
+        String name "Required"
+        String description
+        BoostType type "PRODUCT | SHOP"
+        Number duration "in days"
+        Number price "Required"
+        String currency "Default FCFA"
+        Array_String features
+        Boolean isActive
+        Boolean isRecommended
+        Boolean isDeleted
+        Date createdAt
+        Date updatedAt
+    }
+
+    BOOST_PAYMENT {
+        ObjectId _id PK
+        ObjectId userId FK "Ref: USER"
+        ObjectId productId FK "Ref: PRODUCT"
+        ObjectId boostPackId FK "Ref: BOOST_PACK"
+        Enum type "PRODUCT | SHOP"
+        Number amount "Required"
+        String currency "Required"
+        BoostPaymentStatus status "PENDING | COMPLETED | FAILED | CANCELLED"
+        String paydunyaInvoiceToken
+        String paydunyaReceiptUrl
+        String transactionId
+        Date paidAt
+        Date createdAt
+        Date updatedAt
+    }
+
+    REPORT {
+        ObjectId _id PK
+        String reportId "Required"
+        ReportType type "LISTING | USER"
+        ObjectId reportedItem FK "Ref: PRODUCT"
+        ObjectId reporter FK "Ref: USER"
+        ObjectId reportedUser FK "Ref: USER"
+        String reason "Required"
+        String details
+        ReportStatus status "OPEN | IN_REVIEW | RESOLVED"
+        Date createdAt
+        Date updatedAt
+    }
+
+    NOTIFICATION {
+        ObjectId _id PK
+        ObjectId user FK "Ref: USER"
+        NotificationType type "COMMANDE_PASSEE | PAIEMENT_EFFECTUE | NOUVEAU_MESSAGE | etc"
+        String title "Required"
+        String message "Required"
+        Boolean isRead
+        Object data
+        Boolean isDeleted
+        Date createdAt
+        Date updatedAt
+    }
+
+    SHIPPING_ADDRESS {
+        ObjectId _id PK
+        ObjectId user FK "Ref: USER"
+        String fullName "Required"
+        String country "Required"
+        String addressLine1 "Required"
+        String addressLine2
+        String postcode "Required"
+        String city "Required"
+        Boolean isDefault
+        Boolean isDeleted
+        Date createdAt
+        Date updatedAt
+    }
+
+    FAVORITE {
+        ObjectId user FK "Ref: USER"
+        ObjectId product FK "Ref: PRODUCT"
+    }
+
+    FOLLOW {
+        ObjectId follower FK "Ref: USER"
+        ObjectId following FK "Ref: USER"
+        Date createdAt
+        Date updatedAt
+    }
+
+    BLOCK {
+        ObjectId blocker FK "Ref: USER"
+        ObjectId blocked FK "Ref: USER"
+        Date createdAt
+        Date updatedAt
+    }
+
+    USER ||--o{ PRODUCT : "owns / lists"
+    USER ||--o{ ORDER : "purchases / sells"
+    USER ||--o{ PAYMENT : "makes / receives payment"
     USER ||--o{ FAVORITE : "bookmarks"
-    USER ||--o{ SAVED_DEAL : "saves"
-    USER ||--o{ COMMISSION : "earns as influencer"
-    USER ||--o{ WITHDRAW : "requests payout"
-    USER ||--o{ USER : "refers / referred by"
-
-    RESTAURANT ||--o{ USER : "employs staff"
-    RESTAURANT ||--o{ DEAL : "offers"
-    RESTAURANT ||--o{ RESERVATION : "hosts"
-    RESTAURANT ||--o{ SHORTS : "publishes"
-    RESTAURANT ||--o{ REVIEW : "receives"
-    RESTAURANT ||--o{ FAVORITE : "saved by"
-
-    DEAL ||--o{ RESERVATION : "applied to"
-    DEAL ||--o{ SAVED_DEAL : "bookmarked by"
-
-    SUBSCRIPTION_PLAN ||--o{ USER_SUBSCRIPTION : "defines plan tier"
-    USER_SUBSCRIPTION ||--o{ COMMISSION : "generates referral reward"
+    USER ||--o{ FOLLOW : "follows / targeted"
+    USER ||--o{ BLOCK : "blocks / blocked"
+    USER ||--o{ IDENTITY_VERIFICATION : "submits KYC"
+    USER ||--o{ WITHDRAW : "requests withdrawal"
+    USER ||--o{ REPORT : "reports / target"
+    USER ||--o{ REVIEW : "writes / receives review"
+    USER ||--o{ NOTIFICATION : "receives alerts"
+    USER ||--o{ SHIPPING_ADDRESS : "owns addresses"
+    PRODUCT ||--o{ ORDER : "purchased in"
+    PRODUCT ||--o{ FAVORITE : "bookmarked in"
+    PRODUCT ||--o{ REVIEW : "reviewed in"
+    PRODUCT ||--o{ BOOST_PAYMENT : "promoted in"
+    ORDER ||--|| PAYMENT : "paid via"
+    ORDER ||--o{ DISPUTE : "disputed via"
+    ORDER ||--o{ REVIEW : "reviewed via"
+    CONVERSATION ||--o{ MESSAGE : "contains"
+    USER ||--o{ MESSAGE : "sends"
+    PRODUCT ||--o{ MESSAGE : "negotiates on"
+    BOOST_PACK ||--o{ BOOST_PAYMENT : "defines tier"
 ```
 
 ---
 
-### Detailed Schemas & Complete Data Definitions
-
-#### 1. `USER` Schema
-Represents platform members, customers, restaurant owners, staff members, and influencer affiliates.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique User Identifier |
-| `name` | `String` | Required | Full display name |
-| `email` | `String` | Unique, Sparse | User email address |
-| `phone` | `String` | Required | Mobile phone number |
-| `password` | `String` | Select: false | Encrypted credentials |
-| `role` | `Enum` | `"USER"` \| `"RESTAURANT_OWNER"` \| `"STAFF"` \| `"ADMIN"` | Platform access level |
-| `avatar` | `String` | Optional | Profile image URL |
-| `referredBy` | `ObjectId` | Ref: `USER` | Influencer / Referrer ID |
-| `referralCode` | `String` | Unique | Unique referral string |
-| `walletBalance` | `Number` | Default: `0` | Available withdrawal earnings balance |
-| `isActive` | `Boolean` | Default: `true` | Account active state |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Schema record timestamps |
-
----
-
-#### 2. `RESTAURANT` Schema
-Represents restaurant profiles, venue metadata, staff assignments, and location coordinates.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Restaurant ID |
-| `owner` | `ObjectId` | Ref: `USER` | Restaurant Owner User ID |
-| `name` | `String` | Required | Restaurant business name |
-| `description` | `String` | Optional | Detailed business bio / summary |
-| `coverImage` | `String` | Optional | Main header/banner image URL |
-| `gallery` | `Array<String>` | Default: `[]` | Venue gallery image URLs |
-| `cuisineTypes` | `Array<String>` | Required | Cuisine tags (e.g. Italian, Sushi) |
-| `location` | `Object` | `{ lat: Number, lng: Number, address: String }` | Geolocation and street address |
-| `openingHours` | `Object` | `{ open: String, close: String, days: Array<String> }` | Business operational hours |
-| `rating` | `Number` | Default: `0` | Aggregated user review score |
-| `reviewCount` | `Number` | Default: `0` | Total number of reviews received |
-| `staff` | `Array<ObjectId>` | Ref: `USER` | Associated staff user accounts |
-| `isActive` | `Boolean` | Default: `true` | Restaurant listing status |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Entity timestamps |
-
----
-
-#### 3. `DEAL` Schema
-Promotions, discount vouchers, and special dining offers created by restaurants.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Deal ID |
-| `restaurant` | `ObjectId` | Ref: `RESTAURANT` | Host restaurant ID |
-| `title` | `String` | Required | Deal headline |
-| `description` | `String` | Optional | Terms & conditions / offer details |
-| `discountPercentage` | `Number` | Required | Percentage discount (e.g. `20%`) |
-| `validFrom` | `Date` | Required | Offer start timestamp |
-| `validUntil` | `Date` | Required | Offer expiration timestamp |
-| `maxRedemptions` | `Number` | Optional | Maximum total booking limit |
-| `status` | `Enum` | `"ACTIVE"` \| `"EXPIRED"` \| `"DISABLED"` | Deal operational state |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Record timestamps |
-
----
-
-#### 4. `RESERVATION` Schema
-Booking contracts between dining users and host restaurants, incorporating applied deals.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Reservation ID |
-| `user` | `ObjectId` | Ref: `USER` | Customer User ID |
-| `restaurant` | `ObjectId` | Ref: `RESTAURANT` | Host Restaurant ID |
-| `deal` | `ObjectId` | Ref: `DEAL` (Optional) | Applied deal or offer ID |
-| `partySize` | `Number` | Required | Number of dining guests |
-| `reservationTime` | `Date` | Required | Scheduled dining date & time |
-| `status` | `Enum` | `"PENDING"` \| `"CONFIRMED"` \| `"COMPLETED"` \| `"CANCELLED"` \| `"NO_SHOW"` | Booking lifecycle status |
-| `specialRequests` | `String` | Optional | Table preferences / dietary notes |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Booking timestamps |
-
----
-
-#### 5. `SHORTS` Schema
-Engaging short video clips published by restaurants for promotion and food discovery.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Short ID |
-| `restaurant` | `ObjectId` | Ref: `RESTAURANT` | Publishing restaurant ID |
-| `videoUrl` | `String` | Required | Streaming video file URL |
-| `thumbnail` | `String` | Optional | Video thumbnail preview image URL |
-| `caption` | `String` | Optional | Short description / hashtags |
-| `likesCount` | `Number` | Default: `0` | Total user likes count |
-| `viewsCount` | `Number` | Default: `0` | Total video views count |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Upload timestamps |
-
----
-
-#### 6. `SUBSCRIPTION_PLAN` Schema
-Tier configurations for paid user or restaurant membership plans.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Subscription Plan ID |
-| `name` | `String` | Required | Plan tier name (e.g. Premium VIP) |
-| `price` | `Number` | Required | Recurring subscription fee |
-| `billingCycle` | `Enum` | `"MONTHLY"` \| `"YEARLY"` | Billing frequency |
-| `features` | `Array<String>` | Default: `[]` | Included features and privileges |
-| `isActive` | `Boolean` | Default: `true` | Plan availability status |
-
----
-
-#### 7. `USER_SUBSCRIPTION` Schema
-Active membership subscriptions purchased by users or venues, linked to referral commissions.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Subscription Record ID |
-| `user` | `ObjectId` | Ref: `USER` | Subscriber User ID |
-| `plan` | `ObjectId` | Ref: `SUBSCRIPTION_PLAN` | Plan tier reference |
-| `startDate` | `Date` | Required | Subscription activation date |
-| `endDate` | `Date` | Required | Expiration date |
-| `status` | `Enum` | `"ACTIVE"` \| `"EXPIRED"` \| `"CANCELLED"` | Current subscription state |
-| `paymentId` | `String` | Optional | Transaction payment reference |
-
----
-
-#### 8. `COMMISSION` Schema
-Referral rewards and affiliate earnings generated when referred users purchase subscriptions.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Commission ID |
-| `influencer` | `ObjectId` | Ref: `USER` | User receiving the commission reward |
-| `subscription` | `ObjectId` | Ref: `USER_SUBSCRIPTION` | Source subscription generating reward |
-| `amount` | `Number` | Required | Calculated commission payout amount |
-| `status` | `Enum` | `"PENDING"` \| `"PAID"` \| `"CANCELLED"` | Payout status |
-| `createdAt` | `Date` | Timestamp | Reward generation date |
-
----
-
-#### 9. `SAVED_DEAL` & `FAVORITE` Schemas
-Bookmarks and saved listings created by users.
-
-- **`SAVED_DEAL`**: Maps `user` ID to saved `deal` ID with timestamp.
-- **`FAVORITE`**: Maps `user` ID to bookmarked `restaurant` ID with timestamp.
-
----
-
-#### 10. `REVIEW` Schema
-User reviews, star ratings, and feedback left for restaurants.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Review ID |
-| `user` | `ObjectId` | Ref: `USER` | Review author ID |
-| `restaurant` | `ObjectId` | Ref: `RESTAURANT` | Target restaurant ID |
-| `rating` | `Number` | Required (1-5) | Star rating score |
-| `comment` | `String` | Optional | Text review feedback |
-| `createdAt` | `Date` | Timestamp | Review creation timestamp |
-
----
-
-#### 11. `WITHDRAW` Schema
-Payout requests submitted by influencers or users to withdraw earned wallet commissions.
-
-| Field | Data Type | Modifiers / Ref | Description |
-| :--- | :--- | :--- | :--- |
-| `_id` | `ObjectId` | Primary Key | Unique Withdrawal ID |
-| `user` | `ObjectId` | Ref: `USER` | Requesting User ID |
-| `amount` | `Number` | Required | Payout amount requested |
-| `payoutMethod` | `String` | Required | Payment method (Mobile Money / Bank) |
-| `accountDetails` | `Object` | Required | Account number or mobile string |
-| `status` | `Enum` | `"PENDING"` \| `"APPROVED"` \| `"COMPLETED"` \| `"REJECTED"` | Disbursement status |
-| `createdAt` / `updatedAt` | `Date` | Timestamp | Request timestamps |
-
----
-
-## ⚙️ Initial Startup Seeding
-
----
 
 ## ⚙️ Initial Startup Seeding
 During initialization, the application executes pre-start seeding scripts to guarantee baseline security and settings:
