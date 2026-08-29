@@ -82,7 +82,7 @@ export const sendVerificationCode = async (to: string) => {
             },
             body: JSON.stringify({
                 number: formattedNumber,
-                signature: signature,
+                service: signature,
             }),
         });
 
@@ -107,9 +107,14 @@ export const sendVerificationCode = async (to: string) => {
 export const checkVerificationCode = async (to: string, code: string): Promise<boolean> => {
     try {
         const apiKey = config.dexchange_sms_api_key;
+        const signature = config.dexchange_sms_signature;
 
         if (!apiKey) {
             throw new Error("DEXCHANGE_SMS_API_KEY is not configured in environment variables.");
+        }
+
+        if (!signature) {
+            throw new Error("DEXCHANGE_SMS_SIGNATURE is not configured in environment variables.");
         }
 
         const formattedNumber = formatPhoneNumber(to);
@@ -123,6 +128,7 @@ export const checkVerificationCode = async (to: string, code: string): Promise<b
             body: JSON.stringify({
                 number: formattedNumber,
                 otp: code,
+                service: signature,
             }),
         });
 

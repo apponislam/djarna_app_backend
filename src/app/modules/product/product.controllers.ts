@@ -148,6 +148,19 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteProductByAdmin = catchAsync(async (req: Request, res: Response) => {
+    const adminId = req.user?._id;
+    const reportId = (req.query.reportId || req.body?.reportId) as string | undefined;
+    const result = await ProductService.deleteProductByAdmin(req.params.id as string, adminId as string, reportId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Produit supprimé avec succès par l'administrateur",
+        data: result,
+    });
+});
+
 const getPriceRange = catchAsync(async (req: Request, res: Response) => {
     const result = await ProductService.getPriceRange();
 
@@ -169,5 +182,6 @@ export const ProductController = {
     updateProductStatus,
     boostProduct,
     deleteProduct,
+    deleteProductByAdmin,
     getPriceRange,
 };

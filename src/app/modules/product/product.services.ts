@@ -8,6 +8,7 @@ import { FavoriteModel } from "../favorite/favorite.model";
 import { ActivityService } from "../activity/activity.services";
 import { escapeRegex } from "../../../utils/escapeRegex";
 import { BlockService } from "../block/block.services";
+import { ReportModel } from "../report/report.model";
 
 const createProduct = async (payload: IProduct) => {
     // If the product is being boosted during creation
@@ -425,6 +426,20 @@ const deleteProduct = async (id: string, userId: string) => {
     return { message: "Produit supprimé avec succès" };
 };
 
+const deleteProductByAdmin = async (id: string, adminId: string, reportId?: string) => {
+    const product = await ProductModel.findById(id);
+    if (!product) throw new ApiError(httpStatus.NOT_FOUND, "Produit introuvable");
+
+    await ProductModel.findByIdAndDelete(id);
+    ActivityService.logActivity(adminId.toString(), "PRODUCT_DELETE", `Produit supprimé définitivement par l'administrateur : ${product.title}`, { productId: id });
+
+    if (reportId) {
+        await ReportModel.findByIdAndUpdate(reportId, { status: "RESOLVED" });
+    }
+
+    return { message: "Produit supprimé définitivement avec succès par l'administrateur" };
+};
+
 const getPriceRange = async () => {
     const result = await ProductModel.aggregate([
         { $match: { isDeleted: false, status: "ACTIVE" } },
@@ -466,5 +481,6 @@ export const ProductService = {
     updateProductStatus,
     boostProduct,
     deleteProduct,
+    deleteProductByAdmin,
     getPriceRange,
 };

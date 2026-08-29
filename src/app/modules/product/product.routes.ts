@@ -3,6 +3,7 @@ import { ProductController } from "./product.controllers";
 import validateRequest from "../../middlewares/validateRequest";
 import { createProductSchema, updateProductStatusSchema, boostProductSchema, updateProductSchema } from "./product.validations";
 import auth from "../../middlewares/auth";
+import authorize from "../../middlewares/authorized";
 import checkAuth from "../../middlewares/checkAuth";
 import { parseBodyData, uploadProductImages } from "../../middlewares/multer";
 
@@ -14,6 +15,9 @@ router.get("/my-products", auth, ProductController.getMyProducts);
 router.get("/user/:userId", checkAuth, ProductController.getProductsByUserId);
 router.get("/price-range", ProductController.getPriceRange);
 router.get("/:id", checkAuth, ProductController.getProductById);
+
+// Admin routes
+router.delete("/admin/:id", auth, authorize(["ADMIN"]), ProductController.deleteProductByAdmin);
 
 // Protected User routes
 router.post("/", auth, uploadProductImages, parseBodyData, validateRequest(createProductSchema), ProductController.createProduct);
