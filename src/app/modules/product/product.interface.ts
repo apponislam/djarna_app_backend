@@ -2,7 +2,8 @@ import { Types } from "mongoose";
 
 export type ProductStatus = "ACTIVE" | "SOLD" | "PENDING" | "REJECTED" | "DRAFT" | "PAUSED";
 
-export type ProductSize = "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "4XL" | "5XL" | "6XL" | "7XL" | "8XL";
+// export type ProductSize = "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "4XL" | "5XL" | "6XL" | "7XL" | "8XL";
+export type ProductSize = string;
 
 export interface IProduct {
     title: string;
