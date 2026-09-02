@@ -14,7 +14,7 @@ export const seedAdmin = async () => {
             const hashedPassword = await bcrypt.hash(config.superAdminPassword as string, Number(config.bcrypt_salt_rounds));
 
             const superAdmin = {
-                name: "Admin",
+                name: "Estelle",
                 email: config.superAdminEmail,
                 password: hashedPassword,
                 role: "ADMIN" as const,
